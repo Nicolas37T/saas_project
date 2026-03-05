@@ -21,7 +21,7 @@ def list_tenants(current_user: UserGlobal = Depends(get_current_superadmin)):
                 "business_name": t.business_name,
                 "subdomain": t.subdomain,
                 "status": t.status,
-                "db_name": t.db_name,
+                "schema_name": t.schema_name,
                 "plan": {
                     "id": str(t.plan.id),
                     "name": t.plan.name

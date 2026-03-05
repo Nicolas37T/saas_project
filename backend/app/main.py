@@ -10,7 +10,7 @@ from app.core.middleware import tenant_middleware
 from app.core.security import get_password_hash, verify_password, create_access_token
 from app.schemas.auth import LoginRequest, Token
 from app.schemas.tenant import TenantCreate
-from app.utils.provisioning import create_tenant_db
+from app.utils.provisioning import create_tenant_schema
 
 # ─── Aplicación ───────────────────────────────────────────────────────────────
 app = FastAPI(title="SaaS Multi-tenancy Manager")
@@ -30,8 +30,20 @@ app.add_middleware(
 # ─── Startup ──────────────────────────────────────────────────────────────────
 @app.on_event("startup")
 def on_startup():
-    """Crea las tablas y hace seed de los datos iniciales al arrancar."""
-    SQLModel.metadata.create_all(engine)
+    """Crea las tablas MAESTRAS y hace seed de los datos iniciales al arrancar."""
+    # Solo tablas maestras, NO tablas de tenant (products vive en cada schema)
+    from app.db.models import UserRole, Plan, Tenant, UserGlobal, Subscription
+    master_tables = [
+        UserRole.__table__, Plan.__table__, Tenant.__table__,
+        UserGlobal.__table__, Subscription.__table__,
+    ]
+    SQLModel.metadata.create_all(engine, tables=master_tables)
+
+    # Limpiar tabla products de public si se creó por error en versiones anteriores
+    from sqlalchemy import text
+    with engine.connect() as conn:
+        conn.execute(text("DROP TABLE IF EXISTS public.products"))
+        conn.commit()
 
     with Session(engine) as session:
         # 1. Seed de Roles
@@ -97,7 +109,7 @@ def get_public_plans():
 async def register_tenant(data: TenantCreate):
     """Registra un nuevo negocio y crea su base de datos aislada vacía."""
     print(f"Solicitud de registro: {data.business_name} ({data.subdomain})")
-    db_name = f"db_{data.subdomain}"
+    schema_name = f"tenant_{data.subdomain.replace('-', '_')}"
 
     with Session(engine) as session:
         if session.exec(select(Tenant).where(Tenant.subdomain == data.subdomain)).first():
@@ -105,10 +117,10 @@ async def register_tenant(data: TenantCreate):
         if session.exec(select(UserGlobal).where(UserGlobal.email == data.email)).first():
             raise HTTPException(status_code=400, detail="El correo ya está registrado")
 
-    # Crear DB física del tenant (vacía)
-    print("Aprovisionando DB del tenant...")
-    if not create_tenant_db(db_name=db_name):
-        raise HTTPException(status_code=500, detail="Error al provisionar la base de datos del negocio")
+    # Crear schema aislado del tenant en Supabase
+    print("Aprovisionando schema del tenant...")
+    if not create_tenant_schema(schema_name=schema_name):
+        raise HTTPException(status_code=500, detail="Error al provisionar el schema del negocio")
 
     with Session(engine) as session:
         # Verificar que el plan exista
@@ -140,7 +152,7 @@ async def register_tenant(data: TenantCreate):
                 business_type=data.business_type,
                 subdomain=data.subdomain,
                 domain=data.domain,
-                db_name=db_name,
+                schema_name=schema_name,
                 plan_id=plan.id,
                 created_by=new_user.id,
             )
@@ -225,4 +237,8 @@ async def login(data: LoginRequest):
 
 # ─── Routers ──────────────────────────────────────────────────────────────────
 from app.routers import admin as admin_router
+from app.routers import products as products_router
+from app.routers import dental as dental_router
 app.include_router(admin_router.router)
+app.include_router(products_router.router)
+app.include_router(dental_router.router)

@@ -47,8 +47,7 @@ class Tenant(SQLModel, table=True):
     custom_domain: Optional[str] = Field(default=None, unique=True)
     domain: Optional[str] = Field(default=None)
     status: str = Field(default="active")   # "active", "suspended", "past_due"
-    db_name: str
-    db_host: str = Field(default="localhost")
+    schema_name: str = Field(default="public")
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 

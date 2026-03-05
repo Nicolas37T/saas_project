@@ -1,30 +1,25 @@
 from sqlmodel import create_engine, Session
+from sqlalchemy import event, text
 from app.core.config import settings
 from typing import Dict
 
-# Motor para la base de datos maestra
-engine = create_engine(settings.DATABASE_URL)
+# Motor único para toda la aplicación
+engine = create_engine(settings.DATABASE_URL, pool_pre_ping=True)
 
-# Caché para motores de tenants (evita crear uno nuevo en cada petición)
-tenant_engines: Dict[str, any] = {}
 
 def get_session():
-    """Sesión para la base de datos maestra"""
+    """Sesión para la base de datos maestra (schema public)"""
     with Session(engine) as session:
         yield session
 
-def get_tenant_engine(db_name: str):
-    """Obtiene o crea un motor para una base de datos de tenant específica"""
-    if db_name not in tenant_engines:
-        # Construimos la URL para el tenant (asumiendo el mismo host/pass que la maestra)
-        base_url = settings.DATABASE_URL.rsplit('/', 1)[0]
-        tenant_url = f"{base_url}/{db_name}"
-        tenant_engines[db_name] = create_engine(tenant_url)
-    return tenant_engines[db_name]
 
-def get_tenant_session(db_name: str):
-    """Generador de sesiones para una base de datos de tenant específica"""
-    tenant_engine = get_tenant_engine(db_name)
-    with Session(tenant_engine) as session:
+def get_tenant_session(schema_name: str):
+    """
+    Genera una sesión que opera en el schema del tenant.
+    Setea search_path al inicio y lo restaura al cerrar.
+    """
+    with Session(engine) as session:
+        session.execute(text(f"SET search_path TO {schema_name}, public"))
         yield session
+        session.execute(text("SET search_path TO public"))
 
