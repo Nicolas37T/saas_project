@@ -10,7 +10,7 @@ from app.core.middleware import tenant_middleware
 from app.core.security import get_password_hash, verify_password, create_access_token
 from app.schemas.auth import LoginRequest, Token
 from app.schemas.tenant import TenantCreate
-from app.utils.provisioning import create_tenant_db
+from app.utils.provisioning import create_tenant_db, create_tenant_schema
 
 # ─── Aplicación ───────────────────────────────────────────────────────────────
 app = FastAPI(title="SaaS Multi-tenancy Manager")
@@ -44,12 +44,13 @@ def on_startup():
         session.commit()
 
         # 2. Seed de Planes
-        for plan_name, price, max_u in [
-            ("Plan Básico", 10.0, 5),
-            ("Plan Pro",    30.0, 20),
+        for plan_name, price, max_u, strategy in [
+            ("Plan Básico", 10.0, 5,  "schema"),
+            ("Plan Pro",    30.0, 20, "schema"),
+            ("Plan Enterprise", 50.0, 100, "database"),
         ]:
             if not session.exec(select(Plan).where(Plan.name == plan_name)).first():
-                session.add(Plan(name=plan_name, price=price, billing_cycle="monthly", max_users=max_u))
+                session.add(Plan(name=plan_name, price=price, billing_cycle="monthly", max_users=max_u, strategy=strategy))
         session.commit()
 
         # 3. Seed del Superadmin (sólo si no existe)
@@ -105,13 +106,8 @@ async def register_tenant(data: TenantCreate):
         if session.exec(select(UserGlobal).where(UserGlobal.email == data.email)).first():
             raise HTTPException(status_code=400, detail="El correo ya está registrado")
 
-    # Crear DB física del tenant (vacía)
-    print("Aprovisionando DB del tenant...")
-    if not create_tenant_db(db_name=db_name):
-        raise HTTPException(status_code=500, detail="Error al provisionar la base de datos del negocio")
-
+    # Obtener el plan para determinar la estrategia
     with Session(engine) as session:
-        # Verificar que el plan exista
         try:
             plan_uuid = uuid.UUID(data.plan_id)
         except ValueError:
@@ -120,7 +116,22 @@ async def register_tenant(data: TenantCreate):
         plan = session.exec(select(Plan).where(Plan.id == plan_uuid)).first()
         if not plan:
             raise HTTPException(status_code=404, detail="El plan seleccionado no existe")
-            
+        
+        strategy = plan.strategy or "schema"
+
+    # Aprovisionamiento según la estrategia del plan
+    print(f"Aprovisionando tenant con estrategia: {strategy}...")
+    if strategy == "database":
+        if not create_tenant_db(db_name=db_name):
+            raise HTTPException(status_code=500, detail="Error al provisionar la base de datos del negocio")
+    else:
+        # Para esquema, usamos el subdominio como nombre de esquema
+        if not create_tenant_schema(schema_name=data.subdomain):
+             raise HTTPException(status_code=500, detail="Error al provisionar el esquema del negocio")
+
+    with Session(engine) as session:
+        # (Ya tenemos el plan cargado arriba, pero lo re-obtenemos en esta sesión para evitar errores de detachement)
+        plan = session.get(Plan, plan_uuid)
         owner_role = session.exec(select(UserRole).where(UserRole.name == "owner")).first()
 
         try:
@@ -142,6 +153,7 @@ async def register_tenant(data: TenantCreate):
                 domain=data.domain,
                 db_name=db_name,
                 plan_id=plan.id,
+                strategy=strategy,
                 created_by=new_user.id,
             )
             session.add(new_tenant)
