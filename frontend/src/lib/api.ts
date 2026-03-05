@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 function getToken(): string {
     return typeof window !== "undefined"
@@ -55,7 +55,12 @@ export interface Tenant {
     subdomain: string;
     db_name: string;
     status: string;
-    plan: { id: string; name: string } | null;
+    plan: {
+        id: string;
+        name: string;
+        price: number;
+        billing_cycle: string;
+    } | null;
 }
 
 export interface User {
