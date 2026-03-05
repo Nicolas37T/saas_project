@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { publicApi, Plan } from "@/lib/api"
+import { publicApi, Plan, API_BASE } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -32,8 +32,8 @@ export default function RegisterForm() {
         const data = Object.fromEntries(formData.entries())
 
         try {
-            console.log("Enviando petición de registro a http://localhost:8000/register...")
-            const response = await fetch("http://localhost:8000/register", {
+            console.log(`Enviando petición de registro a ${API_BASE}/register...`)
+            const response = await fetch(`${API_BASE}/register`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
