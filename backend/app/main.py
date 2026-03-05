@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request, HTTPException
 from sqlmodel import SQLModel, Session, select
 from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.middleware.cors import CORSMiddleware
+import os
 import uuid
 
 from app.db.session import engine
