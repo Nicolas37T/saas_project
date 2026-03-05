@@ -4,10 +4,13 @@ from app.core.config import settings
 
 def create_tenant_db(db_name: str) -> bool:
     """
-    1. Crea una base de datos física en PostgreSQL para el nuevo tenant.
-    (En MVP simplificado, no creamos tablas dentro, queda vacía).
+    Crea una base de datos física en PostgreSQL para el nuevo tenant.
+    NOTA: En entornos de nube (como Railway/Render), esto puede fallar si el 
+    usuario de la base de datos no tiene permisos de 'CREATEDB'.
+    Se recomienda usar la estrategia de 'schema' para máxima compatibilidad.
     """
-    print(f"--- Aprovisionando DB: {db_name} ---")
+    print(f"--- Intentando aprovisionar DB física: {db_name} ---")
+    # Intentamos conectar a la base de datos 'postgres' para crear la nueva
     base_url = settings.DATABASE_URL.rsplit('/', 1)[0] + '/postgres'
 
     conn = None
@@ -17,13 +20,17 @@ def create_tenant_db(db_name: str) -> bool:
         cur = conn.cursor()
         cur.execute(f'CREATE DATABASE "{db_name}"')
         cur.close()
-        print(f"✅ DB '{db_name}' creada")
+        print(f"✅ DB '{db_name}' creada con éxito.")
         return True
     except psycopg2.errors.DuplicateDatabase:
         print(f"ℹ️ DB '{db_name}' ya existía.")
         return True
+    except psycopg2.errors.InsufficientPrivilege:
+        print(f"⚠️ Error: Permisos insuficientes para crear bases de datos físicas.")
+        print("MICA: Se recomienda cambiar el plan del tenant a uno que use la estrategia 'schema'.")
+        return False
     except Exception as e:
-        print(f"❌ Error al crear DB: {e}")
+        print(f"❌ Error inesperado al crear DB: {e}")
         return False
     finally:
         if conn:
