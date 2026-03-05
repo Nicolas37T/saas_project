@@ -15,19 +15,21 @@ from app.utils.provisioning import create_tenant_db, create_tenant_schema
 # ─── Aplicación ───────────────────────────────────────────────────────────────
 app = FastAPI(title="SaaS Multi-tenancy Manager")
 
-import os
-
 # ─── Middlewares ──────────────────────────────────────────────────────────────
-# IMPORTANTE: El último en añadirse es el primero en ejecutarse.
-app.add_middleware(BaseHTTPMiddleware, dispatch=tenant_middleware)
+# Usamos el decorador .middleware para mayor estabilidad que BaseHTTPMiddleware
+@app.middleware("http")
+async def dispatch_tenant(request: Request, call_next):
+    return await tenant_middleware(request, call_next)
 
 # Configuración de CORS
-origins = os.getenv("CORS_ORIGINS", "*").split(",")
+# Limpiamos espacios por si acaso el usuario los puso en las variables de entorno
+origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",")]
+is_wildcard = "*" in origins
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=True,
+    allow_credentials=not is_wildcard,
     allow_methods=["*"],
     allow_headers=["*"],
 )
