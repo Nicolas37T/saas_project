@@ -18,39 +18,31 @@ app = FastAPI(title="SaaS Multi-tenancy Manager")
 
 # ─── Middlewares ──────────────────────────────────────────────────────────────
 
-@app.middleware("http")
-async def tenant_middleware_wrapper(request: Request, call_next):
-    # Log para depuración en Railway
-    host = request.headers.get("host", "")
-    # print(f"DEBUG: Host recibido: {host} | Method: {request.method}")
-    
-    # Si es OPTIONS, dejamos que CORSMiddleware haga su trabajo sin interferir
-    if request.method == "OPTIONS":
-        return await call_next(request)
-        
-    try:
-        return await tenant_middleware(request, call_next)
-    except HTTPException as e:
-        # Si es un error de negocio no encontrado, devolvemos JSON limpio
-        from fastapi.responses import JSONResponse
-        return JSONResponse(status_code=e.status_code, content={"detail": e.detail})
-    except Exception as e:
-        from fastapi.responses import JSONResponse
-        return JSONResponse(status_code=500, content={"detail": f"Error interno: {str(e)}"})
-
-# Configuración de CORS - DEBE SER EL ÚLTIMO EN AÑADIRSE PARA SER EL PRIMERO EN EJECUTARSE
+# 1. CORS (Debe ser el exterior para manejar OPTIONS antes que nada)
 origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",")]
-# Aseguramos que si hay wildcard, no enviemos credentials
-allow_all = "*" in origins
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=not allow_all,
+    allow_credentials=False if "*" in origins else True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"]
 )
+
+# 2. Tenant Middleware (Lo ponemos después de CORS)
+@app.middleware("http")
+async def tenant_middleware_wrapper(request: Request, call_next):
+    if request.method == "OPTIONS":
+        return await call_next(request)
+    
+    try:
+        return await tenant_middleware(request, call_next)
+    except HTTPException as e:
+        from fastapi.responses import JSONResponse
+        return JSONResponse(status_code=e.status_code, content={"detail": e.detail})
+    except Exception as e:
+        print(f"ERROR CRÍTICO: {str(e)}")
+        from fastapi.responses import JSONResponse
+        return JSONResponse(status_code=500, content={"detail": "Error interno del servidor"})
 
 
 # ─── Startup ──────────────────────────────────────────────────────────────────
