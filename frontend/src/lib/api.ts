@@ -1,4 +1,7 @@
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const RAILWAY_BACKEND = "https://saasproject-production-0c1a.up.railway.app";
+export const API_BASE = process.env.NEXT_PUBLIC_API_URL ||
+    (typeof window !== "undefined" ? RAILWAY_BACKEND : "http://localhost:8000");
+
 if (typeof window !== "undefined") {
     console.log("🛠️ SaaS API Base URL:", API_BASE);
 }
