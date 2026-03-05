@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, Building2, ShieldAlert } from "lucide-react"
+import { API_BASE } from "@/lib/api"
 
 export default function LoginForm() {
     const router = useRouter()
@@ -27,7 +28,7 @@ export default function LoginForm() {
         try {
             // Ambos tipos de login usan el mismo endpoint global
             // El backend determina el rol y el subdominio
-            const response = await fetch("http://localhost:8000/auth/login", {
+            const response = await fetch(`${API_BASE}/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),
