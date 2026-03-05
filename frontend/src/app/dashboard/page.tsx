@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, Settings, ArrowRight, Activity, Bell } from "lucide-react";
+import { Building2, Settings, ArrowRight, Activity, Bell, Package, Users, Stethoscope, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function TenantDashboard() {
@@ -81,26 +81,63 @@ export default function TenantDashboard() {
 
                 {/* Coming Soon Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div className="group p-6 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-900/50 border border-slate-800 hover:border-slate-700 transition-all duration-300">
-                        <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                            <Settings className="text-blue-400" size={24} />
+                    <div className="group p-6 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-900/50 border border-slate-800 hover:border-blue-500/50 transition-all duration-300 cursor-pointer"
+                         onClick={() => router.push("/dashboard/products")}>
+                        <div className="w-12 h-12 rounded-xl bg-blue-600/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                            <Package className="text-blue-400" size={24} />
                         </div>
-                        <h3 className="text-lg font-semibold text-white mb-2">Configuración Inicial</h3>
-                        <p className="text-slate-400 text-sm mb-6">Completa el perfil de tu negocio y configura las opciones básicas de tu entorno.</p>
-                        <Button variant="outline" className="w-full bg-transparent border-slate-700 hover:bg-slate-800 text-white" disabled>
-                            Próximamente <ArrowRight size={16} className="ml-2" />
+                        <h3 className="text-lg font-semibold text-white mb-2">Productos</h3>
+                        <p className="text-slate-400 text-sm mb-6">Registra y administra los productos de tu negocio.</p>
+                        <Button variant="outline" className="w-full bg-transparent border-slate-700 hover:bg-slate-800 text-white">
+                            Ir a Productos <ArrowRight size={16} className="ml-2" />
+                        </Button>
+                    </div>
+
+                    <div className="group p-6 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-900/50 border border-slate-800 hover:border-cyan-500/50 transition-all duration-300 cursor-pointer"
+                         onClick={() => router.push("/dashboard/patients")}>
+                        <div className="w-12 h-12 rounded-xl bg-cyan-600/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                            <Users className="text-cyan-400" size={24} />
+                        </div>
+                        <h3 className="text-lg font-semibold text-white mb-2">Pacientes</h3>
+                        <p className="text-slate-400 text-sm mb-6">Registra pacientes, historial clínico y odontogramas.</p>
+                        <Button variant="outline" className="w-full bg-transparent border-slate-700 hover:bg-slate-800 text-white">
+                            Ir a Pacientes <ArrowRight size={16} className="ml-2" />
+                        </Button>
+                    </div>
+
+                    <div className="group p-6 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-900/50 border border-slate-800 hover:border-emerald-500/50 transition-all duration-300 cursor-pointer"
+                         onClick={() => router.push("/dashboard/treatments")}>
+                        <div className="w-12 h-12 rounded-xl bg-emerald-600/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                            <Stethoscope className="text-emerald-400" size={24} />
+                        </div>
+                        <h3 className="text-lg font-semibold text-white mb-2">Catálogo de Tratamientos</h3>
+                        <p className="text-slate-400 text-sm mb-6">Define tratamientos y sus precios para tu consultorio.</p>
+                        <Button variant="outline" className="w-full bg-transparent border-slate-700 hover:bg-slate-800 text-white">
+                            Ir a Tratamientos <ArrowRight size={16} className="ml-2" />
+                        </Button>
+                    </div>
+
+                    <div className="group p-6 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-900/50 border border-slate-800 hover:border-purple-500/50 transition-all duration-300 cursor-pointer"
+                         onClick={() => router.push("/dashboard/appointments")}>
+                        <div className="w-12 h-12 rounded-xl bg-purple-600/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                            <Calendar className="text-purple-400" size={24} />
+                        </div>
+                        <h3 className="text-lg font-semibold text-white mb-2">Citas</h3>
+                        <p className="text-slate-400 text-sm mb-6">Agenda y gestiona las citas de tus pacientes.</p>
+                        <Button variant="outline" className="w-full bg-transparent border-slate-700 hover:bg-slate-800 text-white">
+                            Ir a Citas <ArrowRight size={16} className="ml-2" />
                         </Button>
                     </div>
 
                     <div className="group p-6 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-900/50 border border-slate-800 hover:border-slate-700 transition-all duration-300">
-                        <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center mb-6 opacity-50">
-                            <Building2 className="text-slate-400" size={24} />
+                        <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                            <Settings className="text-blue-400" size={24} />
                         </div>
-                        <h3 className="text-lg font-semibold text-white mb-2">Módulo de Sucursales</h3>
-                        <p className="text-slate-400 text-sm mb-6">Administra múltiples puntos de venta físicos o ubicaciones para tu negocio.</p>
-                        <div className="inline-flex items-center text-xs font-medium text-slate-500 uppercase tracking-widest">
-                            En construcción
-                        </div>
+                        <h3 className="text-lg font-semibold text-white mb-2">Configuración</h3>
+                        <p className="text-slate-400 text-sm mb-6">Completa el perfil de tu negocio y configura las opciones básicas.</p>
+                        <Button variant="outline" className="w-full bg-transparent border-slate-700 hover:bg-slate-800 text-white" disabled>
+                            Próximamente <ArrowRight size={16} className="ml-2" />
+                        </Button>
                     </div>
                 </div>
             </main>
