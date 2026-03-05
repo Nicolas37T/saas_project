@@ -17,22 +17,39 @@ from app.utils.provisioning import create_tenant_db, create_tenant_schema
 app = FastAPI(title="SaaS Multi-tenancy Manager")
 
 # ─── Middlewares ──────────────────────────────────────────────────────────────
-# Usamos el decorador .middleware para mayor estabilidad que BaseHTTPMiddleware
-@app.middleware("http")
-async def dispatch_tenant(request: Request, call_next):
-    return await tenant_middleware(request, call_next)
 
-# Configuración de CORS
-# Limpiamos espacios por si acaso el usuario los puso en las variables de entorno
+@app.middleware("http")
+async def tenant_middleware_wrapper(request: Request, call_next):
+    # Log para depuración en Railway
+    host = request.headers.get("host", "")
+    # print(f"DEBUG: Host recibido: {host} | Method: {request.method}")
+    
+    # Si es OPTIONS, dejamos que CORSMiddleware haga su trabajo sin interferir
+    if request.method == "OPTIONS":
+        return await call_next(request)
+        
+    try:
+        return await tenant_middleware(request, call_next)
+    except HTTPException as e:
+        # Si es un error de negocio no encontrado, devolvemos JSON limpio
+        from fastapi.responses import JSONResponse
+        return JSONResponse(status_code=e.status_code, content={"detail": e.detail})
+    except Exception as e:
+        from fastapi.responses import JSONResponse
+        return JSONResponse(status_code=500, content={"detail": f"Error interno: {str(e)}"})
+
+# Configuración de CORS - DEBE SER EL ÚLTIMO EN AÑADIRSE PARA SER EL PRIMERO EN EJECUTARSE
 origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",")]
-is_wildcard = "*" in origins
+# Aseguramos que si hay wildcard, no enviemos credentials
+allow_all = "*" in origins
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=not is_wildcard,
+    allow_credentials=not allow_all,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 
