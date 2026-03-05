@@ -1,4 +1,7 @@
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+if (typeof window !== "undefined") {
+    console.log("🛠️ SaaS API Base URL:", API_BASE);
+}
 
 function getToken(): string {
     return typeof window !== "undefined"
