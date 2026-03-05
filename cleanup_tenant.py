@@ -11,7 +11,7 @@ if len(sys.argv) < 2:
     sys.exit(1)
 
 db_url = sys.argv[1]
-target_subdomain = "doñaluisa"
+target_subdomain = "postgresql://postgres:SqFJwbebNRKGxNZzXgaJZfweeiUZYLMr@gondola.proxy.rlwy.net:11450/railway"
 
 try:
     print(f"Conectando a la base de datos...")
