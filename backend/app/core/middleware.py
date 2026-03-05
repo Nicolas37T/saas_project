@@ -14,9 +14,14 @@ async def tenant_middleware(request: Request, call_next):
     # 2. Determinar el subdominio
     subdomain = None
     if "." in host:
-        # Si es una IP (ej: 127.0.0.1), no hay subdominio
         parts = host.split(".")
-        if not all(part.isdigit() for part in parts):
+        # Si es una IP (ej: 127.0.0.1) o localhost, no hay subdominio
+        if all(part.isdigit() for part in parts) or "localhost" in host:
+            subdomain = None
+        # Si es el dominio de Railway, no hay subdominio de tenant
+        elif "up.railway.app" in host:
+            subdomain = None
+        else:
             subdomain = parts[0]
     
     # Opción B: Usar un header para pruebas (X-Tenant) tiene prioridad
@@ -25,7 +30,7 @@ async def tenant_middleware(request: Request, call_next):
         subdomain = tenant_header
 
     # Si no hay subdominio o es una ruta reservada, es contexto GLOBAL
-    if subdomain in [None, "", "www", "localhost", "admin"]:
+    if subdomain in [None, "", "www", "localhost", "admin"] or (subdomain and subdomain.startswith("saasproject-production")):
         request.state.tenant = None
     else:
         # 3. Buscar el tenant en la DB maestra
