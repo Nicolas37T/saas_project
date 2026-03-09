@@ -21,12 +21,16 @@ def get_tenant_engine(db_name: str):
         tenant_engines[db_name] = create_engine(tenant_url)
     return tenant_engines[db_name]
 
-def get_session_for_tenant(tenant):
+from fastapi import Request
+
+def get_session_for_tenant(request: Request):
     """
     Generador de sesiones inteligente: 
+    - Extrae el tenant del estado de la petición (inyectado por el middleware).
     - Si el tenant es 'database', abre conexión a su DB dedicada.
     - Si es 'schema', usa la DB maestra y cambia el search_path.
     """
+    tenant = getattr(request.state, "tenant", None)
     if not tenant:
         with Session(engine) as session:
             yield session

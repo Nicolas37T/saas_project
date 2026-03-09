@@ -237,13 +237,14 @@ export default function TreatmentsPage() {
                       required
                       min="0"
                       step="0.01"
-                      value={newTreatment.price}
-                      onChange={(e) =>
+                      value={isNaN(newTreatment.price) ? "" : newTreatment.price}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
                         setNewTreatment({
                           ...newTreatment,
-                          price: parseFloat(e.target.value),
-                        })
-                      }
+                          price: isNaN(val) ? 0 : val,
+                        });
+                      }}
                       className="bg-slate-950/50 border-slate-800 text-white"
                     />
                   </div>
@@ -253,13 +254,14 @@ export default function TreatmentsPage() {
                     </label>
                     <Input
                       type="number"
-                      value={newTreatment.duration_minutes}
-                      onChange={(e) =>
+                      value={isNaN(newTreatment.duration_minutes) ? "" : newTreatment.duration_minutes}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
                         setNewTreatment({
                           ...newTreatment,
-                          duration_minutes: parseInt(e.target.value),
-                        })
-                      }
+                          duration_minutes: isNaN(val) ? 0 : val,
+                        });
+                      }}
                       className="bg-slate-950/50 border-slate-800 text-white"
                     />
                   </div>

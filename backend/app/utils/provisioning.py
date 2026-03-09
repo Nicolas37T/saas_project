@@ -58,12 +58,17 @@ def create_tenant_schema(schema_name: str) -> bool:
         
         with engine.connect() as sqla_conn:
             # Forzamos la busqueda de Tablas al nuevo esquema para esta conexion
-            sqla_conn.execute(text(f'SET search_path TO "{schema_name}"'))
+            # IMPORTANTE: Usamos comillas dobles para el nombre del esquema
+            sqla_conn.execute(text(f'SET search_path TO "{schema_name}", public'))
             
-            # Filtramos para que SOLO construya estas tablas
+            # Filtramos para que SOLO construya estas tablas en el esquema del tenant
             tenant_models = [Role, User, Setting, Patient, Treatment, MedicalHistory, Appointment, Payment, Odontogram]
             tenant_tables = [m.__table__ for m in tenant_models]
             
+            # Asociamos temporalmente el esquema a las tablas antes de crear
+            for table in tenant_tables:
+                table.schema = schema_name
+                
             SQLModel.metadata.create_all(sqla_conn, tables=tenant_tables)
             sqla_conn.commit()
 
