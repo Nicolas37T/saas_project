@@ -54,11 +54,17 @@ def create_tenant_schema(schema_name: str) -> bool:
         from sqlmodel import SQLModel
         from app.db.session import engine
         from sqlalchemy import text
-        from app.db import tenant_models # ensures models are registered
+        from app.db.tenant_models import Role, User, Setting, Patient, Treatment, MedicalHistory, Appointment, Payment, Odontogram
         
         with engine.connect() as sqla_conn:
+            # Forzamos la busqueda de Tablas al nuevo esquema para esta conexion
             sqla_conn.execute(text(f'SET search_path TO "{schema_name}"'))
-            SQLModel.metadata.create_all(sqla_conn)
+            
+            # Filtramos para que SOLO construya estas tablas
+            tenant_models = [Role, User, Setting, Patient, Treatment, MedicalHistory, Appointment, Payment, Odontogram]
+            tenant_tables = [m.__table__ for m in tenant_models]
+            
+            SQLModel.metadata.create_all(sqla_conn, tables=tenant_tables)
             sqla_conn.commit()
 
         print(f"✅ Schema '{schema_name}' creado con tablas inicializadas")

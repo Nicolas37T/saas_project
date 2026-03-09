@@ -49,7 +49,10 @@ async def tenant_middleware_wrapper(request: Request, call_next):
 @app.on_event("startup")
 def on_startup():
     """Crea las tablas y hace seed de los datos iniciales al arrancar."""
-    SQLModel.metadata.create_all(engine)
+    # Solo crear modelos globales en el schema public, no mezclar con tenant_models
+    global_models = [UserRole, Plan, Tenant, UserGlobal, Subscription]
+    global_tables = [m.__table__ for m in global_models]
+    SQLModel.metadata.create_all(engine, tables=global_tables)
 
     with Session(engine) as session:
         # 1. Seed de Roles
