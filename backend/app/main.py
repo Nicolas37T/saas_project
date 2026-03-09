@@ -68,7 +68,7 @@ def on_startup():
         for plan_name, price, max_u, strategy in [
             ("Plan Básico", 10.0, 5,  "schema"),
             ("Plan Pro",    30.0, 20, "schema"),
-            ("Plan Enterprise", 50.0, 100, "database"),
+            ("Plan Enterprise", 50.0, 100, "schema"), # Cambiado a schema para Railway
         ]:
             if not session.exec(select(Plan).where(Plan.name == plan_name)).first():
                 session.add(Plan(name=plan_name, price=price, billing_cycle="monthly", max_users=max_u, strategy=strategy))

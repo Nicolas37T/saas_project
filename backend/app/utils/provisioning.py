@@ -70,6 +70,12 @@ def create_tenant_schema(schema_name: str) -> bool:
                 table.schema = schema_name
                 
             SQLModel.metadata.create_all(sqla_conn, tables=tenant_tables)
+            
+            # IMPORTANTE: Reseteamos el schema de los objetos tabla para no afectar 
+            # otras partes del proceso en el mismo hilo de ejecución.
+            for table in tenant_tables:
+                table.schema = None
+                
             sqla_conn.commit()
 
         print(f"✅ Schema '{schema_name}' creado con tablas inicializadas")
