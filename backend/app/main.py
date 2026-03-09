@@ -259,4 +259,11 @@ async def login(data: LoginRequest):
 
 # ─── Routers ──────────────────────────────────────────────────────────────────
 from app.routers import admin as admin_router
+from app.routers import patients, treatments, appointments, payments, odontograms
+
 app.include_router(admin_router.router)
+app.include_router(patients.router, prefix="/api/tenant", tags=["Tenant - Patients"])
+app.include_router(treatments.router, prefix="/api/tenant", tags=["Tenant - Treatments"])
+app.include_router(appointments.router, prefix="/api/tenant", tags=["Tenant - Appointments"])
+app.include_router(payments.router, prefix="/api/tenant", tags=["Tenant - Payments"])
+app.include_router(odontograms.router, prefix="/api/tenant", tags=["Tenant - Odontograms"])

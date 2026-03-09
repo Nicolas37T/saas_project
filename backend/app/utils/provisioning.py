@@ -49,7 +49,19 @@ def create_tenant_schema(schema_name: str) -> bool:
         cur = conn.cursor()
         cur.execute(f'CREATE SCHEMA IF NOT EXISTS "{schema_name}"')
         cur.close()
-        print(f"✅ Schema '{schema_name}' creado")
+        
+        # Create all tables in the new schema
+        from sqlmodel import SQLModel
+        from app.db.session import engine
+        from sqlalchemy import text
+        from app.db import tenant_models # ensures models are registered
+        
+        with engine.connect() as sqla_conn:
+            sqla_conn.execute(text(f'SET search_path TO "{schema_name}"'))
+            SQLModel.metadata.create_all(sqla_conn)
+            sqla_conn.commit()
+
+        print(f"✅ Schema '{schema_name}' creado con tablas inicializadas")
         return True
     except Exception as e:
         print(f"❌ Error al crear Schema: {e}")
