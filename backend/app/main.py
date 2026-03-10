@@ -18,17 +18,7 @@ app = FastAPI(title="SaaS Multi-tenancy Manager")
 
 # ─── Middlewares ──────────────────────────────────────────────────────────────
 
-# 1. CORS (Debe ser el exterior para manejar OPTIONS antes que nada)
-origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",")]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=False if "*" in origins else True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# 2. Tenant Middleware (Lo ponemos después de CORS)
+# 1. Tenant Middleware
 @app.middleware("http")
 async def tenant_middleware_wrapper(request: Request, call_next):
     if request.method == "OPTIONS":
@@ -37,12 +27,35 @@ async def tenant_middleware_wrapper(request: Request, call_next):
     try:
         return await tenant_middleware(request, call_next)
     except HTTPException as e:
+        # Preservar errores 404, 401, etc. del middleware de tenant
         from fastapi.responses import JSONResponse
         return JSONResponse(status_code=e.status_code, content={"detail": e.detail})
     except Exception as e:
-        print(f"ERROR CRÍTICO: {str(e)}")
+        import traceback
+        print(f"ERROR CRÍTICO EN API: {str(e)}")
+        traceback.print_exc()
         from fastapi.responses import JSONResponse
-        return JSONResponse(status_code=500, content={"detail": "Error interno del servidor"})
+        return JSONResponse(
+            status_code=500, 
+            content={"detail": f"Error interno: {str(e)}"}
+        )
+
+# 2. CORS (Se añade al FINAL para que sea el middleware más EXTERNO)
+# Esto garantiza que las cabeceras CORS se añadan incluso si hay un error en el middleware de tenant.
+origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")]
+if "*" not in origins:
+    # Añadir variantes comunes de localhost si no están
+    for loc in ["http://localhost:3000", "http://127.0.0.1:3000"]:
+        if loc not in origins:
+            origins.append(loc)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 # ─── Startup ──────────────────────────────────────────────────────────────────

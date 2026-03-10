@@ -1,12 +1,15 @@
 const RAILWAY_BACKEND = "https://saasproject-production-0c1a.up.railway.app";
 export const API_BASE =
     process.env.NEXT_PUBLIC_API_URL ||
-    (typeof window !== "undefined" && !window.location.hostname.includes("localhost")
-        ? RAILWAY_BACKEND
-        : "http://localhost:8000");
+    (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+        ? "http://localhost:8000"
+        : (typeof window !== "undefined" && !window.location.hostname.includes("localhost")
+            ? RAILWAY_BACKEND
+            : "http://localhost:8000"));
 
 if (typeof window !== "undefined") {
     console.log("🛠️ SaaS API Base URL:", API_BASE);
+    console.log("🛠️ Current Tenant:", localStorage.getItem("tenant_subdomain") || "NONE (Global)");
 }
 
 function getToken(): string {
@@ -15,12 +18,27 @@ function getToken(): string {
         : "";
 }
 
+function getTenant(): string {
+    return typeof window !== "undefined"
+        ? localStorage.getItem("tenant_subdomain") || ""
+        : "";
+}
+
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+    const tenant = getTenant();
+    const token = getToken();
+
+    // Solo loguear en desarrollo para no ensuciar prod, o dejarlo para debug local
+    if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+        console.log(`🚀 API Request: ${path} | Tenant: ${tenant || 'GLOBAL'}`);
+    }
+
     const res = await fetch(`${API_BASE}${path}`, {
         ...options,
         headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${getToken()}`,
+            Authorization: `Bearer ${token}`,
+            "X-Tenant": tenant,
             ...(options?.headers || {}),
         },
     });

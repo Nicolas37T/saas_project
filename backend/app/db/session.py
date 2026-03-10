@@ -43,8 +43,11 @@ def get_session_for_tenant(request: Request):
             yield session
     else:
         # Estrategia: Esquema (Schema) dentro de la DB Maestra
-        with Session(engine) as session:
-            # Ponemos el esquema en el search_path para esta sesión
-            session.exec(text(f'SET search_path TO "{tenant.subdomain}"'))
-            yield session
+        # Usamos engine.connect() para asegurar que el search_path persista en la misma conexión
+        with engine.connect() as connection:
+            connection.execute(text(f'SET search_path TO "{tenant.subdomain}", public'))
+            connection.commit() # Algunos drivers requieren commit para cambios de sesión
+            
+            with Session(connection) as session:
+                yield session
 
