@@ -270,7 +270,8 @@ def delete_patient(
 def create_medical_history(
     patient_id: uuid.UUID,
     history: MedicalHistoryCreate,
-    session: Session = Depends(get_session_for_tenant)
+    session: Session = Depends(get_session_for_tenant),
+    current_user: UserGlobal = Depends(get_current_user)
 ):
     db_patient = session.get(Patient, patient_id)
     if not db_patient:
@@ -278,6 +279,7 @@ def create_medical_history(
 
     db_history = MedicalHistory.model_validate(history)
     db_history.patient_id = patient_id
+    db_history.created_by = current_user.id
     session.add(db_history)
     session.commit()
     session.refresh(db_history)
@@ -297,7 +299,8 @@ def get_medical_histories(
 def create_full_medical_history(
     patient_id: uuid.UUID,
     full_data: FullMedicalHistoryCreate,
-    session: Session = Depends(get_session_for_tenant)
+    session: Session = Depends(get_session_for_tenant),
+    current_user: UserGlobal = Depends(get_current_user)
 ):
     db_patient = session.get(Patient, patient_id)
     if not db_patient:
@@ -361,7 +364,8 @@ def create_full_medical_history(
             brushing_technique=full_data.brushing_technique,
             uses_floss=full_data.uses_floss,
             patient_id=patient_id,
-            treatment_id=db_treatment.id
+            treatment_id=db_treatment.id,
+            created_by=current_user.id
         )
         session.add(db_history)
 
