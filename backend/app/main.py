@@ -11,7 +11,7 @@ from app.core.middleware import tenant_middleware
 from app.core.security import get_password_hash, verify_password, create_access_token
 from app.schemas.auth import LoginRequest, Token
 from app.schemas.tenant import TenantCreate
-from app.utils.provisioning import create_tenant_db, create_tenant_schema
+from app.utils.provisioning import create_tenant_db, create_tenant_schema, seed_tenant_defaults
 
 # ─── Aplicación ───────────────────────────────────────────────────────────────
 app = FastAPI(title="SaaS Multi-tenancy Manager")
@@ -223,12 +223,31 @@ async def register_tenant(data: TenantCreate):
             session.commit()
 
             print(f"✅ Registro completado: {data.subdomain} (Plan: {plan.name})")
-            return {"message": "Registro exitoso", "subdomain": data.subdomain}
+
+            # ─── Seed de roles y admin en el schema del tenant ──────────────
+            # Guardar datos antes de cerrar la sesión
+            owner_email = new_user.email
+            owner_password_hash = new_user.password_hash
+            owner_full_name = new_user.full_name or data.business_name
 
         except Exception as e:
             session.rollback()
             print(f"❌ Error al guardar en BD Maestra: {e}")
             raise HTTPException(status_code=500, detail=f"Error al guardar los registros: {str(e)}")
+
+    # Correr el seed FUERA del bloque de sesión principal para evitar conflictos
+    seed_result = seed_tenant_defaults(
+        schema_name=data.subdomain,
+        owner_email=owner_email,
+        owner_password_hash=owner_password_hash,
+        owner_full_name=owner_full_name,
+        strategy=strategy,
+        db_name=db_name,
+    )
+    if not seed_result:
+        print(f"⚠️ El seed de defaults falló para {data.subdomain}, pero el tenant fue creado.")
+
+    return {"message": "Registro exitoso", "subdomain": data.subdomain}
 
 
 # ─── Login Global ─────────────────────────────────────────────────────────────

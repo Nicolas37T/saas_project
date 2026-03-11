@@ -176,16 +176,17 @@ export const adminApi = {
 // ─── TENANT DENTAL API ────────────────────────────────────────────────────────
 
 export interface Patient {
-  id: string;
-  first_name: string;
-  last_name: string;
-  phone?: string;
-  birth_day?: string;
-  address?: string;
-  description?: string;
-  status: boolean;
-  created_at: string;
-  updated_at: string;
+    id: string;
+    first_name: string;
+    last_name: string;
+    phone?: string;
+    birth_day?: string;
+    address?: string;
+    description?: string;
+    status: boolean;
+    created_at: string;
+    updated_at: string;
+    created_by?: string;
 }
 
 export interface Appointment {

@@ -2,11 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
 from sqlmodel import Session, select
 from typing import List
+from datetime import datetime
 import uuid
 from datetime import datetime
 
 from app.db.session import get_session_for_tenant
-from app.db.tenant_models import Patient, MedicalHistory, Treatment, Odontogram, Payment
+from app.db.tenant_models import Patient, MedicalHistory, Treatment, Odontogram, Payment, User
+from app.db.models import UserGlobal
+from app.core.deps import get_current_user
 from app.schemas.tenant_schemas import (
     PatientCreate, PatientRead, PatientUpdate,
     MedicalHistoryCreate, MedicalHistoryRead, MedicalHistoryUpdate,
@@ -190,9 +193,16 @@ def soft_delete_medical_history(
 @router.post("/", response_model=PatientRead)
 def create_patient(
     patient: PatientCreate,
-    session: Session = Depends(get_session_for_tenant)
+    session: Session = Depends(get_session_for_tenant),
+    current_user: UserGlobal = Depends(get_current_user)
 ):
     db_patient = Patient.model_validate(patient)
+    
+    # Buscar el usuario dentro del esquema del tenant por email
+    tenant_user = session.exec(select(User).where(User.email == current_user.email)).first()
+    if tenant_user:
+        db_patient.created_by = tenant_user.id
+        
     session.add(db_patient)
     session.commit()
     session.refresh(db_patient)
@@ -203,7 +213,10 @@ def get_patients(
     skip: int = 0, limit: int = 100,
     session: Session = Depends(get_session_for_tenant)
 ):
-    patients = session.exec(select(Patient).offset(skip).limit(limit)).all()
+    # Solo devuelve pacientes con status=True (eliminación suave)
+    patients = session.exec(
+        select(Patient).where(Patient.status == True).offset(skip).limit(limit)
+    ).all()
     return patients
 
 @router.get("/{patient_id}", response_model=PatientRead)
@@ -227,6 +240,7 @@ def update_patient(
         raise HTTPException(status_code=404, detail="Patient not found")
     
     update_data = patient_update.model_dump(exclude_unset=True)
+    update_data["updated_at"] = datetime.utcnow()  # Siempre actualizar timestamp
     db_patient.sqlmodel_update(update_data)
     
     session.add(db_patient)
@@ -239,13 +253,16 @@ def delete_patient(
     patient_id: uuid.UUID,
     session: Session = Depends(get_session_for_tenant)
 ):
+    """Eliminación suave: solo cambia status a False, no elimina de la BD."""
     db_patient = session.get(Patient, patient_id)
     if not db_patient:
         raise HTTPException(status_code=404, detail="Patient not found")
     
-    session.delete(db_patient)
+    db_patient.status = False
+    db_patient.updated_at = datetime.utcnow()
+    session.add(db_patient)
     session.commit()
-    return {"ok": True}
+    return {"ok": True, "message": "Paciente desactivado correctamente"}
 
 # --- MEDICAL HISTORY ---
 
