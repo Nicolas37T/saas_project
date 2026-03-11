@@ -138,6 +138,14 @@ class MedicalHistoryBase(BaseModel):
     allergies: Optional[str] = None
     medications: Optional[str] = None
     description: Optional[str] = None
+    
+    # Dental Hygiene
+    uses_toothbrush: bool = True
+    uses_dentifrice: bool = True
+    brushing_frequency: Optional[str] = None
+    brushing_technique: Optional[str] = None
+    uses_floss: bool = False
+    
     status: bool = True
     patient_id: uuid.UUID
     treatment_id: Optional[uuid.UUID] = None
@@ -213,6 +221,10 @@ class OdontogramBase(BaseModel):
     tooth_number: int
     tooth_type: str
     notes: Optional[str] = None
+    price: float = 0.0
+    description: Optional[str] = None
+    duration_minutes: Optional[int] = None
+    treatment_date: Optional[datetime] = None
     status: bool = True
     treatment_id: uuid.UUID
 
@@ -231,3 +243,66 @@ class OdontogramRead(OdontogramBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# --- Composite Creation Schemas ---
+
+class FullMedicalHistoryItem(BaseModel):
+    tooth_number: int
+    tooth_type: str
+    notes: Optional[str] = None
+    price: float = 0.0
+    description: Optional[str] = None
+    duration_minutes: Optional[int] = None
+    treatment_date: Optional[datetime] = None
+
+class FullMedicalHistoryCreate(BaseModel):
+    # Medical History data
+    conditions: Optional[str] = None
+    allergies: Optional[str] = None
+    medications: Optional[str] = None
+    medical_description: Optional[str] = None
+    
+    # Dental Hygiene
+    uses_toothbrush: bool = True
+    uses_dentifrice: bool = True
+    brushing_frequency: Optional[str] = None
+    brushing_technique: Optional[str] = None
+    uses_floss: bool = False
+    
+    # Treatment summary price
+    price: float = 0.0
+    
+    # Odontogram data (now contains per-tooth treatment data)
+    odontogram_items: List[FullMedicalHistoryItem] = []
+    
+    # Payment data
+    payment_amount: float
+    payment_method: str = "cash"
+    payment_status: str = "completed"
+
+
+class FullMedicalHistoryUpdate(BaseModel):
+    # Medical History data
+    conditions: Optional[str] = None
+    allergies: Optional[str] = None
+    medications: Optional[str] = None
+    medical_description: Optional[str] = None
+    
+    # Dental Hygiene
+    uses_toothbrush: bool = True
+    uses_dentifrice: bool = True
+    brushing_frequency: Optional[str] = None
+    brushing_technique: Optional[str] = None
+    uses_floss: bool = False
+    
+    # Treatment data summary
+    price: float = 0.0
+    
+    # Odontogram data
+    odontogram_items: List[FullMedicalHistoryItem] = []
+    
+    # Payment data
+    payment_amount: Optional[float] = None
+    payment_method: str = "cash"
+    payment_status: str = "completed"

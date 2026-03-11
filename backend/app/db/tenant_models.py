@@ -85,6 +85,14 @@ class MedicalHistory(SQLModel, table=True):
     allergies: Optional[str] = None
     medications: Optional[str] = None
     description: Optional[str] = None
+    
+    # Dental Hygiene Fields
+    uses_toothbrush: bool = Field(default=True)
+    uses_dentifrice: bool = Field(default=True)
+    brushing_frequency: Optional[str] = None
+    brushing_technique: Optional[str] = None
+    uses_floss: bool = Field(default=False)
+    
     status: bool = Field(default=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
@@ -125,6 +133,10 @@ class Odontogram(SQLModel, table=True):
     tooth_number: int
     tooth_type: str  # e.g., adult, child, molar, incisor etc.
     notes: Optional[str] = None
+    price: float = Field(default=0.0)
+    description: Optional[str] = None  # Treatment name for this tooth
+    duration_minutes: Optional[int] = None
+    treatment_date: Optional[datetime] = None
     status: bool = Field(default=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
