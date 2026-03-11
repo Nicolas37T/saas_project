@@ -38,7 +38,10 @@ def update_settings(
 ):
     """Actualiza la configuración del tenant actual"""
     # Verificar permisos de rol mediante la tabla global
-    if current_user.role.name not in ["admin", "superadmin", "owner"]:
+    from app.db.models import UserRole
+    role = session.get(UserRole, current_user.role_id)
+    
+    if not role or role.name not in ["admin", "superadmin", "owner"]:
         raise HTTPException(status_code=403, detail="Permisos insuficientes para editar la configuración.")
 
     setting = session.exec(select(Setting)).first()
