@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from app.db.session import get_session_for_tenant
 from app.db.tenant_models import Setting
-from app.core.deps import get_current_user
+from app.core.deps import get_current_tenant_user
 from app.db.models import UserGlobal
 
 router = APIRouter()
@@ -22,7 +22,7 @@ class SettingUpdate(BaseModel):
 @router.get("/settings", response_model=Setting)
 def get_settings(
     session: Session = Depends(get_session_for_tenant),
-    current_user: UserGlobal = Depends(get_current_user)
+    current_user = Depends(get_current_tenant_user)
 ):
     """Obtener la configuración del tenant actual"""
     setting = session.exec(select(Setting)).first()
@@ -34,14 +34,11 @@ def get_settings(
 def update_settings(
     data: SettingUpdate,
     session: Session = Depends(get_session_for_tenant),
-    current_user: UserGlobal = Depends(get_current_user)
+    current_user = Depends(get_current_tenant_user)
 ):
     """Actualiza la configuración del tenant actual"""
-    # Verificar permisos de rol mediante la tabla global
-    from app.db.models import UserRole
-    role = session.get(UserRole, current_user.role_id)
-    
-    if not role or role.name not in ["admin", "superadmin", "owner"]:
+    # Verificar permisos de rol mediante la dependencia híbrida
+    if current_user.computed_role not in ["admin", "superadmin", "owner"]:
         raise HTTPException(status_code=403, detail="Permisos insuficientes para editar la configuración.")
 
     setting = session.exec(select(Setting)).first()

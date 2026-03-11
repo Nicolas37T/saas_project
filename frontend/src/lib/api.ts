@@ -240,22 +240,73 @@ export interface Odontogram {
 }
 
 export interface SettingData {
-  business_name?: string;
-  logo_url?: string;
-  phone?: string;
-  cellphone?: string;
-  address?: string;
-  currency?: string;
+    business_name: string;
+    logo_url?: string;
+    phone?: string;
+    cellphone?: string;
+    address?: string;
+    currency?: string;
+}
+
+export interface Role {
+    id: string;
+    name: string;
+}
+
+export interface Employee {
+    id: string;
+    username: string;
+    email: string;
+    full_name: string;
+    role?: Role;
+    status: boolean;
+    created_at: string;
+}
+
+export interface EmployeeCreate {
+    username: string;
+    email: string;
+    full_name: string;
+    password: string;
+    role_id: string;
 }
 
 export const tenantApi = {
   // Config / Settings
-  getTenantConfig: () => apiFetch<SettingData>("/api/tenant/settings"),
-  updateTenantConfig: (data: SettingData) =>
-    apiFetch<SettingData>("/api/tenant/settings", {
+  getTenantConfig: async (): Promise<SettingData> => {
+    return apiFetch("/api/tenant/settings");
+  },
+  updateTenantConfig: async (data: Partial<SettingData>): Promise<SettingData> => {
+    return apiFetch("/api/tenant/settings", {
       method: "PUT",
       body: JSON.stringify(data),
-    }),
+    });
+  },
+
+  // Employees
+  getEmployees: async (): Promise<Employee[]> => {
+    return apiFetch("/api/tenant/employees");
+  },
+  getRoles: async (): Promise<Role[]> => {
+    return apiFetch("/api/tenant/roles");
+  },
+  createEmployee: async (data: EmployeeCreate): Promise<Employee> => {
+    return apiFetch("/api/tenant/employees", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+  updateEmployee: async (id: string, data: Partial<EmployeeCreate>): Promise<Employee> => {
+    return apiFetch(`/api/tenant/employees/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  },
+  deleteEmployee: async (id: string): Promise<{ ok: boolean }> => {
+    return apiFetch(`/api/tenant/employees/${id}`, {
+      method: "DELETE",
+    });
+  },
 
   // Patients
   getPatients: () => apiFetch<Patient[]>("/api/tenant/patients/"),

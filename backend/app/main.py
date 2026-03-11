@@ -250,6 +250,16 @@ async def register_tenant(data: TenantCreate):
     return {"message": "Registro exitoso", "subdomain": data.subdomain}
 
 
+@app.get("/auth/tenants")
+def get_public_tenants():
+    """Devuelve la lista de clínicas activas para el selector de login."""
+    with Session(engine) as session:
+        tenants = session.exec(
+            select(Tenant)
+            .where((Tenant.status == "active") | (Tenant.status == "created"))
+        ).all()
+        return [{"subdomain": t.subdomain, "name": t.business_name or t.subdomain} for t in tenants]
+
 # ─── Login Global ─────────────────────────────────────────────────────────────
 @app.post("/auth/login", response_model=Token)
 async def login(data: LoginRequest):
@@ -294,7 +304,7 @@ async def login(data: LoginRequest):
 
 # ─── Routers ──────────────────────────────────────────────────────────────────
 from app.routers import admin as admin_router
-from app.routers import patients, treatments, appointments, payments, odontograms, settings
+from app.routers import patients, treatments, appointments, payments, odontograms, settings, employees
 
 app.include_router(admin_router.router)
 app.include_router(patients.router, prefix="/api/tenant", tags=["Tenant - Patients"])
@@ -303,3 +313,4 @@ app.include_router(appointments.router, prefix="/api/tenant", tags=["Tenant - Ap
 app.include_router(payments.router, prefix="/api/tenant", tags=["Tenant - Payments"])
 app.include_router(odontograms.router, prefix="/api/tenant", tags=["Tenant - Odontograms"])
 app.include_router(settings.router, prefix="/api/tenant", tags=["Tenant - Settings"])
+app.include_router(employees.router, prefix="/api/tenant", tags=["Tenant - Employees"])

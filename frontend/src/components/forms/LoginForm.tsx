@@ -1,19 +1,39 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, Building2, ShieldAlert } from "lucide-react"
+import { Loader2, Building2, ShieldAlert, Users } from "lucide-react"
 import { API_BASE } from "@/lib/api"
 
 export default function LoginForm() {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
-    const [loginType, setLoginType] = useState<"tenant" | "admin">("tenant")
+    const [loginType, setLoginType] = useState<"tenant" | "employee" | "admin">("tenant")
+    const [tenants, setTenants] = useState<{subdomain: string, name: string}[]>([])
+    const [loadingTenants, setLoadingTenants] = useState(false)
+
+    useEffect(() => {
+        async function fetchTenants() {
+            try {
+                setLoadingTenants(true)
+                const res = await fetch(`${API_BASE}/auth/tenants`)
+                if (res.ok) {
+                    const data = await res.json()
+                    setTenants(data)
+                }
+            } catch (err) {
+                console.error("Error fetching tenants:", err)
+            } finally {
+                setLoadingTenants(false)
+            }
+        }
+        fetchTenants()
+    }, [])
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -26,11 +46,18 @@ export default function LoginForm() {
         const subdomain = formData.get("subdomain") as string
 
         try {
-            // Ambos tipos de login usan el mismo endpoint global
-            // El backend determina el rol y el subdominio
-            const response = await fetch(`${API_BASE}/auth/login`, {
+            let endpoint = `${API_BASE}/auth/login`
+            let headers: any = { "Content-Type": "application/json" }
+
+            if (loginType === "employee") {
+                if (!subdomain) throw new Error("Debes ingresar el código de negocio")
+                endpoint = `${API_BASE}/api/tenant/auth/login`
+                headers["X-Tenant"] = subdomain
+            }
+
+            const response = await fetch(endpoint, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers,
                 body: JSON.stringify({ email, password }),
             })
 
@@ -40,13 +67,17 @@ export default function LoginForm() {
             localStorage.setItem("token", result.access_token)
             localStorage.setItem("user_role", result.role)
 
-            if (result.role === "superadmin") {
-                if (loginType !== "admin") throw new Error("Debes usar el tab Administrador")
-                router.push("/admin/dashboard")
-            } else if (result.role === "owner") {
-                if (loginType !== "tenant") throw new Error("Debes usar el tab Mi Negocio")
+            if (result.is_employee) {
+                if (loginType !== "employee") throw new Error("Debes usar la pestaña Empleado")
                 localStorage.setItem("tenant_subdomain", result.subdomain)
-                router.push("/dashboard") // O donde sea el dashboard base por ahora
+                router.push("/dashboard")
+            } else if (result.role === "superadmin") {
+                if (loginType !== "admin") throw new Error("Debes usar la pestaña Plataforma")
+                router.push("/admin/dashboard")
+            } else if (result.role === "owner" || result.role === "admin") {
+                if (loginType !== "tenant") throw new Error("Debes usar la pestaña Mi Negocio")
+                localStorage.setItem("tenant_subdomain", result.subdomain)
+                router.push("/dashboard") 
             } else {
                 throw new Error("Rol no reconocido")
             }
@@ -62,9 +93,9 @@ export default function LoginForm() {
             <CardHeader>
                 <CardTitle className="text-2xl text-center">Iniciar Sesión</CardTitle>
                 <CardDescription className="text-center">
-                    {loginType === "tenant"
-                        ? "Ingresa a la consola de administración de tu negocio."
-                        : "Acceso exclusivo para administradores de la plataforma."}
+                    {loginType === "tenant" && "Ingresa a la consola de administración de tu negocio."}
+                    {loginType === "employee" && "Accede como colaborador de una clínica."}
+                    {loginType === "admin" && "Acceso exclusivo para administradores de la plataforma."}
                 </CardDescription>
             </CardHeader>
 
@@ -73,23 +104,57 @@ export default function LoginForm() {
                 <Button
                     type="button"
                     variant={loginType === "tenant" ? "default" : "outline"}
-                    className="flex-1 gap-2 text-xs h-8"
+                    className="flex-1 gap-1.5 text-xs h-8 px-2"
                     onClick={() => { setLoginType("tenant"); setError(""); }}
                 >
-                    <Building2 size={14} /> Mi Negocio
+                    <Building2 size={13} /> Negocio
+                </Button>
+                <Button
+                    type="button"
+                    variant={loginType === "employee" ? "default" : "outline"}
+                    className="flex-1 gap-1.5 text-xs h-8 px-2"
+                    onClick={() => { setLoginType("employee"); setError(""); }}
+                >
+                    <Users size={13} /> Empleado
                 </Button>
                 <Button
                     type="button"
                     variant={loginType === "admin" ? "default" : "outline"}
-                    className="flex-1 gap-2 text-xs h-8"
+                    className="flex-1 gap-1.5 text-xs h-8 px-2"
                     onClick={() => { setLoginType("admin"); setError(""); }}
                 >
-                    <ShieldAlert size={14} /> Plataforma
+                    <ShieldAlert size={13} /> Plataforma
                 </Button>
             </div>
 
             <form onSubmit={handleSubmit}>
                 <CardContent className="space-y-4">
+                    {loginType === "employee" && (
+                        <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                            <Label htmlFor="subdomain">Clínica / Negocio</Label>
+                            {loadingTenants ? (
+                                <div className="h-10 border border-input rounded-md flex items-center justify-center text-sm text-slate-500 bg-slate-50 animate-pulse">
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Cargando clínicas...
+                                </div>
+                            ) : tenants.length > 0 ? (
+                                <select 
+                                    id="subdomain" 
+                                    name="subdomain" 
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    required
+                                >
+                                    <option value="">Selecciona tu clínica</option>
+                                    {tenants.map(t => (
+                                        <option key={t.subdomain} value={t.subdomain}>
+                                            {t.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            ) : (
+                                <Input id="subdomain" name="subdomain" type="text" placeholder="ej: mi-clinica" required />
+                            )}
+                        </div>
+                    )}
                     <div className="space-y-2">
                         <Label htmlFor="email">Correo Electrónico</Label>
                         <Input id="email" name="email" type="email" placeholder="tu@email.com" required />

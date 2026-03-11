@@ -16,7 +16,8 @@ import {
   Menu,
   X,
   ClipboardClock,
-  User as UserIcon
+  User as UserIcon,
+  Contact
 } from "lucide-react";
 import { tenantApi } from "@/lib/api";
 
@@ -39,7 +40,7 @@ export default function DashboardLayout({
       const role = localStorage.getItem("user_role");
       const sub = localStorage.getItem("tenant_subdomain");
 
-      if (!token || role !== "owner" || !sub) {
+      if (!token || !sub) {
         router.push("/login");
         return;
       }
@@ -69,6 +70,9 @@ export default function DashboardLayout({
     );
   }
 
+  const role = typeof window !== 'undefined' ? localStorage.getItem("user_role") : "empleado";
+  const isPrivileged = role === "owner" || role === "admin" || role === "superadmin" || role === "administrador";
+
   const navItems = [
     { name: "Inicio", href: "/dashboard", icon: <Activity size={20} /> },
     {
@@ -96,11 +100,18 @@ export default function DashboardLayout({
       href: "/dashboard/payments",
       icon: <CreditCard size={20} />,
     },
-    {
-      name: "Configuración",
-      href: "/dashboard/settings",
-      icon: <SettingsIcon size={20} />,
-    },
+    ...(isPrivileged ? [
+      {
+        name: "Empleados",
+        href: "/dashboard/employees",
+        icon: <Contact size={20} />,
+      },
+      {
+        name: "Configuración",
+        href: "/dashboard/settings",
+        icon: <SettingsIcon size={20} />,
+      }
+    ] : []),
   ];
 
   return (
