@@ -76,7 +76,7 @@ export default function SettingsPage() {
                     Moneda Base
                   </label>
                   <select className="w-full p-2.5 rounded-md bg-slate-950/50 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50">
-                    <option>USD ($)</option>
+                    <option>BOB (Bs.)</option>
                     <option>EUR (€)</option>
                     <option>MXN ($)</option>
                   </select>

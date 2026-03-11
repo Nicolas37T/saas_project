@@ -139,7 +139,7 @@ export default function TreatmentsPage() {
                   <th className="p-4 pl-6 font-semibold">Procedimiento</th>
                   <th className="p-4 font-semibold">Paciente</th>
                   <th className="p-4 font-semibold">Estado</th>
-                  <th className="p-4 font-semibold">Honorarios</th>
+                  <th className="p-4 font-semibold">Honorarios (Bs.)</th>
                   <th className="p-4 font-semibold hidden md:table-cell">
                     Duración
                   </th>
@@ -180,7 +180,7 @@ export default function TreatmentsPage() {
                     </td>
                     <td className="p-4 text-slate-300 font-medium">
                       <div className="flex items-center">
-                        <DollarSign size={14} className="text-slate-500 mr-1" />
+                        <span className="text-slate-500 mr-1 font-bold">Bs.</span>
                         {t.price.toFixed(2)}
                       </div>
                     </td>
@@ -260,7 +260,7 @@ export default function TreatmentsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-300">
-                      Precio / Costo ($)
+                      Precio / Costo (Bs.)
                     </label>
                     <Input
                       type="number"

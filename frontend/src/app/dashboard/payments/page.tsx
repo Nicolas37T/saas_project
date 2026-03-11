@@ -79,9 +79,9 @@ export default function PaymentsPage() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("es-BO", {
       style: "currency",
-      currency: "USD",
+      currency: "BOB",
     }).format(amount);
   };
 
@@ -431,7 +431,7 @@ export default function PaymentsPage() {
                           const balance = Math.max(0, t.price - alreadyPaid);
                           return (
                             <option key={t.id} value={t.id}>
-                              {t.description} - Total: ${t.price} (Saldo: ${balance})
+                              {t.description} - Total: Bs. {t.price} (Saldo: Bs. {balance})
                             </option>
                           );
                         })}
@@ -450,15 +450,15 @@ export default function PaymentsPage() {
                         <>
                           <div className="flex justify-between text-sm">
                             <span className="text-slate-400">Costo Total:</span>
-                            <span className="text-white font-medium">${sel.price.toFixed(2)}</span>
+                            <span className="text-white font-medium">Bs. {sel.price.toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between text-sm">
                             <span className="text-slate-400">Pagado Acumulado:</span>
-                            <span className="text-emerald-400 font-medium">${paid.toFixed(2)}</span>
+                            <span className="text-emerald-400 font-medium">Bs. {paid.toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between text-sm border-t border-slate-800 mt-2 pt-2">
                             <span className="text-slate-300 font-medium">Saldo Deudor:</span>
-                            <span className="text-orange-400 font-bold">${bal.toFixed(2)}</span>
+                            <span className="text-orange-400 font-bold">Bs. {bal.toFixed(2)}</span>
                           </div>
                         </>
                       );
@@ -470,8 +470,8 @@ export default function PaymentsPage() {
                     Monto Cobrado
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
-                      $
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 font-medium text-sm">
+                      Bs
                     </div>
                     <Input
                       type="number"
