@@ -7,6 +7,7 @@ import uuid
 
 class Role(SQLModel, table=True):
     """Roles within a specific tenant (e.g., dentist, secretary)"""
+    
     __tablename__ = "roles"
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(unique=True, index=True)
