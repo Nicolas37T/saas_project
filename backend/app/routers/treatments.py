@@ -5,11 +5,11 @@ import uuid
 
 from app.db.session import get_session_for_tenant
 from app.db.tenant_models import Treatment
-from app.schemas.tenant_schemas import TreatmentCreate, TreatmentRead, TreatmentUpdate
+from app.schemas.tenant_schemas import TreatmentCreate, TreatmentRead, TreatmentUpdate, TreatmentReadWithRelations
 
 router = APIRouter(prefix="/treatments", tags=["Treatments"])
 
-@router.post("/", response_model=TreatmentRead)
+@router.post("/", response_model=TreatmentReadWithRelations)
 def create_treatment(
     treatment: TreatmentCreate,
     session: Session = Depends(get_session_for_tenant)
@@ -20,7 +20,7 @@ def create_treatment(
     session.refresh(db_treatment)
     return db_treatment
 
-@router.get("/", response_model=List[TreatmentRead])
+@router.get("/", response_model=List[TreatmentReadWithRelations])
 def get_treatments(
     skip: int = 0, limit: int = 100,
     session: Session = Depends(get_session_for_tenant)
@@ -28,7 +28,7 @@ def get_treatments(
     treatments = session.exec(select(Treatment).offset(skip).limit(limit)).all()
     return treatments
 
-@router.get("/{treatment_id}", response_model=TreatmentRead)
+@router.get("/{treatment_id}", response_model=TreatmentReadWithRelations)
 def get_treatment(
     treatment_id: uuid.UUID,
     session: Session = Depends(get_session_for_tenant)
@@ -38,7 +38,7 @@ def get_treatment(
         raise HTTPException(status_code=404, detail="Treatment not found")
     return treatment
 
-@router.put("/{treatment_id}", response_model=TreatmentRead)
+@router.put("/{treatment_id}", response_model=TreatmentReadWithRelations)
 def update_treatment(
     treatment_id: uuid.UUID,
     treatment_update: TreatmentUpdate,

@@ -16,11 +16,8 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export default function TreatmentsPage() {
   const [treatments, setTreatments] = useState<Treatment[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Solo para crear tratamiento se necesita, pero no hay fk a paciente directo en model de tratamiento
-  // En nuestro caso, Patient <-> MedicalHistory <-> Treatment.
-  // Por simplicidad en la UI conectaremos a pacientes si es posible o asumimos creaciones base.
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newTreatment, setNewTreatment] = useState({
@@ -28,6 +25,7 @@ export default function TreatmentsPage() {
     price: 0,
     status_treatments: "pending",
     duration_minutes: 30,
+    patient_id: "",
   });
 
   useEffect(() => {
@@ -37,8 +35,12 @@ export default function TreatmentsPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const data = await tenantApi.getTreatments();
-      setTreatments(data);
+      const [tData, pData] = await Promise.all([
+        tenantApi.getTreatments(),
+        tenantApi.getPatients(),
+      ]);
+      setTreatments(tData);
+      setPatients(pData);
     } catch (error) {
       console.error("Failed to load treatments", error);
     } finally {
@@ -61,6 +63,7 @@ export default function TreatmentsPage() {
         price: 0,
         status_treatments: "pending",
         duration_minutes: 30,
+        patient_id: "",
       });
       loadData();
     } catch (error) {
@@ -134,6 +137,7 @@ export default function TreatmentsPage() {
               <thead className="bg-slate-950/80 border-b border-slate-800 text-slate-400 font-medium text-sm">
                 <tr>
                   <th className="p-4 pl-6 font-semibold">Procedimiento</th>
+                  <th className="p-4 font-semibold">Paciente</th>
                   <th className="p-4 font-semibold">Estado</th>
                   <th className="p-4 font-semibold">Honorarios</th>
                   <th className="p-4 font-semibold hidden md:table-cell">
@@ -160,6 +164,9 @@ export default function TreatmentsPage() {
                           {t.description}
                         </span>
                       </div>
+                    </td>
+                    <td className="p-4 text-slate-300 font-medium whitespace-nowrap">
+                      {t.patient ? `${t.patient.first_name} ${t.patient.last_name}` : <span className="text-slate-500 italic">Sin asignar</span>}
                     </td>
                     <td className="p-4">
                       <span
@@ -210,6 +217,29 @@ export default function TreatmentsPage() {
                 Registrar Tratamiento
               </h2>
               <form onSubmit={handleCreateTreatment} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-300">
+                    Paciente
+                  </label>
+                  <select
+                    required
+                    className="w-full p-2.5 rounded-md bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                    value={newTreatment.patient_id}
+                    onChange={(e) =>
+                      setNewTreatment({
+                        ...newTreatment,
+                        patient_id: e.target.value,
+                      })
+                    }
+                  >
+                    <option value="">Seleccione un paciente...</option>
+                    {patients.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.first_name} {p.last_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">
                     Descripción del Procedimiento

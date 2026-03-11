@@ -62,6 +62,7 @@ class Patient(SQLModel, table=True):
     created_by: Optional[uuid.UUID] = Field(default=None, foreign_key="users.id")
     medical_histories: List["MedicalHistory"] = Relationship(back_populates="patient")
     appointments: List["Appointment"] = Relationship(back_populates="patient")
+    treatments: List["Treatment"] = Relationship(back_populates="patient")
 
 class Treatment(SQLModel, table=True):
     __tablename__ = "treatments"
@@ -78,6 +79,9 @@ class Treatment(SQLModel, table=True):
     payments: List["Payment"] = Relationship(back_populates="treatment")
     odontograms: List["Odontogram"] = Relationship(back_populates="treatment")
     medical_histories: List["MedicalHistory"] = Relationship(back_populates="treatment")
+
+    patient_id: Optional[uuid.UUID] = Field(default=None, foreign_key="patients.id")
+    patient: Optional["Patient"] = Relationship(back_populates="treatments")
 
 class MedicalHistory(SQLModel, table=True):
     __tablename__ = "medical_history"
