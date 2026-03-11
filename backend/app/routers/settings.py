@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from typing import Optional
 from pydantic import BaseModel
 
-from app.db.session import get_session
+from app.db.session import get_session_for_tenant
 from app.db.tenant_models import Setting
 from app.core.deps import get_current_user
 from app.db.models import UserGlobal
@@ -21,7 +21,7 @@ class SettingUpdate(BaseModel):
 
 @router.get("/settings", response_model=Setting)
 def get_settings(
-    session: Session = Depends(get_session),
+    session: Session = Depends(get_session_for_tenant),
     current_user: UserGlobal = Depends(get_current_user)
 ):
     """Obtener la configuración del tenant actual"""
@@ -33,7 +33,7 @@ def get_settings(
 @router.put("/settings", response_model=Setting)
 def update_settings(
     data: SettingUpdate,
-    session: Session = Depends(get_session),
+    session: Session = Depends(get_session_for_tenant),
     current_user: UserGlobal = Depends(get_current_user)
 ):
     """Actualiza la configuración del tenant actual"""
