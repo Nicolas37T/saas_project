@@ -1,6 +1,7 @@
 "use client";
 
-import { Building2, User, Key, Save } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Building2, User, Key, Save, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,8 +11,78 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import { tenantApi } from "@/lib/api";
+
+type SettingData = {
+  business_name: string;
+  logo_url: string;
+  phone: string;
+  cellphone: string;
+  address: string;
+  currency: string;
+};
 
 export default function SettingsPage() {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState<SettingData>({
+    business_name: "",
+    logo_url: "",
+    phone: "",
+    cellphone: "",
+    address: "",
+    currency: "Bs.",
+  });
+
+  useEffect(() => {
+    async function fetchSettings() {
+      try {
+        const response = await tenantApi.getTenantConfig();
+        if (response) {
+          setFormData({
+            business_name: response.business_name || "",
+            logo_url: response.logo_url || "",
+            phone: response.phone || "",
+            cellphone: response.cellphone || "",
+            address: response.address || "",
+            currency: response.currency || "Bs.",
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchSettings();
+  }, []);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await tenantApi.updateTenantConfig(formData);
+      alert("Configuración Guardada");
+      // Opcionalmente forzar la recarga para que el Layout/Sidebar lea la nueva config (o manejarlo por estado global)
+      window.location.reload(); 
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      alert("Error al guardar la configuración");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="text-white text-center py-20">Cargando configuración...</div>;
+  }
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div>
@@ -57,46 +128,98 @@ export default function SettingsPage() {
                   Nombre del Negocio
                 </label>
                 <Input
-                  defaultValue="Mi Clínica Dental"
+                  name="business_name"
+                  value={formData.business_name}
+                  onChange={handleChange}
                   className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500/50"
                 />
               </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                  <ImageIcon size={14} /> Logo URL
+                </label>
+                <Input
+                  name="logo_url"
+                  placeholder="https://ejemplo.com/logo.png"
+                  value={formData.logo_url}
+                  onChange={handleChange}
+                  className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500/50"
+                />
+                {formData.logo_url && (
+                    <div className="mt-2 p-2 bg-slate-900 rounded-lg border border-slate-800 inline-block">
+                        <img src={formData.logo_url} alt="Logo preview" className="h-10 object-contain" />
+                    </div>
+                )}
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">
                     Teléfono
                   </label>
                   <Input
+                    name="phone"
                     placeholder="+1 234 567 890"
+                    value={formData.phone}
+                    onChange={handleChange}
                     className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500/50"
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">
-                    Moneda Base
+                    Celular
                   </label>
-                  <select className="w-full p-2.5 rounded-md bg-slate-950/50 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50">
-                    <option>USD ($)</option>
-                    <option>EUR (€)</option>
-                    <option>MXN ($)</option>
-                  </select>
+                  <Input
+                    name="cellphone"
+                    placeholder="77766555"
+                    value={formData.cellphone}
+                    onChange={handleChange}
+                    className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500/50"
+                  />
                 </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">
-                  Dirección
-                </label>
-                <Input
-                  placeholder="Av. Principal, Edificio 4"
-                  className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500/50"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-300">
+                      Dirección
+                    </label>
+                    <Input
+                      name="address"
+                      placeholder="Av. Principal, Edificio 4"
+                      value={formData.address}
+                      onChange={handleChange}
+                      className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500/50"
+                    />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-300">
+                    Moneda Base
+                  </label>
+                  <select 
+                    name="currency"
+                    value={formData.currency}
+                    onChange={handleChange}
+                    className="w-full p-2.5 rounded-md bg-slate-950/50 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  >
+                    <option value="Bs.">Bolivianos (Bs.)</option>
+                    <option value="USD ($)">USD ($)</option>
+                    <option value="EUR (€)">EUR (€)</option>
+                    <option value="MXN ($)">MXN ($)</option>
+                  </select>
+                </div>
               </div>
             </CardContent>
           </Card>
 
           <div className="flex justify-end pt-4">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white flex items-center shadow-[0_0_15px_rgba(37,99,235,0.3)]">
-              <Save size={16} className="mr-2" /> Guardar Cambios
+            <Button 
+                onClick={handleSave} 
+                disabled={saving}
+                className="bg-blue-600 hover:bg-blue-700 text-white flex items-center shadow-[0_0_15px_rgba(37,99,235,0.3)] disabled:opacity-50"
+            >
+              <Save size={16} className="mr-2" /> 
+              {saving ? "Guardando..." : "Guardar Cambios"}
             </Button>
           </div>
         </div>

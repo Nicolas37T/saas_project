@@ -181,6 +181,21 @@ def seed_tenant_defaults(
                         session.commit()
                     print(f"  ℹ️ Usuario '{owner_email}' ya existía en el tenant.")
 
+                # ── 3. Crear Setting inicial ───────────────────────────────────────
+                from app.db.tenant_models import Setting
+                existing_setting = session.exec(select(Setting)).first()
+                if not existing_setting:
+                    new_setting = Setting(
+                        business_name=owner_full_name,
+                        currency="Bs.",
+                        created_by=existing_user.id if existing_user else tenant_admin.id
+                    )
+                    session.add(new_setting)
+                    session.commit()
+                    print(f"  ✅ Setting inicial creado para '{owner_full_name}'.")
+                else:
+                    print(f"  ℹ️ Setting inicial ya existía en el tenant.")
+
         print(f"✅ Seed completado para tenant: {schema_name}")
         return True
 

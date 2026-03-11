@@ -239,7 +239,24 @@ export interface Odontogram {
   treatment_id: string;
 }
 
+export interface SettingData {
+  business_name?: string;
+  logo_url?: string;
+  phone?: string;
+  cellphone?: string;
+  address?: string;
+  currency?: string;
+}
+
 export const tenantApi = {
+  // Config / Settings
+  getTenantConfig: () => apiFetch<SettingData>("/api/tenant/settings"),
+  updateTenantConfig: (data: SettingData) =>
+    apiFetch<SettingData>("/api/tenant/settings", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
   // Patients
   getPatients: () => apiFetch<Patient[]>("/api/tenant/patients/"),
   getPatient: (id: string) => apiFetch<Patient>(`/api/tenant/patients/${id}`),

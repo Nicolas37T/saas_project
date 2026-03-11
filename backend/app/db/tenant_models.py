@@ -40,6 +40,10 @@ class Setting(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     business_name: str
     logo_url: Optional[str] = None
+    phone: Optional[str] = None
+    cellphone: Optional[str] = None
+    address: Optional[str] = None
+    currency: str = Field(default="Bs.")
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     created_by: Optional[uuid.UUID] = Field(default=None, foreign_key="users.id")
