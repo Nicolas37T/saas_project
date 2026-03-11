@@ -186,6 +186,7 @@ export interface Patient {
   status: boolean;
   created_at: string;
   updated_at: string;
+  created_by?: string;
 }
 
 export interface Appointment {
@@ -217,6 +218,7 @@ export interface MedicalHistory {
   patient_id: string;
   treatment_id?: string;
   created_at: string;
+  created_by?: string;
 }
 
 export interface Payment {
