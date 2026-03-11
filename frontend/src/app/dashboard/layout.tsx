@@ -15,6 +15,7 @@ import {
   Stethoscope,
   Menu,
   X,
+  ClipboardClock
 } from "lucide-react";
 
 export default function DashboardLayout({
@@ -56,6 +57,11 @@ export default function DashboardLayout({
       name: "Pacientes",
       href: "/dashboard/patients",
       icon: <Users size={20} />,
+    },
+    {
+      name: "Historial Médico",
+      href: "/dashboard/historyPatients",
+      icon: <ClipboardClock size={20} />,
     },
     {
       name: "Citas",
