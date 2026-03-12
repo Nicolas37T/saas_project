@@ -85,7 +85,7 @@ export default function PatientProfilePage({
         ]);
         setPatient(patientData);
         setHistory(historyData);
-        setAppointments(appointmentsData.filter(a => a.patient_id === id));
+        setAppointments(appointmentsData.filter(a => a.patient_id === id && a.appointment_status !== "completed" && a.appointment_status !== "cancelled"));
         setTreatments(treatmentsData.filter(t => t.patient_id === id));
         setEmployeesList(employees.filter((emp: Employee) => emp.status));
       } catch (error) {
@@ -252,6 +252,15 @@ export default function PatientProfilePage({
                         {new Date(apt.appointment_date).toLocaleDateString()} a las {new Date(apt.appointment_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                       </p>
                       <p className="text-xs text-slate-400 mt-1 uppercase">Estado: {translateStatus(apt.appointment_status, appointmentStatusMap)}</p>
+                      {apt.assigned_doctor_id && (
+                        <p className="text-xs text-blue-400 mt-1 font-medium">
+                          👨‍⚕️ Dr. {
+                            employeesList.find(e => e.id === apt.assigned_doctor_id)?.username || 
+                            employeesList.find(e => e.id === apt.assigned_doctor_id)?.full_name || 
+                            "Asignado"
+                          }
+                        </p>
+                      )}
                       {apt.notes && <p className="text-xs text-slate-500 mt-1">{apt.notes}</p>}
                     </div>
                   ))}
