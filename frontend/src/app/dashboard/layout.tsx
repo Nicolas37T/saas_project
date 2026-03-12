@@ -15,8 +15,11 @@ import {
   Stethoscope,
   Menu,
   X,
-  ClipboardClock
+  ClipboardClock,
+  User as UserIcon,
+  Contact
 } from "lucide-react";
+import { tenantApi } from "@/lib/api";
 
 export default function DashboardLayout({
   children,
@@ -26,21 +29,37 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [subdomain, setSubdomain] = useState("");
+  const [tenantName, setTenantName] = useState("");
+  const [tenantLogo, setTenantLogo] = useState("");
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const role = localStorage.getItem("user_role");
-    const sub = localStorage.getItem("tenant_subdomain");
+    async function loadTenantData() {
+      const token = localStorage.getItem("token");
+      const role = localStorage.getItem("user_role");
+      const sub = localStorage.getItem("tenant_subdomain");
 
-    if (!token || role !== "owner" || !sub) {
-      router.push("/login");
-      return;
+      if (!token || !sub) {
+        router.push("/login");
+        return;
+      }
+
+      setSubdomain(sub);
+      
+      try {
+        const config = await tenantApi.getTenantConfig();
+        if (config) {
+            setTenantName(config.business_name || sub);
+            setTenantLogo(config.logo_url || "");
+        }
+      } catch (e) {
+        setTenantName(sub);
+      }
+
+      setLoading(false);
     }
-
-    setSubdomain(sub);
-    setLoading(false);
+    loadTenantData();
   }, [router]);
 
   if (loading) {
@@ -50,6 +69,9 @@ export default function DashboardLayout({
       </div>
     );
   }
+
+  const role = typeof window !== 'undefined' ? localStorage.getItem("user_role") : "empleado";
+  const isPrivileged = role === "owner" || role === "admin" || role === "superadmin" || role === "administrador";
 
   const navItems = [
     { name: "Inicio", href: "/dashboard", icon: <Activity size={20} /> },
@@ -78,11 +100,18 @@ export default function DashboardLayout({
       href: "/dashboard/payments",
       icon: <CreditCard size={20} />,
     },
-    {
-      name: "Configuración",
-      href: "/dashboard/settings",
-      icon: <SettingsIcon size={20} />,
-    },
+    ...(isPrivileged ? [
+      {
+        name: "Empleados",
+        href: "/dashboard/employees",
+        icon: <Contact size={20} />,
+      },
+      {
+        name: "Configuración",
+        href: "/dashboard/settings",
+        icon: <SettingsIcon size={20} />,
+      }
+    ] : []),
   ];
 
   return (
@@ -90,11 +119,15 @@ export default function DashboardLayout({
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 border-r border-slate-800 bg-slate-900/50 backdrop-blur-md fixed h-full z-20">
         <div className="p-6 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-            <Building2 size={18} />
-          </div>
-          <span className="text-white font-bold text-lg tracking-tight capitalize">
-            {subdomain}
+          {tenantLogo ? (
+            <img src={tenantLogo} alt="Logo" className="h-8 w-8 object-contain rounded-full shadow-lg" />
+          ) : (
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+              <Building2 size={18} />
+            </div>
+          )}
+          <span className="text-white font-bold text-lg tracking-tight capitalize truncate" title={tenantName || subdomain}>
+            {tenantName || subdomain}
           </span>
         </div>
 
@@ -137,11 +170,15 @@ export default function DashboardLayout({
       {/* Mobile Header & Overlay */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md z-30 flex items-center justify-between px-4">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white">
-            <Building2 size={18} />
-          </div>
-          <span className="text-white font-bold tracking-tight capitalize">
-            {subdomain}
+          {tenantLogo ? (
+            <img src={tenantLogo} alt="Logo" className="h-8 w-8 object-contain rounded-full shadow-lg" />
+          ) : (
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white">
+              <Building2 size={18} />
+            </div>
+          )}
+          <span className="text-white font-bold tracking-tight capitalize truncate max-w-[150px]" title={tenantName || subdomain}>
+            {tenantName || subdomain}
           </span>
         </div>
         <button

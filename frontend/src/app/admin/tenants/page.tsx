@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { adminApi, Tenant } from "@/lib/api";
 import { Building2, AlertTriangle, CheckCircle, XCircle, Trash2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmModal } from "@/components/ui/custom-modal";
 import Link from "next/link";
 
 export default function TenantsPage() {
@@ -11,6 +12,8 @@ export default function TenantsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+    const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
 
     useEffect(() => {
         fetchTenants();
@@ -42,15 +45,22 @@ export default function TenantsPage() {
     }
 
     async function deleteTenant(t: Tenant) {
-        if (!confirm(`¿Eliminar el tenant "${t.business_name}"? Esta acción es irreversible.`)) return;
-        setActionLoading(t.id);
+        setSelectedTenant(t);
+        setIsDeleteConfirmOpen(true);
+    }
+
+    async function confirmDelete() {
+        if (!selectedTenant) return;
+        setIsDeleteConfirmOpen(false);
+        setActionLoading(selectedTenant.id);
         try {
-            await adminApi.deleteTenant(t.id);
-            setTenants((prev) => prev.filter((x) => x.id !== t.id));
+            await adminApi.deleteTenant(selectedTenant.id);
+            setTenants((prev) => prev.filter((x) => x.id !== selectedTenant.id));
         } catch (e: any) {
             setError(e.message);
         } finally {
             setActionLoading(null);
+            setSelectedTenant(null);
         }
     }
 
@@ -186,6 +196,21 @@ export default function TenantsPage() {
                     </div>
                 )}
             </div>
+
+            <ConfirmModal
+                isOpen={isDeleteConfirmOpen}
+                onClose={() => setIsDeleteConfirmOpen(false)}
+                onConfirm={confirmDelete}
+                title="¿Eliminar negocio?"
+                message={
+                    <span>
+                        ¿Estás seguro de que deseas eliminar el negocio <strong>{selectedTenant?.business_name}</strong>? Esta acción es irreversible y se perderán todos los datos asociados del sistema.
+                    </span>
+                }
+                confirmText="Sí, eliminar"
+                variant="danger"
+                icon={<Trash2 size={24} className="text-red-500" />}
+            />
         </div>
     );
 }

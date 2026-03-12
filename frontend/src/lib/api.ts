@@ -239,7 +239,75 @@ export interface Odontogram {
   treatment_id: string;
 }
 
+export interface SettingData {
+    business_name: string;
+    logo_url?: string;
+    phone?: string;
+    cellphone?: string;
+    address?: string;
+    currency?: string;
+}
+
+export interface Role {
+    id: string;
+    name: string;
+}
+
+export interface Employee {
+    id: string;
+    username: string;
+    email: string;
+    full_name: string;
+    role?: Role;
+    status: boolean;
+    created_at: string;
+}
+
+export interface EmployeeCreate {
+    username: string;
+    email: string;
+    full_name: string;
+    password: string;
+    role_id: string;
+}
+
 export const tenantApi = {
+  // Config / Settings
+  getTenantConfig: async (): Promise<SettingData> => {
+    return apiFetch("/api/tenant/settings");
+  },
+  updateTenantConfig: async (data: Partial<SettingData>): Promise<SettingData> => {
+    return apiFetch("/api/tenant/settings", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  },
+
+  // Employees
+  getEmployees: async (): Promise<Employee[]> => {
+    return apiFetch("/api/tenant/employees");
+  },
+  getRoles: async (): Promise<Role[]> => {
+    return apiFetch("/api/tenant/roles");
+  },
+  createEmployee: async (data: EmployeeCreate): Promise<Employee> => {
+    return apiFetch("/api/tenant/employees", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+  updateEmployee: async (id: string, data: Partial<EmployeeCreate>): Promise<Employee> => {
+    return apiFetch(`/api/tenant/employees/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  },
+  deleteEmployee: async (id: string): Promise<{ ok: boolean }> => {
+    return apiFetch(`/api/tenant/employees/${id}`, {
+      method: "DELETE",
+    });
+  },
+
   // Patients
   getPatients: () => apiFetch<Patient[]>("/api/tenant/patients/"),
   getPatient: (id: string) => apiFetch<Patient>(`/api/tenant/patients/${id}`),
@@ -320,6 +388,10 @@ export const tenantApi = {
     apiFetch<Appointment>(`/api/tenant/appointments/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
+    }),
+  deleteAppointment: (id: string) =>
+    apiFetch<{ ok: boolean }>(`/api/tenant/appointments/${id}`, {
+      method: "DELETE",
     }),
 
   // Payments

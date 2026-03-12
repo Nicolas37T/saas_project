@@ -33,6 +33,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { CustomModal, SuccessModal } from "@/components/ui/custom-modal";
 
 import { useParams, useRouter } from "next/navigation";
 
@@ -46,6 +47,10 @@ export default function EditHistoryPatientPage() {
   const [submitting, setSubmitting] = useState(false);
   const [searchPatient, setSearchPatient] = useState("");
   const [isPatientMenuOpen, setIsPatientMenuOpen] = useState(false);
+
+  // Modal State
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [errorModal, setErrorModal] = useState<{isOpen: boolean, message: string}>({ isOpen: false, message: "" });
 
   // Form State
   const [selectedPatientId, setSelectedPatientId] = useState("");
@@ -99,7 +104,7 @@ export default function EditHistoryPatientPage() {
         }
       } catch (error) {
         console.error("Error initializing edit view", error);
-        alert("Error al cargar los datos para edición.");
+        setErrorModal({ isOpen: true, message: "No se pudieron cargar los datos del historial clínico." });
       } finally {
         setLoading(false);
       }
@@ -194,7 +199,10 @@ export default function EditHistoryPatientPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedPatientId) return alert("Por favor selecciona un paciente");
+    if (!selectedPatientId) {
+      setErrorModal({ isOpen: true, message: "Por favor selecciona un paciente antes de continuar." });
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -202,11 +210,13 @@ export default function EditHistoryPatientPage() {
         ...formData,
         odontogram_items: odontogramItems,
       });
-      alert("Historial médico actualizado con éxito");
-      router.push("/dashboard/historyPatients");
+      setIsSuccessModalOpen(true);
+      setTimeout(() => {
+        router.push("/dashboard/historyPatients");
+      }, 1500);
     } catch (error) {
       console.error("Error submitting form", error);
-      alert("Error al guardar el historial");
+      setErrorModal({ isOpen: true, message: "Error al actualizar el historial. Verifica los datos e intenta de nuevo." });
     } finally {
       setSubmitting(false);
     }
@@ -863,6 +873,37 @@ export default function EditHistoryPatientPage() {
           </div>
         </div>
       </form>
+
+      {/* Modals Section */}
+      <SuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={() => {
+            setIsSuccessModalOpen(false);
+            router.push("/dashboard/historyPatients");
+        }}
+        title="Operación Exitosa"
+        message="Historial médico actualizado correctamente en el sistema."
+      />
+
+      <CustomModal
+        isOpen={errorModal.isOpen}
+        onClose={() => setErrorModal({ ...errorModal, isOpen: false })}
+        title="Error en el Sistema"
+      >
+        <div className="space-y-4">
+          <p className="text-slate-300 text-sm leading-relaxed">
+            {errorModal.message}
+          </p>
+          <div className="flex justify-end pt-4">
+            <Button 
+                onClick={() => setErrorModal({ ...errorModal, isOpen: false })}
+                className="bg-rose-600 hover:bg-rose-700 text-white"
+            >
+              Cerrar
+            </Button>
+          </div>
+        </div>
+      </CustomModal>
     </div>
   );
 }
