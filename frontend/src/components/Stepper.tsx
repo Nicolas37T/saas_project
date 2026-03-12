@@ -1,0 +1,70 @@
+"use client";
+import React from "react";
+import { Users, Activity, Stethoscope, CheckCircle2 } from "lucide-react";
+
+interface StepperProps {
+  currentStep: number;
+}
+
+export const Stepper: React.FC<StepperProps> = ({ currentStep }) => {
+  const steps = [
+    {
+      step: 1,
+      label: "Paciente e Higiene",
+      icon: <Users size={18} />,
+    },
+    {
+      step: 2,
+      label: "Tratamientos",
+      icon: <Activity size={18} />,
+    },
+    {
+      step: 3,
+      label: "Evolución y Antecedentes",
+      icon: <Stethoscope size={18} />,
+    },
+  ];
+
+  return (
+    <div className="mb-8 overflow-x-auto pb-4 custom-scrollbar">
+      <div className="flex items-center justify-between min-w-[600px] px-4">
+        {steps.map((item, index) => (
+          <React.Fragment key={item.step}>
+            <div className="flex flex-col items-center gap-2 relative">
+              <div
+                className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-lg ${
+                  currentStep >= item.step
+                    ? "bg-blue-600 text-white shadow-blue-500/30 ring-4 ring-blue-600/10"
+                    : "bg-slate-800 text-slate-500 shadow-none ring-0"
+                }`}
+              >
+                {currentStep > item.step ? (
+                  <CheckCircle2 size={20} />
+                ) : (
+                  item.icon
+                )}
+              </div>
+              <span
+                className={`text-[10px] uppercase font-bold tracking-wider transition-colors duration-300 ${
+                  currentStep >= item.step ? "text-blue-400" : "text-slate-500"
+                }`}
+              >
+                {item.label}
+              </span>
+            </div>
+            {index < steps.length - 1 && (
+              <div className="flex-1 h-[2px] mx-4 bg-slate-800 relative overflow-hidden mb-6">
+                <div
+                  className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 transition-transform duration-700 ease-in-out"
+                  style={{
+                    transform: `translateX(${currentStep > item.step ? "0%" : "-100%"})`,
+                  }}
+                ></div>
+              </div>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  );
+};

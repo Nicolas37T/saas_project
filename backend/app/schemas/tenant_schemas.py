@@ -277,11 +277,7 @@ class FullMedicalHistoryCreate(BaseModel):
     
     # Odontogram data (now contains per-tooth treatment data)
     odontogram_items: List[FullMedicalHistoryItem] = []
-    
-    # Payment data
-    payment_amount: float
-    payment_method: str = "cash"
-    payment_status: str = "completed"
+
 
 
 class FullMedicalHistoryUpdate(BaseModel):
@@ -304,10 +300,8 @@ class FullMedicalHistoryUpdate(BaseModel):
     # Odontogram data
     odontogram_items: List[FullMedicalHistoryItem] = []
     
-    # Payment data
-    payment_amount: Optional[float] = None
-    payment_method: str = "cash"
-    payment_status: str = "completed"
+    # Odontogram data
+    odontogram_items: List[FullMedicalHistoryItem] = []
 
 class TreatmentReadWithRelations(TreatmentRead):
     patient: Optional[PatientRead] = None

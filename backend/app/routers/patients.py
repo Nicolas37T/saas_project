@@ -22,13 +22,19 @@ router = APIRouter(prefix="/patients", tags=["Patients"])
 
 @router.get("/all-medical-histories")
 def get_all_medical_histories(
-    session: Session = Depends(get_session_for_tenant)
+    session: Session = Depends(get_session_for_tenant),
+    current_user = Depends(get_current_tenant_user)
 ):
     try:
+        tenant_user = session.exec(select(User).where(User.email == current_user.email)).first()
+        if not tenant_user:
+            return []
+            
         results = session.exec(
             select(MedicalHistory, Patient)
             .join(Patient, MedicalHistory.patient_id == Patient.id)
             .where(MedicalHistory.status == True)
+            .where(MedicalHistory.created_by == tenant_user.id) # Filter by logged-in user
             .order_by(MedicalHistory.created_at.desc())
         ).all()
         
@@ -146,16 +152,8 @@ def update_full_medical_history(
                     )
                     session.add(db_odontogram)
 
-                # 4. Update Payment
-                old_payments = session.exec(
-                    select(Payment).where(Payment.treatment_id == db_treatment.id)
-                ).all()
-                if old_payments:
-                    payment = old_payments[0]
-                    payment.amount = update_data.payment_amount if update_data.payment_amount is not None else total_price
-                    payment.payment_method = update_data.payment_method
-                    payment.payment_status = update_data.payment_status
-                    session.add(payment)
+                # Removed Payment Update
+
 
         session.commit()
         session.refresh(db_history)
@@ -228,6 +226,17 @@ def get_patient(
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
     return patient
+
+@router.get("/{patient_id}/has-history")
+def check_patient_history(
+    patient_id: uuid.UUID,
+    session: Session = Depends(get_session_for_tenant)
+):
+    """Verifica si un paciente ya tiene un historial clínico activo."""
+    exists = session.exec(
+        select(MedicalHistory).where(MedicalHistory.patient_id == patient_id, MedicalHistory.status == True)
+    ).first()
+    return {"has_history": exists is not None}
 
 @router.put("/{patient_id}", response_model=PatientRead)
 def update_patient(
@@ -312,6 +321,14 @@ def create_full_medical_history(
         raise HTTPException(status_code=404, detail="Patient not found")
 
     try:
+        # 0. Check if patient already has a medical history
+        existing_history = session.exec(
+            select(MedicalHistory).where(MedicalHistory.patient_id == patient_id, MedicalHistory.status == True)
+        ).first()
+        
+        if existing_history:
+            raise HTTPException(status_code=400, detail="Este paciente ya tiene un historial médico activo. Solo se permite un historial por paciente.")
+
         # Calculate total price and build summary description
         total_price = sum(item.price for item in full_data.odontogram_items)
         final_price = total_price if total_price > 0 else full_data.price
@@ -329,7 +346,8 @@ def create_full_medical_history(
             price=final_price,
             duration_minutes=total_duration,
             date=latest_date,
-            status_treatments="completed"
+            status_treatments="completed",
+            patient_id=patient_id
         )
         session.add(db_treatment)
         session.flush()
@@ -348,16 +366,9 @@ def create_full_medical_history(
             )
             session.add(db_odontogram)
 
-        # 3. Create Payment
-        db_payment = Payment(
-            amount=full_data.payment_amount if full_data.payment_amount else final_price,
-            payment_method=full_data.payment_method,
-            payment_status=full_data.payment_status,
-            treatment_id=db_treatment.id
-        )
-        session.add(db_payment)
+        # Removed Payment Creation
 
-        # 4. Create Medical History entry
+        # 3. Create Medical History entry
         db_history = MedicalHistory(
             conditions=full_data.conditions,
             allergies=full_data.allergies,
