@@ -180,6 +180,7 @@ class AppointmentBase(BaseModel):
     appointment_status: str = "scheduled"
     status: bool = True
     patient_id: uuid.UUID
+    assigned_doctor_id: Optional[uuid.UUID] = None
 
 class AppointmentCreate(AppointmentBase):
     pass
@@ -189,6 +190,7 @@ class AppointmentUpdate(BaseModel):
     notes: Optional[str] = None
     appointment_status: Optional[str] = None
     status: Optional[bool] = None
+    assigned_doctor_id: Optional[uuid.UUID] = None
 
 class AppointmentRead(AppointmentBase):
     id: uuid.UUID

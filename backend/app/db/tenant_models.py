@@ -122,6 +122,7 @@ class Appointment(SQLModel, table=True):
     notes: Optional[str] = None
     appointment_status: str = Field(default="scheduled") # e.g. scheduled, confirmed, cancelled, completed
     status: bool = Field(default=True)
+    assigned_doctor_id: Optional[uuid.UUID] = Field(default=None, foreign_key="users.id")
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 

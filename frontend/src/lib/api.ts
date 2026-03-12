@@ -197,6 +197,7 @@ export interface Appointment {
   appointment_status: string;
   status: boolean;
   patient_id: string;
+  assigned_doctor_id?: string;
 }
 
 export interface Treatment {
