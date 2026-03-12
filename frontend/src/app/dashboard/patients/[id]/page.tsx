@@ -7,10 +7,8 @@ import {
   Activity,
   FileText,
   Calendar,
-  Plus,
-  Save,
 } from "lucide-react";
-import { tenantApi, Patient, MedicalHistory } from "@/lib/api";
+import { tenantApi, Patient, MedicalHistory, Appointment, Treatment, Employee } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,8 +16,28 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
+import { CustomModal, SuccessModal } from "@/components/ui/custom-modal";
+
+const appointmentStatusMap: Record<string, string> = {
+  "scheduled": "Programada",
+  "completed": "Completada",
+  "cancelled": "Cancelada",
+  "no_show": "No asiste",
+};
+
+const treatmentStatusMap: Record<string, string> = {
+  "pending": "Pendiente",
+  "in_progress": "En progreso",
+  "completed": "Completado",
+  "cancelled": "Cancelado",
+};
+
+const translateStatus = (status: string, map: Record<string, string>) => {
+  if (!status) return "";
+  const key = status.toLowerCase();
+  return map[key] || status;
+};
 
 export default function PatientProfilePage({
   params,
@@ -32,50 +50,91 @@ export default function PatientProfilePage({
 
   const [patient, setPatient] = useState<Patient | null>(null);
   const [history, setHistory] = useState<MedicalHistory[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [treatments, setTreatments] = useState<Treatment[]>([]);
+  const [employeesList, setEmployeesList] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [isAddingHistory, setIsAddingHistory] = useState(false);
-  const [newHistory, setNewHistory] = useState({
-    conditions: "",
-    allergies: "",
-    medications: "",
+  // Edit Patient
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    first_name: "",
+    last_name: "",
+    phone: "",
+    address: "",
+    birth_day: "",
     description: "",
+    assigned_doctor_id: "",
   });
+
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [successInfo, setSuccessInfo] = useState({ title: "", message: "" });
 
   useEffect(() => {
     if (!id) return;
+
+    const loadPatientData = async () => {
+      setLoading(true);
+      try {
+        const [patientData, historyData, appointmentsData, treatmentsData, employees] = await Promise.all([
+          tenantApi.getPatient(id),
+          tenantApi.getMedicalHistories(id).catch(() => []),
+          tenantApi.getAppointments().catch(() => []),
+          tenantApi.getTreatments().catch(() => []),
+          tenantApi.getEmployees().catch(() => [])
+        ]);
+        setPatient(patientData);
+        setHistory(historyData);
+        setAppointments(appointmentsData.filter(a => a.patient_id === id && a.appointment_status !== "completed" && a.appointment_status !== "cancelled"));
+        setTreatments(treatmentsData.filter(t => t.patient_id === id));
+        setEmployeesList(employees.filter((emp: Employee) => emp.status));
+      } catch (error) {
+        console.error("Error loading patient data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadPatientData();
   }, [id]);
 
-  const loadPatientData = async () => {
-    setLoading(true);
-    try {
-      const [patientData, historyData] = await Promise.all([
-        tenantApi.getPatient(id),
-        tenantApi.getMedicalHistories(id),
-      ]);
-      setPatient(patientData);
-      setHistory(historyData);
-    } catch (error) {
-      console.error("Error loading patient data:", error);
-    } finally {
-      setLoading(false);
-    }
+  const handleOpenEdit = () => {
+    if (!patient) return;
+    setEditForm({
+      first_name: patient.first_name,
+      last_name: patient.last_name,
+      phone: patient.phone || "",
+      address: patient.address || "",
+      birth_day: patient.birth_day
+        ? new Date(patient.birth_day).toISOString().split("T")[0]
+        : "",
+      description: patient.description || "",
+      assigned_doctor_id: patient.assigned_doctor_id || "",
+    });
+    setIsEditModalOpen(true);
   };
 
-  const handleSaveHistory = async () => {
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!patient) return;
     try {
-      await tenantApi.createMedicalHistory(id, newHistory);
-      setIsAddingHistory(false);
-      setNewHistory({
-        conditions: "",
-        allergies: "",
-        medications: "",
-        description: "",
+      await tenantApi.updatePatient(patient.id, {
+        ...editForm,
+        birth_day: editForm.birth_day ? editForm.birth_day : undefined,
+        assigned_doctor_id: editForm.assigned_doctor_id || undefined,
       });
-      loadPatientData();
+      setIsEditModalOpen(false);
+      
+      setSuccessInfo({ title: "Perfil Actualizado", message: "Los datos del paciente se modificaron correctamente." });
+      setIsSuccessModalOpen(true);
+      
+      // Reload logic
+      const [patientData] = await Promise.all([
+        tenantApi.getPatient(id)
+      ]);
+      setPatient(patientData);
     } catch (error) {
-      console.error("Error adding history", error);
+      console.error("Error updating patient", error);
     }
   };
 
@@ -115,12 +174,22 @@ export default function PatientProfilePage({
               <span>
                 ⏳ Registro: {new Date(patient.created_at).toLocaleDateString()}
               </span>
+              {patient.assigned_doctor_id && (
+                <span className="text-blue-400">
+                  👨‍⚕️ Doctor: {
+                    employeesList.find(e => e.id === patient.assigned_doctor_id)?.username || 
+                    employeesList.find(e => e.id === patient.assigned_doctor_id)?.full_name || 
+                    "Asignado"
+                  }
+                </span>
+              )}
             </div>
           </div>
         </div>
         <div className="flex gap-3">
           <Button
             variant="outline"
+            onClick={handleOpenEdit}
             className="border-slate-700 bg-slate-900 text-white hover:bg-slate-800"
           >
             Editar Perfil
@@ -161,13 +230,6 @@ export default function PatientProfilePage({
                   </div>
                 </div>
               )}
-              <Button
-                onClick={() => setIsAddingHistory(!isAddingHistory)}
-                variant="outline"
-                className="w-full mt-4 border-slate-700 text-blue-400 hover:text-blue-300 hover:bg-slate-800"
-              >
-                <Plus size={16} className="mr-2" /> Agregar Registro
-              </Button>
             </CardContent>
           </Card>
 
@@ -178,129 +240,54 @@ export default function PatientProfilePage({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-slate-500 text-center py-4">
-                No hay citas programadas.
-              </p>
+              {appointments.length === 0 ? (
+                <p className="text-sm text-slate-500 text-center py-4">
+                  No hay citas programadas.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {appointments.map((apt) => (
+                    <div key={apt.id} className="p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                      <p className="text-white text-sm font-medium">
+                        {new Date(apt.appointment_date).toLocaleDateString()} a las {new Date(apt.appointment_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1 uppercase">Estado: {translateStatus(apt.appointment_status, appointmentStatusMap)}</p>
+                      {apt.assigned_doctor_id && (
+                        <p className="text-xs text-blue-400 mt-1 font-medium">
+                          👨‍⚕️ Dr. {
+                            employeesList.find(e => e.id === apt.assigned_doctor_id)?.username || 
+                            employeesList.find(e => e.id === apt.assigned_doctor_id)?.full_name || 
+                            "Asignado"
+                          }
+                        </p>
+                      )}
+                      {apt.notes && <p className="text-xs text-slate-500 mt-1">{apt.notes}</p>}
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
 
         {/* Main Timeline Column */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Form for new medical history entry */}
-          {isAddingHistory && (
-            <Card className="bg-gradient-to-br from-slate-900 flex-1 to-blue-950/20 border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.05)]">
-              <CardHeader>
-                <CardTitle className="text-white">
-                  Nuevo Registro Médico
-                </CardTitle>
-                <CardDescription className="text-slate-400">
-                  Actualiza las condiciones y alergias de {patient.first_name}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">
-                      Condiciones Preexistentes
-                    </label>
-                    <Input
-                      placeholder="Ej: Diabetes, Hipertensión..."
-                      className="bg-slate-950 border-slate-800 text-white"
-                      value={newHistory.conditions}
-                      onChange={(e) =>
-                        setNewHistory({
-                          ...newHistory,
-                          conditions: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">
-                      Alergias Conocidas
-                    </label>
-                    <Input
-                      placeholder="Ej: Penicilina, Látex..."
-                      className="bg-slate-950 border-slate-800 text-white"
-                      value={newHistory.allergies}
-                      onChange={(e) =>
-                        setNewHistory({
-                          ...newHistory,
-                          allergies: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="text-sm font-medium text-slate-300">
-                      Medicamentos Actuales
-                    </label>
-                    <Input
-                      placeholder="Medicamentos que toma de forma regular"
-                      className="bg-slate-950 border-slate-800 text-white"
-                      value={newHistory.medications}
-                      onChange={(e) =>
-                        setNewHistory({
-                          ...newHistory,
-                          medications: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="text-sm font-medium text-slate-300">
-                      Notas / Descripción Adicional
-                    </label>
-                    <textarea
-                      placeholder="Detalles de la consulta..."
-                      className="w-full min-h-[100px] p-3 rounded-md bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                      value={newHistory.description}
-                      onChange={(e) =>
-                        setNewHistory({
-                          ...newHistory,
-                          description: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-                <div className="flex justify-end gap-3 pt-4">
-                  <Button
-                    variant="ghost"
-                    onClick={() => setIsAddingHistory(false)}
-                    className="text-slate-400 hover:text-white"
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    onClick={handleSaveHistory}
-                    className="bg-blue-600 hover:bg-blue-700 text-white flex items-center"
-                  >
-                    <Save size={16} className="mr-2" /> Guardar Registro
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Timeline of previous records */}
+          {/* Timeline of treatments */}
           <div className="space-y-4">
             <h3 className="text-xl font-bold text-white flex items-center gap-2">
-              <FileText size={20} className="text-blue-500" /> Registros
-              Anteriores
+              <FileText size={20} className="text-blue-500" /> Historial de Tratamientos
             </h3>
-            {history.length === 0 ? (
+            {treatments.length === 0 ? (
               <div className="p-8 text-center border border-dashed border-slate-800 rounded-xl bg-slate-900/30">
                 <p className="text-slate-500">
-                  Este paciente no tiene registros históricos todavía.
+                  Este paciente no tiene tratamientos registrados.
                 </p>
               </div>
             ) : (
               <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-800 before:to-transparent">
-                {history.map((record, index) => (
+                {treatments.map((treatment) => (
                   <div
-                    key={record.id}
+                    key={treatment.id}
                     className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active"
                   >
                     <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-slate-950 bg-slate-800 group-hover:bg-blue-500 text-slate-500 group-hover:text-white shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-lg transition-colors duration-300">
@@ -309,43 +296,29 @@ export default function PatientProfilePage({
                     <Card className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-slate-900/80 border-slate-800 backdrop-blur-sm group-hover:border-slate-700 transition-colors">
                       <CardHeader className="p-4 pb-2">
                         <CardTitle className="text-sm text-slate-400 font-medium">
-                          {new Date(record.created_at).toLocaleDateString()} a
-                          las{" "}
-                          {new Date(record.created_at).toLocaleTimeString([], {
+                          {treatment.date ? new Date(treatment.date).toLocaleDateString() : 'Sin fecha'}
+                          {treatment.date && ` a las ${new Date(treatment.date).toLocaleTimeString([], {
                             hour: "2-digit",
                             minute: "2-digit",
-                          })}
+                          })}`}
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="p-4 pt-0">
                         <div className="space-y-2 mt-2">
-                          {record.conditions && (
-                            <p className="text-sm text-white">
-                              <span className="text-slate-500">
-                                Condiciones:
-                              </span>{" "}
-                              {record.conditions}
-                            </p>
-                          )}
-                          {record.allergies && (
-                            <p className="text-sm text-white">
-                              <span className="text-slate-500">Alergias:</span>{" "}
-                              {record.allergies}
-                            </p>
-                          )}
-                          {record.medications && (
-                            <p className="text-sm text-white">
-                              <span className="text-slate-500">
-                                Antologia Médica:
-                              </span>{" "}
-                              {record.medications}
-                            </p>
-                          )}
-                          {record.description && (
-                            <div className="mt-3 p-3 bg-slate-950 rounded border border-slate-800 text-sm text-slate-300">
-                              {record.description}
-                            </div>
-                          )}
+                          <p className="text-sm text-white">
+                            <span className="text-slate-500">
+                              Tratamiento:
+                            </span>{" "}
+                            {treatment.description}
+                          </p>
+                          <p className="text-sm text-white capitalize">
+                            <span className="text-slate-500">Estado:</span>{" "}
+                            {translateStatus(treatment.status_treatments, treatmentStatusMap)}
+                          </p>
+                          <p className="text-sm text-white">
+                            <span className="text-slate-500">Precio:</span>{" "}
+                            ${treatment.price}
+                          </p>
                         </div>
                       </CardContent>
                     </Card>
@@ -356,6 +329,107 @@ export default function PatientProfilePage({
           </div>
         </div>
       </div>
+
+      {/* ─── MODAL: EDITAR PACIENTE ────────────────────────────────────────────── */}
+      <CustomModal
+        isOpen={isEditModalOpen && !!patient}
+        onClose={() => setIsEditModalOpen(false)}
+        title="Editar Perfil"
+      >
+        {patient && (
+          <form onSubmit={handleSaveEdit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-300">Nombre *</label>
+                <Input
+                  required
+                  value={editForm.first_name}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm({ ...editForm, first_name: e.target.value })}
+                  className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-300">Apellidos *</label>
+                <Input
+                  required
+                  value={editForm.last_name}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm({ ...editForm, last_name: e.target.value })}
+                  className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-300">Teléfono</label>
+                <Input
+                  type="tel"
+                  value={editForm.phone}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm({ ...editForm, phone: e.target.value })}
+                  className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-300">Fecha de Nacimiento</label>
+                <Input
+                  type="date"
+                  value={editForm.birth_day}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm({ ...editForm, birth_day: e.target.value })}
+                  className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-300">Dirección</label>
+              <Input
+                value={editForm.address}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm({ ...editForm, address: e.target.value })}
+                className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-300">Descripción / Notas</label>
+                <Input
+                  value={editForm.description}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm({ ...editForm, description: e.target.value })}
+                  className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-300">Doctor Asignado</label>
+                <select
+                  value={editForm.assigned_doctor_id}
+                  onChange={(e) => setEditForm({ ...editForm, assigned_doctor_id: e.target.value })}
+                  className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                >
+                  <option value="">Sin Asignar</option>
+                  {employeesList.map(emp => (
+                    <option key={emp.id} value={emp.id}>{emp.username || emp.full_name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end mt-8">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setIsEditModalOpen(false)}
+                className="text-slate-400 hover:text-white hover:bg-slate-800"
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                Guardar Cambios
+              </Button>
+            </div>
+          </form>
+        )}
+      </CustomModal>
+
+      <SuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={() => setIsSuccessModalOpen(false)}
+        title={successInfo.title}
+        message={successInfo.message}
+      />
     </div>
   );
 }

@@ -82,6 +82,7 @@ class PatientBase(BaseModel):
     address: Optional[str] = None
     description: Optional[str] = None
     status: bool = True
+    assigned_doctor_id: Optional[uuid.UUID] = None
 
 class PatientCreate(PatientBase):
     pass
@@ -94,6 +95,7 @@ class PatientUpdate(BaseModel):
     address: Optional[str] = None
     description: Optional[str] = None
     status: Optional[bool] = None
+    assigned_doctor_id: Optional[uuid.UUID] = None
 
 class PatientRead(PatientBase):
     id: uuid.UUID
@@ -178,6 +180,7 @@ class AppointmentBase(BaseModel):
     appointment_status: str = "scheduled"
     status: bool = True
     patient_id: uuid.UUID
+    assigned_doctor_id: Optional[uuid.UUID] = None
 
 class AppointmentCreate(AppointmentBase):
     pass
@@ -187,6 +190,7 @@ class AppointmentUpdate(BaseModel):
     notes: Optional[str] = None
     appointment_status: Optional[str] = None
     status: Optional[bool] = None
+    assigned_doctor_id: Optional[uuid.UUID] = None
 
 class AppointmentRead(AppointmentBase):
     id: uuid.UUID

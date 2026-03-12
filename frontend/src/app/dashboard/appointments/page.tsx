@@ -9,9 +9,8 @@ import {
   FileText,
   Edit2,
   Trash2,
-  CheckCircle2,
 } from "lucide-react";
-import { tenantApi, Appointment, Patient } from "@/lib/api";
+import { tenantApi, Appointment, Patient, Employee } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -20,6 +19,7 @@ import { CustomModal, ConfirmModal, SuccessModal } from "@/components/ui/custom-
 export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Modal state for adding appointment
@@ -30,6 +30,7 @@ export default function AppointmentsPage() {
     appointment_time: "",
     notes: "",
     appointment_status: "scheduled",
+    assigned_doctor_id: "",
   });
 
   // Modal state for editing appointment
@@ -52,9 +53,10 @@ export default function AppointmentsPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [appData, patData] = await Promise.all([
+      const [appData, patData, empData] = await Promise.all([
         tenantApi.getAppointments(),
         tenantApi.getPatients(),
+        tenantApi.getEmployees().catch(() => []),
       ]);
       // Sort appointments by date
       const sorted = appData.sort(
@@ -64,6 +66,7 @@ export default function AppointmentsPage() {
       );
       setAppointments(sorted);
       setPatients(patData);
+      setEmployees(empData.filter((e: Employee) => e.status));
     } catch (error) {
       console.error("Failed to load appointments data", error);
     } finally {
@@ -84,6 +87,7 @@ export default function AppointmentsPage() {
         appointment_date: combinedDate.toISOString(),
         notes: newAppointment.notes,
         appointment_status: newAppointment.appointment_status,
+        assigned_doctor_id: newAppointment.assigned_doctor_id || undefined,
       });
 
       setIsAddModalOpen(false);
@@ -93,6 +97,7 @@ export default function AppointmentsPage() {
         appointment_time: "",
         notes: "",
         appointment_status: "scheduled",
+        assigned_doctor_id: "",
       });
       
       setSuccessInfo({ title: "Cita Programada", message: "La cita ha sido agendada con éxito." });
@@ -112,6 +117,7 @@ export default function AppointmentsPage() {
       date: dateStr,
       time: timeStr,
       notes: apt.notes || "",
+      assigned_doctor_id: apt.assigned_doctor_id || "",
     });
     setIsEditModalOpen(true);
   };
@@ -129,6 +135,7 @@ export default function AppointmentsPage() {
         appointment_date: combinedDate.toISOString(),
         notes: editingAppointment.notes,
         appointment_status: editingAppointment.appointment_status,
+        assigned_doctor_id: editingAppointment.assigned_doctor_id || undefined,
       });
 
       setIsEditModalOpen(false);
@@ -166,6 +173,13 @@ export default function AppointmentsPage() {
   const getPatientName = (id: string) => {
     const p = patients.find((p) => p.id === id);
     return p ? `${p.first_name} ${p.last_name}` : "Paciente Desconocido";
+  };
+
+  // Helper to get doctor name
+  const getDoctorName = (id?: string) => {
+    if (!id) return "Sin Asignar";
+    const d = employees.find((e) => e.id === id);
+    return d ? d.username || d.full_name : "Desconocido";
   };
 
   // Helper for status styling
@@ -228,7 +242,7 @@ export default function AppointmentsPage() {
               No tienes citas programadas
             </h3>
             <p className="text-slate-400">
-              Tu agenda está libre. Haz clic en "Nueva Cita" para empezar.
+              Tu agenda está libre. Haz clic en &quot;Nueva Cita&quot; para empezar.
             </p>
           </CardContent>
         </Card>
@@ -302,6 +316,13 @@ export default function AppointmentsPage() {
                     </div>
                   </div>
 
+                  {apt.assigned_doctor_id && (
+                    <div className="flex items-center gap-2 mb-4 text-sm text-blue-400">
+                      <span>👨‍⚕️</span>
+                      <span className="font-medium">Dr. {getDoctorName(apt.assigned_doctor_id)}</span>
+                    </div>
+                  )}
+
                   {apt.notes && (
                     <div className="mt-4 p-3 rounded-lg bg-slate-950 border border-slate-800/50 text-sm text-slate-400 flex items-start gap-2">
                       <FileText
@@ -342,6 +363,29 @@ export default function AppointmentsPage() {
                     {patients.map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.first_name} {p.last_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-300">
+                    Doctor Asignado
+                  </label>
+                  <select
+                    className="w-full p-2.5 rounded-md bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    value={newAppointment.assigned_doctor_id}
+                    onChange={(e) =>
+                      setNewAppointment({
+                        ...newAppointment,
+                        assigned_doctor_id: e.target.value,
+                      })
+                    }
+                  >
+                    <option value="">Sin doctor asignado...</option>
+                    {employees.map((emp) => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.username || emp.full_name}
                       </option>
                     ))}
                   </select>
@@ -463,6 +507,29 @@ export default function AppointmentsPage() {
                     {patients.map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.first_name} {p.last_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-300">
+                    Doctor Asignado
+                  </label>
+                  <select
+                    className="w-full p-2.5 rounded-md bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    value={editingAppointment.assigned_doctor_id}
+                    onChange={(e) =>
+                      setEditingAppointment({
+                        ...editingAppointment,
+                        assigned_doctor_id: e.target.value,
+                      })
+                    }
+                  >
+                    <option value="">Sin doctor asignado...</option>
+                    {employees.map((emp) => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.username || emp.full_name}
                       </option>
                     ))}
                   </select>

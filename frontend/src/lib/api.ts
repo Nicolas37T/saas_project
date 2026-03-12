@@ -195,6 +195,7 @@ export interface Patient {
   created_at: string;
   updated_at: string;
   created_by?: string;
+  assigned_doctor_id?: string;
 }
 
 export interface Appointment {
@@ -204,6 +205,7 @@ export interface Appointment {
   appointment_status: string;
   status: boolean;
   patient_id: string;
+  assigned_doctor_id?: string;
 }
 
 export interface Treatment {
