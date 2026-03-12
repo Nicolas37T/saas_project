@@ -2,11 +2,11 @@ const RAILWAY_BACKEND = "https://saasproject-production-0c1a.up.railway.app";
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ||
   (typeof window !== "undefined" &&
-  (window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1")
+    (window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1")
     ? "http://localhost:8000"
     : typeof window !== "undefined" &&
-        !window.location.hostname.includes("localhost")
+      !window.location.hostname.includes("localhost")
       ? RAILWAY_BACKEND
       : "http://localhost:8000");
 
@@ -176,17 +176,17 @@ export const adminApi = {
 // ─── TENANT DENTAL API ────────────────────────────────────────────────────────
 
 export interface Patient {
-    id: string;
-    first_name: string;
-    last_name: string;
-    phone?: string;
-    birth_day?: string;
-    address?: string;
-    description?: string;
-    status: boolean;
-    created_at: string;
-    updated_at: string;
-    created_by?: string;
+  id: string;
+  first_name: string;
+  last_name: string;
+  phone?: string;
+  birth_day?: string;
+  address?: string;
+  description?: string;
+  status: boolean;
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
 }
 
 export interface Appointment {
@@ -206,6 +206,9 @@ export interface Treatment {
   duration_minutes?: number;
   date?: string;
   status: boolean;
+  patient_id?: string;
+  patient?: Patient;
+  payments?: Payment[];
 }
 
 export interface MedicalHistory {

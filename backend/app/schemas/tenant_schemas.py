@@ -112,6 +112,7 @@ class TreatmentBase(BaseModel):
     duration_minutes: Optional[int] = None
     date: Optional[datetime] = None
     status: bool = True
+    patient_id: Optional[uuid.UUID] = None
 
 class TreatmentCreate(TreatmentBase):
     pass
@@ -307,3 +308,9 @@ class FullMedicalHistoryUpdate(BaseModel):
     payment_amount: Optional[float] = None
     payment_method: str = "cash"
     payment_status: str = "completed"
+
+class TreatmentReadWithRelations(TreatmentRead):
+    patient: Optional[PatientRead] = None
+    payments: List[PaymentRead] = []
+
+    model_config = ConfigDict(from_attributes=True)
