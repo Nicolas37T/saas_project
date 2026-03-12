@@ -9,17 +9,19 @@ import {
   MoreVertical,
   Pencil,
   Trash2,
-  X,
   Calendar,
 } from "lucide-react";
-import { tenantApi, Patient } from "@/lib/api";
+import { tenantApi, Patient, Employee } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { CustomModal, ConfirmModal, SuccessModal } from "@/components/ui/custom-modal";
+import { useRouter } from "next/navigation";
 
 export default function PatientsPage() {
+  const router = useRouter();
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [employeesMap, setEmployeesMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [mounted, setMounted] = useState(false);
@@ -79,7 +81,17 @@ export default function PatientsPage() {
   const loadPatients = async () => {
     setLoading(true);
     try {
-      const data = await tenantApi.getPatients();
+      const [data, employees] = await Promise.all([
+        tenantApi.getPatients(),
+        tenantApi.getEmployees().catch(() => [])
+      ]);
+
+      const empMap: Record<string, string> = {};
+      employees.forEach((emp: Employee) => {
+        empMap[emp.id] = emp.username || emp.full_name || emp.id;
+      });
+      setEmployeesMap(empMap);
+
       // Solo mostramos activos (status=true), el backend ya filtra pero doble check
       setPatients(data.filter((p) => p.status));
     } catch (error) {
@@ -240,7 +252,7 @@ export default function PatientsPage() {
                         {patient.last_name[0]}
                       </div>
                       <div>
-                        <h4 className="text-white font-medium truncate max-w-[150px]">
+                        <h4 className="text-white font-medium break-words pr-2">
                           {patient.first_name} {patient.last_name}
                         </h4>
                         <span className="text-xs text-slate-500 capitalize">
@@ -304,8 +316,8 @@ export default function PatientsPage() {
                     {patient.created_by && (
                       <div className="flex items-center gap-2 text-xs text-slate-500 mt-2">
                         <User size={12} className="text-slate-600" />
-                        <span className="truncate" title={`Registrado por ID: ${patient.created_by}`}>
-                          Registrado por: {patient.created_by.substring(0, 8)}...
+                        <span className="truncate" title={`Registrado por: ${employeesMap[patient.created_by] || patient.created_by}`}>
+                          Registrado por: {employeesMap[patient.created_by] || patient.created_by.substring(0, 8) + "..."}
                         </span>
                       </div>
                     )}
@@ -320,6 +332,7 @@ export default function PatientsPage() {
                       variant="ghost"
                       size="sm"
                       className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 h-8 px-3"
+                      onClick={() => router.push(`/dashboard/patients/${patient.id}`)}
                     >
                       Ver Perfil
                     </Button>
