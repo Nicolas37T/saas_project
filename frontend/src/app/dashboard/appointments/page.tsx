@@ -7,11 +7,15 @@ import {
   Clock,
   User,
   FileText,
+  Edit2,
+  Trash2,
+  CheckCircle2,
 } from "lucide-react";
 import { tenantApi, Appointment, Patient } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { CustomModal, ConfirmModal, SuccessModal } from "@/components/ui/custom-modal";
 
 export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -27,6 +31,19 @@ export default function AppointmentsPage() {
     notes: "",
     appointment_status: "scheduled",
   });
+
+  // Modal state for editing appointment
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingAppointment, setEditingAppointment] = useState<Appointment & { time: string; date: string } | null>(null);
+
+  // Modal state for custom confirmations
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Success message modal
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [successInfo, setSuccessInfo] = useState({ title: "", message: "" });
 
   useEffect(() => {
     loadData();
@@ -77,9 +94,71 @@ export default function AppointmentsPage() {
         notes: "",
         appointment_status: "scheduled",
       });
+      
+      setSuccessInfo({ title: "Cita Programada", message: "La cita ha sido agendada con éxito." });
+      setIsSuccessModalOpen(true);
       loadData(); // refresh list
     } catch (error) {
       console.error("Error creating appointment", error);
+    }
+  };
+
+  const openEditModal = (apt: Appointment) => {
+    const d = new Date(apt.appointment_date);
+    const dateStr = d.toISOString().split("T")[0]; // YYYY-MM-DD
+    const timeStr = d.toTimeString().substring(0, 5); // HH:MM
+    setEditingAppointment({
+      ...apt,
+      date: dateStr,
+      time: timeStr,
+      notes: apt.notes || "",
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateAppointment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAppointment) return;
+    try {
+      const combinedDate = new Date(
+        `${editingAppointment.date}T${editingAppointment.time}`,
+      );
+
+      await tenantApi.updateAppointment(editingAppointment.id, {
+        patient_id: editingAppointment.patient_id,
+        appointment_date: combinedDate.toISOString(),
+        notes: editingAppointment.notes,
+        appointment_status: editingAppointment.appointment_status,
+      });
+
+      setIsEditModalOpen(false);
+      setEditingAppointment(null);
+      
+      setSuccessInfo({ title: "Cita Actualizada", message: "Los cambios se guardaron correctamente." });
+      setIsSuccessModalOpen(true);
+      loadData();
+    } catch (error) {
+      console.error("Error updating appointment", error);
+    }
+  };
+
+  const confirmDeleteAction = (id: string) => {
+    setDeletingId(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteAppointment = async () => {
+    if (!deletingId) return;
+    setIsDeleting(true);
+    try {
+      await tenantApi.deleteAppointment(deletingId);
+      setIsDeleteModalOpen(false);
+      setDeletingId(null);
+      loadData();
+    } catch (error) {
+      console.error("Error deleting appointment", error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -96,6 +175,8 @@ export default function AppointmentsPage() {
         return "bg-blue-500/20 text-blue-400 border-blue-500/30";
       case "confirmed":
         return "bg-green-500/20 text-green-400 border-green-500/30";
+      case "pending":
+        return "bg-yellow-500/20 text-yellow-500 border-yellow-500/30";
       case "completed":
         return "bg-slate-500/20 text-slate-400 border-slate-500/30";
       case "cancelled":
@@ -103,6 +184,15 @@ export default function AppointmentsPage() {
       default:
         return "bg-slate-500/20 text-slate-400 border-slate-500/30";
     }
+  };
+
+  // Helper strings to map status to spanish labels
+  const statusLabels: Record<string, string> = {
+    scheduled: "Programada",
+    confirmed: "Confirmada",
+    pending: "Pendiente",
+    completed: "Completada",
+    cancelled: "Cancelada",
   };
 
   return (
@@ -169,11 +259,33 @@ export default function AppointmentsPage() {
                       })}
                     </span>
                   </div>
-                  <span
-                    className={`px-3 py-1 text-xs font-semibold rounded-full border uppercase tracking-wider ${getStatusStyle(apt.appointment_status)}`}
-                  >
-                    {apt.appointment_status}
-                  </span>
+                  <div className="flex flex-col items-end gap-2">
+                    <span
+                      className={`px-3 py-1 text-xs font-semibold rounded-full border uppercase tracking-wider ${getStatusStyle(apt.appointment_status)}`}
+                    >
+                      {statusLabels[apt.appointment_status.toLowerCase()] || apt.appointment_status}
+                    </span>
+                    <div className="flex items-center gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-7 w-7 text-slate-400 hover:text-white hover:bg-slate-800"
+                          onClick={(e) => { e.stopPropagation(); openEditModal(apt); }}
+                          title="Editar"
+                        >
+                            <Edit2 size={14} />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-7 w-7 text-red-400/70 hover:text-red-400 hover:bg-red-500/10"
+                          onClick={(e) => { e.stopPropagation(); confirmDeleteAction(apt.id); }}
+                          title="Eliminar"
+                        >
+                            <Trash2 size={14} />
+                        </Button>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent className="p-4 pt-4">
                   <div className="flex items-center gap-3 mb-4">
@@ -204,16 +316,12 @@ export default function AppointmentsPage() {
             );
           })}
         </div>
-      )}
-
-      {/* Add Appointment Modal */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md bg-slate-900 border-slate-800 shadow-2xl">
-            <div className="p-6">
-              <h2 className="text-xl font-bold text-white mb-6">
-                Programar Cita
-              </h2>
+      )}      {/* Add Appointment Modal */}
+      <CustomModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)} 
+        title="Programar Cita"
+      >
               <form onSubmit={handleCreateAppointment} className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">
@@ -292,7 +400,10 @@ export default function AppointmentsPage() {
                     }
                   >
                     <option value="scheduled">Programada</option>
+                    <option value="pending">Pendiente</option>
                     <option value="confirmed">Confirmada</option>
+                    <option value="completed">Completada</option>
+                    <option value="cancelled">Cancelada</option>
                   </select>
                 </div>
                 <div className="space-y-2">
@@ -328,10 +439,163 @@ export default function AppointmentsPage() {
                   </Button>
                 </div>
               </form>
-            </div>
-          </Card>
-        </div>
-      )}
+      </CustomModal>
+
+      {/* Edit Appointment Modal */}
+      <CustomModal 
+        isOpen={isEditModalOpen && !!editingAppointment} 
+        onClose={() => { setIsEditModalOpen(false); setEditingAppointment(null); }} 
+        title="Editar Cita"
+      >
+        {editingAppointment && (
+              <form onSubmit={handleUpdateAppointment} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-300">
+                    Paciente
+                  </label>
+                  <select
+                    required
+                    className="w-full p-2.5 rounded-md bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 opacity-70 cursor-not-allowed"
+                    value={editingAppointment.patient_id}
+                    disabled
+                  >
+                    <option value="">Seleccione un paciente...</option>
+                    {patients.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.first_name} {p.last_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-300">
+                      Fecha
+                    </label>
+                    <Input
+                      type="date"
+                      required
+                      value={editingAppointment.date}
+                      onChange={(e) =>
+                        setEditingAppointment({
+                          ...editingAppointment,
+                          date: e.target.value,
+                        })
+                      }
+                      className="bg-slate-950/50 border-slate-800 text-white"
+                      style={{ colorScheme: "dark" }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-300">
+                      Hora
+                    </label>
+                    <Input
+                      type="time"
+                      required
+                      value={editingAppointment.time}
+                      onChange={(e) =>
+                        setEditingAppointment({
+                          ...editingAppointment,
+                          time: e.target.value,
+                        })
+                      }
+                      className="bg-slate-950/50 border-slate-800 text-white"
+                      style={{ colorScheme: "dark" }}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-300">
+                    Estado
+                  </label>
+                  <select
+                    className="w-full p-2.5 rounded-md bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    value={editingAppointment.appointment_status}
+                    onChange={(e) =>
+                      setEditingAppointment({
+                        ...editingAppointment,
+                        appointment_status: e.target.value,
+                      })
+                    }
+                  >
+                    <option value="scheduled">Programada</option>
+                    <option value="pending">Pendiente</option>
+                    <option value="confirmed">Confirmada</option>
+                    <option value="completed">Completada</option>
+                    <option value="cancelled">Cancelada</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-300">
+                    Motivo / Notas
+                  </label>
+                  <textarea
+                    placeholder="Motivo de la consulta..."
+                    className="w-full min-h-[80px] p-3 rounded-md bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    value={editingAppointment.notes}
+                    onChange={(e) =>
+                      setEditingAppointment({
+                        ...editingAppointment,
+                        notes: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div className="flex justify-end gap-3 mt-6">
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    onClick={() => {
+                        setIsEditModalOpen(false);
+                        setEditingAppointment(null);
+                    }}
+                    className="text-slate-400 hover:text-white hover:bg-slate-800"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    Guardar Cambios
+                  </Button>
+                </div>
+              </form>
+        )}
+      </CustomModal>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteAppointment}
+        title="¿Eliminar cita?"
+        message={
+          <span>
+            La cita del paciente{" "}
+            <strong>
+              {getPatientName(
+                appointments.find((a) => a.id === deletingId)?.patient_id || "",
+              )}
+            </strong>{" "}
+            será desactivada del sistema. Los datos permanecerán en la base de datos.
+          </span>
+        }
+        variant="danger"
+        confirmText="Sí, eliminar"
+        isLoading={isDeleting}
+        icon={<Trash2 size={26} className="text-red-400" />}
+      />
+
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={() => setIsSuccessModalOpen(false)}
+        title={successInfo.title}
+        message={successInfo.message}
+      />
     </div>
   );
 }

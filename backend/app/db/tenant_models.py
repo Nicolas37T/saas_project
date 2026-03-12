@@ -108,7 +108,7 @@ class MedicalHistory(SQLModel, table=True):
     treatment_id: Optional[uuid.UUID] = Field(default=None, foreign_key="treatments.id")
     treatment: Optional[Treatment] = Relationship(back_populates="medical_histories")
 
-    created_by: Optional[uuid.UUID] = Field(default=None, foreign_key="users_global.id")
+    created_by: Optional[uuid.UUID] = Field(default=None, foreign_key="users.id")
 
 class Appointment(SQLModel, table=True):
     __tablename__ = "appointments"

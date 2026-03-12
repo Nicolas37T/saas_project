@@ -389,6 +389,10 @@ export const tenantApi = {
       method: "PUT",
       body: JSON.stringify(data),
     }),
+  deleteAppointment: (id: string) =>
+    apiFetch<{ ok: boolean }>(`/api/tenant/appointments/${id}`, {
+      method: "DELETE",
+    }),
 
   // Payments
   getPayments: () => apiFetch<Payment[]>("/api/tenant/payments/"),

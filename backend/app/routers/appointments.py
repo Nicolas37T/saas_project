@@ -25,7 +25,12 @@ def get_appointments(
     skip: int = 0, limit: int = 100,
     session: Session = Depends(get_session_for_tenant)
 ):
-    appointments = session.exec(select(Appointment).offset(skip).limit(limit)).all()
+    appointments = session.exec(
+        select(Appointment)
+        .where(Appointment.status == True)
+        .offset(skip)
+        .limit(limit)
+    ).all()
     return appointments
 
 @router.get("/{appointment_id}", response_model=AppointmentRead)
@@ -65,6 +70,8 @@ def delete_appointment(
     if not db_appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
     
-    session.delete(db_appointment)
+    # Soft delete: set status to False instead of deleting from DB
+    db_appointment.status = False
+    session.add(db_appointment)
     session.commit()
     return {"ok": True}

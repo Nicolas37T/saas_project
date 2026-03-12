@@ -279,7 +279,12 @@ def create_medical_history(
 
     db_history = MedicalHistory.model_validate(history)
     db_history.patient_id = patient_id
-    db_history.created_by = current_user.id
+    
+    # Buscar el usuario dentro del esquema del tenant por email
+    tenant_user = session.exec(select(User).where(User.email == current_user.email)).first()
+    if tenant_user:
+        db_history.created_by = tenant_user.id
+        
     session.add(db_history)
     session.commit()
     session.refresh(db_history)
@@ -364,9 +369,13 @@ def create_full_medical_history(
             brushing_technique=full_data.brushing_technique,
             uses_floss=full_data.uses_floss,
             patient_id=patient_id,
-            treatment_id=db_treatment.id,
-            created_by=current_user.id
+            treatment_id=db_treatment.id
         )
+        # Buscar el usuario dentro del esquema del tenant por email
+        tenant_user = session.exec(select(User).where(User.email == current_user.email)).first()
+        if tenant_user:
+            db_history.created_by = tenant_user.id
+            
         session.add(db_history)
 
         session.commit()

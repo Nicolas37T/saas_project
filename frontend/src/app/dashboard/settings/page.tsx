@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Building2, User, Key, Save, Image as ImageIcon } from "lucide-react";
+import { Building2, User, Key, Save, Image as ImageIcon, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,6 +12,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { tenantApi } from "@/lib/api";
+import { CustomModal, SuccessModal } from "@/components/ui/custom-modal";
 
 type SettingData = {
   business_name: string;
@@ -33,6 +34,13 @@ export default function SettingsPage() {
     address: "",
     currency: "Bs.",
   });
+
+  // Modal: Success message
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  
+  // Modal: Error message
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+  const [errorText, setErrorText] = useState("");
 
   useEffect(() => {
     async function fetchSettings() {
@@ -68,15 +76,20 @@ export default function SettingsPage() {
     setSaving(true);
     try {
       await tenantApi.updateTenantConfig(formData);
-      alert("Configuración Guardada");
-      // Opcionalmente forzar la recarga para que el Layout/Sidebar lea la nueva config (o manejarlo por estado global)
-      window.location.reload(); 
-    } catch (error) {
+      setIsSuccessModalOpen(true);
+    } catch (error: any) {
       console.error("Error saving settings:", error);
-      alert("Error al guardar la configuración");
+      setErrorText(error.message || "Error al guardar la configuración");
+      setIsErrorModalOpen(true);
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSuccessClose = () => {
+    setIsSuccessModalOpen(false);
+    // Reload to apply name/logo changes globally
+    window.location.reload();
   };
 
   if (loading) {
@@ -224,6 +237,27 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={handleSuccessClose}
+        title="Configuración Guardada"
+        message="Los cambios han sido aplicados correctamente. La página se recargará para actualizar la cabecera."
+      />
+
+      {/* Error Modal */}
+      <CustomModal isOpen={isErrorModalOpen} onClose={() => setIsErrorModalOpen(false)} title="Error" maxWidth="max-w-sm">
+          <div className="text-center">
+            <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+              <AlertCircle size={26} className="text-red-400" />
+            </div>
+            <p className="text-slate-400 text-sm mb-6">{errorText}</p>
+            <Button className="w-full bg-slate-800 hover:bg-slate-700 text-white" onClick={() => setIsErrorModalOpen(false)}>
+              Reintentar
+            </Button>
+          </div>
+      </CustomModal>
     </div>
   );
 }

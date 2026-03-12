@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { Plus, Search, UserPlus, Mail, Shield, User, Loader2, X, Check, Trash2, Edit2, AlertCircle } from "lucide-react";
 import { tenantApi, Employee, Role } from "@/lib/api";
+import { CustomModal, ConfirmModal, SuccessModal } from "@/components/ui/custom-modal";
+import { Button } from "@/components/ui/button";
 
 export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -22,7 +24,13 @@ export default function EmployeesPage() {
     role_id: "",
   });
 
-  const [message, setMessage] = useState({ type: "", text: "" });
+  // Modal: Success message
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [successInfo, setSuccessInfo] = useState({ title: "", message: "" });
+  
+  // Modal: Error message
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+  const [errorText, setErrorText] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -55,7 +63,6 @@ export default function EmployeesPage() {
       password: "",
       role_id: roles.length > 0 ? roles[0].id : "",
     });
-    setMessage({ type: "", text: "" });
     setShowModal(true);
   };
 
@@ -68,32 +75,31 @@ export default function EmployeesPage() {
       password: "", // Password remains empty unless user wants to change it
       role_id: emp.role?.id || "",
     });
-    setMessage({ type: "", text: "" });
     setShowModal(true);
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    setMessage({ type: "", text: "" });
 
     try {
       if (editingEmployee) {
-        // Prepare update data, only include password if not empty
         const updateData: any = { ...formData };
         if (!updateData.password) delete updateData.password;
         
         await tenantApi.updateEmployee(editingEmployee.id, updateData);
-        setMessage({ type: "success", text: "Empleado actualizado exitosamente" });
+        setSuccessInfo({ title: "Empleado Actualizado", message: "La información del empleado ha sido actualizada con éxito." });
       } else {
         await tenantApi.createEmployee(formData);
-        setMessage({ type: "success", text: "Empleado creado exitosamente" });
+        setSuccessInfo({ title: "Empleado Creado", message: "La cuenta del nuevo empleado ha sido creada con éxito." });
       }
       
       setShowModal(false);
+      setIsSuccessModalOpen(true);
       fetchData();
     } catch (error: any) {
-      setMessage({ type: "error", text: error.message || "Error al procesar la solicitud" });
+      setErrorText(error.message || "Error al procesar la solicitud");
+      setIsErrorModalOpen(true);
     } finally {
       setIsSaving(false);
     }
@@ -105,8 +111,11 @@ export default function EmployeesPage() {
       await tenantApi.deleteEmployee(id);
       setEmployees(employees.filter(e => e.id !== id));
       setShowDeleteConfirm(null);
+      setSuccessInfo({ title: "Empleado Eliminado", message: "La cuenta ha sido desactivada correctamente." });
+      setIsSuccessModalOpen(true);
     } catch (error: any) {
-      alert(error.message || "Error al eliminar empleado");
+      setErrorText(error.message || "Error al eliminar empleado");
+      setIsErrorModalOpen(true);
     } finally {
       setIsSaving(false);
     }
@@ -217,7 +226,10 @@ export default function EmployeesPage() {
                                 <Edit2 size={18} />
                             </button>
                             <button 
-                                onClick={() => setShowDeleteConfirm(emp.id)}
+                                onClick={() => {
+                                    setEditingEmployee(emp);
+                                    setShowDeleteConfirm(emp.id);
+                                }}
                                 className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
                                 title="Eliminar"
                             >
@@ -234,21 +246,12 @@ export default function EmployeesPage() {
       </div>
 
       {/* Modal Nueva/Editar Cuenta */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={() => setShowModal(false)}></div>
-          <div className="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl z-10 overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-slate-800 flex justify-between items-center">
-              <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                 {editingEmployee ? <Edit2 className="text-blue-500" /> : <UserPlus className="text-blue-500" />} 
-                 {editingEmployee ? "Editar Empleado" : "Nuevo Empleado"}
-              </h3>
-              <button onClick={() => setShowModal(false)} className="text-slate-500 hover:text-white transition-colors">
-                <X size={24} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSave} className="p-6 space-y-4">
+      <CustomModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title={editingEmployee ? "Editar Empleado" : "Nuevo Empleado"}
+      >
+            <form onSubmit={handleSave} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                     <label className="text-sm font-medium text-slate-400 ml-1">Nombre Completo</label>
@@ -321,69 +324,67 @@ export default function EmployeesPage() {
                 </select>
               </div>
 
-              {message.text && (
-                <div className={`p-3 rounded-xl text-sm ${message.type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
-                  {message.text}
-                </div>
-              )}
-
               <div className="pt-4 flex gap-3">
-                <button
+                <Button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-medium py-2.5 rounded-xl transition-all"
+                  variant="ghost"
+                  className="flex-1 text-slate-400 hover:text-white"
                 >
                   Cancelar
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   disabled={isSaving}
-                  className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-medium py-2.5 rounded-xl transition-all flex items-center justify-center gap-2"
+                  className="flex-1 bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center gap-2"
                 >
                   {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
-                  {editingEmployee ? "Guardar Cambios" : "Crear Cuenta"}
-                </button>
+                  {editingEmployee ? "Guardar" : "Crear"}
+                </Button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+      </CustomModal>
 
       {/* Modal de Confirmación de Eliminación */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(null)}></div>
-            <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl shadow-2xl z-10 overflow-hidden animate-in zoom-in-95 duration-200">
-                <div className="p-6 text-center space-y-4">
-                    <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto border border-red-500/20 mt-2">
-                        <AlertCircle size={32} />
-                    </div>
-                    <div className="space-y-2">
-                        <h3 className="text-xl font-bold text-white">¿Eliminar empleado?</h3>
-                        <p className="text-slate-400 text-sm px-4">
-                            Esta acción desactivará la cuenta del empleado. No podrá acceder al sistema, pero sus datos se conservarán en la base de datos.
-                        </p>
-                    </div>
-                    <div className="flex gap-3 pt-4 px-2">
-                        <button
-                            onClick={() => setShowDeleteConfirm(null)}
-                            className="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-medium py-2.5 rounded-xl transition-all"
-                        >
-                            Cancelar
-                        </button>
-                        <button
-                            disabled={isSaving}
-                            onClick={() => handleDelete(showDeleteConfirm)}
-                            className="flex-1 bg-red-600 hover:bg-red-500 text-white font-medium py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-600/20"
-                        >
-                            {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Trash2 size={18} />}
-                            Eliminar
-                        </button>
-                    </div>
-                </div>
+      <ConfirmModal
+        isOpen={!!showDeleteConfirm}
+        onClose={() => {
+            setShowDeleteConfirm(null);
+            setEditingEmployee(null);
+        }}
+        onConfirm={() => showDeleteConfirm && handleDelete(showDeleteConfirm)}
+        title="¿Eliminar empleado?"
+        message={
+            <span>
+                <strong>{editingEmployee?.full_name}</strong> será desactivado del sistema. No podrá acceder al sistema, pero sus datos se conservarán en la base de datos.
+            </span>
+        }
+        variant="danger"
+        confirmText="Sí, eliminar"
+        isLoading={isSaving}
+        icon={<Trash2 size={26} className="text-red-400" />}
+      />
+
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={() => setIsSuccessModalOpen(false)}
+        title={successInfo.title}
+        message={successInfo.message}
+      />
+
+      {/* Error Modal */}
+      <CustomModal isOpen={isErrorModalOpen} onClose={() => setIsErrorModalOpen(false)} title="Error" maxWidth="max-w-sm">
+          <div className="text-center">
+            <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+              <AlertCircle size={26} className="text-red-400" />
             </div>
-        </div>
-      )}
+            <p className="text-slate-400 text-sm mb-6">{errorText}</p>
+            <Button className="w-full bg-slate-800 hover:bg-slate-700 text-white" onClick={() => setIsErrorModalOpen(false)}>
+              Entendido
+            </Button>
+          </div>
+      </CustomModal>
     </div>
   );
 }
