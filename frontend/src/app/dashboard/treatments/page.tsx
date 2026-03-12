@@ -13,6 +13,7 @@ import { tenantApi, Treatment, Patient } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { CustomModal, SuccessModal } from "@/components/ui/custom-modal";
 
 export default function TreatmentsPage() {
   const [treatments, setTreatments] = useState<Treatment[]>([]);
@@ -27,6 +28,8 @@ export default function TreatmentsPage() {
     duration_minutes: 30,
     patient_id: "",
   });
+
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -65,6 +68,7 @@ export default function TreatmentsPage() {
         duration_minutes: 30,
         patient_id: "",
       });
+      setIsSuccessModalOpen(true);
       loadData();
     } catch (error) {
       console.error("Error creating treatment", error);
@@ -209,13 +213,11 @@ export default function TreatmentsPage() {
       )}
 
       {/* Add Treatment Modal */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md bg-slate-900 border-slate-800 shadow-2xl">
-            <div className="p-6">
-              <h2 className="text-xl font-bold text-white mb-6">
-                Registrar Tratamiento
-              </h2>
+      <CustomModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        title="Registrar Tratamiento"
+      >
               <form onSubmit={handleCreateTreatment} className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">
@@ -320,7 +322,7 @@ export default function TreatmentsPage() {
                     type="button"
                     variant="ghost"
                     onClick={() => setIsAddModalOpen(false)}
-                    className="text-slate-400 hover:text-white hover:bg-slate-800"
+                    className="text-slate-400 hover:text-white"
                   >
                     Cancelar
                   </Button>
@@ -328,14 +330,18 @@ export default function TreatmentsPage() {
                     type="submit"
                     className="bg-indigo-600 hover:bg-indigo-700 text-white"
                   >
-                    Guardar Tratamiento
+                    Guardar
                   </Button>
                 </div>
               </form>
-            </div>
-          </Card>
-        </div>
-      )}
+      </CustomModal>
+
+      <SuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={() => setIsSuccessModalOpen(false)}
+        title="Tratamiento Registrado"
+        message="El nuevo procedimiento ha sido guardado exitosamente."
+      />
     </div>
   );
 }

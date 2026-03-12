@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CustomModal, SuccessModal } from "@/components/ui/custom-modal";
 
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -29,6 +30,8 @@ export default function PaymentsPage() {
     payment_status: "completed",
     treatment_id: "",
   });
+
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -63,6 +66,7 @@ export default function PaymentsPage() {
         payment_status: "completed",
         treatment_id: "",
       });
+      setIsSuccessModalOpen(true);
       loadData(); // refresh
     } catch (error) {
       console.error("Error creating payment", error);
@@ -374,11 +378,11 @@ export default function PaymentsPage() {
       </Tabs>
 
       {/* Add Payment Modal */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md bg-slate-900 border-slate-800 shadow-2xl">
-            <div className="p-6">
-              <h2 className="text-xl font-bold text-white mb-6">Nuevo Pago</h2>
+      <CustomModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        title="Registrar Pago"
+      >
               <form onSubmit={handleCreatePayment} className="space-y-4">
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -533,7 +537,7 @@ export default function PaymentsPage() {
                     type="button"
                     variant="ghost"
                     onClick={() => setIsAddModalOpen(false)}
-                    className="text-slate-400 hover:text-white hover:bg-slate-800"
+                    className="text-slate-400 hover:text-white"
                   >
                     Cancelar
                   </Button>
@@ -541,14 +545,18 @@ export default function PaymentsPage() {
                     type="submit"
                     className="bg-emerald-600 hover:bg-emerald-700 text-white"
                   >
-                    Procesar Pago
+                    Procesar
                   </Button>
                 </div>
               </form>
-            </div>
-          </Card>
-        </div>
-      )}
+      </CustomModal>
+
+      <SuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={() => setIsSuccessModalOpen(false)}
+        title="Pago Registrado"
+        message="El cobro ha sido procesado exitosamente en el sistema."
+      />
     </div>
   );
 }

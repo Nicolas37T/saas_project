@@ -10,3 +10,4 @@ class Token(BaseModel):
     token_type: str
     subdomain: Optional[str] = None
     role: str
+    is_employee: Optional[bool] = False

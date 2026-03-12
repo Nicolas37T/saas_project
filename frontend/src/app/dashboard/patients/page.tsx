@@ -16,6 +16,7 @@ import { tenantApi, Patient } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { CustomModal, ConfirmModal, SuccessModal } from "@/components/ui/custom-modal";
 
 export default function PatientsPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -54,6 +55,10 @@ export default function PatientsPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingPatient, setDeletingPatient] = useState<Patient | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Success message modal
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [successInfo, setSuccessInfo] = useState({ title: "", message: "" });
 
   useEffect(() => {
     setMounted(true);
@@ -94,6 +99,9 @@ export default function PatientsPage() {
       });
       setIsAddModalOpen(false);
       setNewPatient({ first_name: "", last_name: "", phone: "", address: "", birth_day: "", description: "" });
+      
+      setSuccessInfo({ title: "Paciente Registrado", message: "El paciente ha sido creado con éxito." });
+      setIsSuccessModalOpen(true);
       loadPatients();
     } catch (error) {
       console.error("Error creating patient", error);
@@ -128,6 +136,9 @@ export default function PatientsPage() {
       });
       setIsEditModalOpen(false);
       setEditingPatient(null);
+      
+      setSuccessInfo({ title: "Datos Actualizados", message: "La información del paciente se actualizó correctamente." });
+      setIsSuccessModalOpen(true);
       loadPatients();
     } catch (error) {
       console.error("Error updating patient", error);
@@ -321,19 +332,11 @@ export default function PatientsPage() {
       </Card>
 
       {/* ─── MODAL: NUEVO PACIENTE ─────────────────────────────────────────────── */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md bg-slate-900 border-slate-800 shadow-2xl">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-white">Nuevo Paciente</h2>
-                <button
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="text-slate-500 hover:text-white transition-colors"
-                >
-                  <X size={20} />
-                </button>
-              </div>
+      <CustomModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        title="Nuevo Paciente"
+      >
               <form onSubmit={handleCreatePatient} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -410,25 +413,15 @@ export default function PatientsPage() {
                   </Button>
                 </div>
               </form>
-            </div>
-          </Card>
-        </div>
-      )}
+      </CustomModal>
 
       {/* ─── MODAL: EDITAR PACIENTE ────────────────────────────────────────────── */}
-      {isEditModalOpen && editingPatient && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md bg-slate-900 border-slate-800 shadow-2xl">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-white">Editar Paciente</h2>
-                <button
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="text-slate-500 hover:text-white transition-colors"
-                >
-                  <X size={20} />
-                </button>
-              </div>
+      <CustomModal
+        isOpen={isEditModalOpen && !!editingPatient}
+        onClose={() => setIsEditModalOpen(false)}
+        title="Editar Paciente"
+      >
+        {editingPatient && (
               <form onSubmit={handleSaveEdit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -500,47 +493,36 @@ export default function PatientsPage() {
                   </Button>
                 </div>
               </form>
-            </div>
-          </Card>
-        </div>
-      )}
+        )}
+      </CustomModal>
 
       {/* ─── MODAL: CONFIRMAR ELIMINACIÓN ─────────────────────────────────────── */}
-      {isDeleteModalOpen && deletingPatient && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-sm bg-slate-900 border-slate-800 shadow-2xl">
-            <div className="p-6 text-center">
-              <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
-                <Trash2 size={26} className="text-red-400" />
-              </div>
-              <h2 className="text-lg font-bold text-white mb-2">¿Eliminar paciente?</h2>
-              <p className="text-slate-400 text-sm mb-6">
-                <span className="text-white font-medium">
-                  {deletingPatient.first_name} {deletingPatient.last_name}
-                </span>{" "}
-                será desactivado del sistema. Sus datos se conservarán en la base de datos.
-              </p>
-              <div className="flex gap-3">
-                <Button
-                  variant="ghost"
-                  className="flex-1 text-slate-400 hover:text-white hover:bg-slate-800"
-                  onClick={() => setIsDeleteModalOpen(false)}
-                  disabled={isDeleting}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-                  onClick={handleConfirmDelete}
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? "Eliminando..." : "Sí, eliminar"}
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="¿Eliminar paciente?"
+        message={
+          <>
+            <span className="text-white font-medium">
+              {deletingPatient?.first_name} {deletingPatient?.last_name}
+            </span>{" "}
+            será desactivado del sistema. Sus datos se conservarán en la base de datos.
+          </>
+        }
+        variant="danger"
+        confirmText="Sí, eliminar"
+        isLoading={isDeleting}
+        icon={<Trash2 size={26} className="text-red-400" />}
+      />
+
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={() => setIsSuccessModalOpen(false)}
+        title={successInfo.title}
+        message={successInfo.message}
+      />
     </div>
   );
 }
