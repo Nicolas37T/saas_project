@@ -82,6 +82,7 @@ class PatientBase(BaseModel):
     address: Optional[str] = None
     description: Optional[str] = None
     status: bool = True
+    assigned_doctor_id: Optional[uuid.UUID] = None
 
 class PatientCreate(PatientBase):
     pass
@@ -94,6 +95,7 @@ class PatientUpdate(BaseModel):
     address: Optional[str] = None
     description: Optional[str] = None
     status: Optional[bool] = None
+    assigned_doctor_id: Optional[uuid.UUID] = None
 
 class PatientRead(PatientBase):
     id: uuid.UUID

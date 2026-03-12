@@ -187,6 +187,7 @@ export interface Patient {
   created_at: string;
   updated_at: string;
   created_by?: string;
+  assigned_doctor_id?: string;
 }
 
 export interface Appointment {

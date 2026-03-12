@@ -8,7 +8,7 @@ import {
   FileText,
   Calendar,
 } from "lucide-react";
-import { tenantApi, Patient, MedicalHistory, Appointment, Treatment } from "@/lib/api";
+import { tenantApi, Patient, MedicalHistory, Appointment, Treatment, Employee } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -52,6 +52,7 @@ export default function PatientProfilePage({
   const [history, setHistory] = useState<MedicalHistory[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [treatments, setTreatments] = useState<Treatment[]>([]);
+  const [employeesList, setEmployeesList] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Edit Patient
@@ -63,6 +64,7 @@ export default function PatientProfilePage({
     address: "",
     birth_day: "",
     description: "",
+    assigned_doctor_id: "",
   });
 
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
@@ -74,16 +76,18 @@ export default function PatientProfilePage({
     const loadPatientData = async () => {
       setLoading(true);
       try {
-        const [patientData, historyData, appointmentsData, treatmentsData] = await Promise.all([
+        const [patientData, historyData, appointmentsData, treatmentsData, employees] = await Promise.all([
           tenantApi.getPatient(id),
           tenantApi.getMedicalHistories(id).catch(() => []),
           tenantApi.getAppointments().catch(() => []),
-          tenantApi.getTreatments().catch(() => [])
+          tenantApi.getTreatments().catch(() => []),
+          tenantApi.getEmployees().catch(() => [])
         ]);
         setPatient(patientData);
         setHistory(historyData);
         setAppointments(appointmentsData.filter(a => a.patient_id === id));
         setTreatments(treatmentsData.filter(t => t.patient_id === id));
+        setEmployeesList(employees.filter((emp: Employee) => emp.status));
       } catch (error) {
         console.error("Error loading patient data:", error);
       } finally {
@@ -105,6 +109,7 @@ export default function PatientProfilePage({
         ? new Date(patient.birth_day).toISOString().split("T")[0]
         : "",
       description: patient.description || "",
+      assigned_doctor_id: patient.assigned_doctor_id || "",
     });
     setIsEditModalOpen(true);
   };
@@ -116,6 +121,7 @@ export default function PatientProfilePage({
       await tenantApi.updatePatient(patient.id, {
         ...editForm,
         birth_day: editForm.birth_day ? editForm.birth_day : undefined,
+        assigned_doctor_id: editForm.assigned_doctor_id || undefined,
       });
       setIsEditModalOpen(false);
       
@@ -168,6 +174,15 @@ export default function PatientProfilePage({
               <span>
                 ⏳ Registro: {new Date(patient.created_at).toLocaleDateString()}
               </span>
+              {patient.assigned_doctor_id && (
+                <span className="text-blue-400">
+                  👨‍⚕️ Doctor: {
+                    employeesList.find(e => e.id === patient.assigned_doctor_id)?.username || 
+                    employeesList.find(e => e.id === patient.assigned_doctor_id)?.full_name || 
+                    "Asignado"
+                  }
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -360,13 +375,28 @@ export default function PatientProfilePage({
                 className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
               />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">Descripción / Notas</label>
-              <Input
-                value={editForm.description}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm({ ...editForm, description: e.target.value })}
-                className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-300">Descripción / Notas</label>
+                <Input
+                  value={editForm.description}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditForm({ ...editForm, description: e.target.value })}
+                  className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-300">Doctor Asignado</label>
+                <select
+                  value={editForm.assigned_doctor_id}
+                  onChange={(e) => setEditForm({ ...editForm, assigned_doctor_id: e.target.value })}
+                  className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                >
+                  <option value="">Sin Asignar</option>
+                  {employeesList.map(emp => (
+                    <option key={emp.id} value={emp.id}>{emp.username || emp.full_name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
             <div className="flex gap-3 justify-end mt-8">
               <Button
