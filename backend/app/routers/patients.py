@@ -126,35 +126,56 @@ def update_full_medical_history(
                 dates = [item.treatment_date for item in update_data.odontogram_items if item.treatment_date]
                 latest_date = max(dates) if dates else datetime.utcnow()
 
-                descriptions = [f"Diente {item.tooth_number}: {item.description}" for item in update_data.odontogram_items if item.description]
-                summary_desc = " | ".join(descriptions) if descriptions else "Múltiples tratamientos"
-                
-                db_treatment.description = summary_desc
+                db_treatment.description = update_data.medical_description or "Tratamiento dental"
                 db_treatment.price = total_price if total_price > 0 else update_data.price
                 db_treatment.duration_minutes = total_duration
                 db_treatment.date = latest_date
                 db_treatment.updated_at = datetime.utcnow()
                 session.add(db_treatment)
 
-                # 3. Replace Odontogram items (delete old, create new)
+                # 3. Upsert Odontogram items (preserve existing procedure_status)
                 old_odontograms = session.exec(
                     select(Odontogram).where(Odontogram.treatment_id == db_treatment.id)
                 ).all()
-                for old in old_odontograms:
-                    session.delete(old)
+                # Build a lookup by tooth_number for existing items
+                existing_by_tooth = {o.tooth_number: o for o in old_odontograms}
+                incoming_tooth_numbers = set()
 
                 for item in update_data.odontogram_items:
-                    db_odontogram = Odontogram(
-                        tooth_number=item.tooth_number,
-                        tooth_type=item.tooth_type,
-                        notes=item.notes,
-                        price=item.price,
-                        description=item.description,
-                        duration_minutes=item.duration_minutes,
-                        treatment_date=item.treatment_date,
-                        treatment_id=db_treatment.id
-                    )
-                    session.add(db_odontogram)
+                    incoming_tooth_numbers.add(item.tooth_number)
+                    if item.tooth_number in existing_by_tooth:
+                        # Update existing odontogram, preserving its procedure_status
+                        existing = existing_by_tooth[item.tooth_number]
+                        existing.tooth_type = item.tooth_type
+                        existing.notes = item.notes
+                        existing.price = item.price
+                        existing.description = item.description
+                        existing.duration_minutes = item.duration_minutes
+                        existing.treatment_date = item.treatment_date
+                        # Only update procedure_status if explicitly provided and not default
+                        if item.procedure_status and item.procedure_status != "pendiente":
+                            existing.procedure_status = item.procedure_status
+                        existing.updated_at = datetime.utcnow()
+                        session.add(existing)
+                    else:
+                        # Create new odontogram entry
+                        db_odontogram = Odontogram(
+                            tooth_number=item.tooth_number,
+                            tooth_type=item.tooth_type,
+                            notes=item.notes,
+                            price=item.price,
+                            description=item.description,
+                            duration_minutes=item.duration_minutes,
+                            treatment_date=item.treatment_date,
+                            procedure_status=item.procedure_status,
+                            treatment_id=db_treatment.id
+                        )
+                        session.add(db_odontogram)
+
+                # Remove odontograms that were deleted by the user
+                for tooth_num, old_odontogram in existing_by_tooth.items():
+                    if tooth_num not in incoming_tooth_numbers:
+                        session.delete(old_odontogram)
 
                 # Removed Payment Update
 
@@ -455,7 +476,6 @@ def create_full_medical_history(
         if existing_history:
             raise HTTPException(status_code=400, detail="Este paciente ya tiene un historial médico activo. Solo se permite un historial por paciente.")
 
-        # Calculate total price and build summary description
         total_price = sum(item.price for item in full_data.odontogram_items)
         final_price = total_price if total_price > 0 else full_data.price
         
@@ -463,16 +483,12 @@ def create_full_medical_history(
         dates = [item.treatment_date for item in full_data.odontogram_items if item.treatment_date]
         latest_date = max(dates) if dates else datetime.utcnow()
 
-        descriptions = [f"Diente {item.tooth_number}: {item.description}" for item in full_data.odontogram_items if item.description]
-        summary_desc = " | ".join(descriptions) if descriptions else "Múltiples tratamientos"
-
         # 1. Create Treatment (as a summary)
         db_treatment = Treatment(
-            description=summary_desc,
+            description=full_data.medical_description or "Tratamiento dental",
             price=final_price,
             duration_minutes=total_duration,
             date=latest_date,
-            status_treatments="completed",
             patient_id=patient_id
         )
         session.add(db_treatment)
@@ -488,6 +504,7 @@ def create_full_medical_history(
                 description=item.description,
                 duration_minutes=item.duration_minutes,
                 treatment_date=item.treatment_date,
+                procedure_status=item.procedure_status,
                 treatment_id=db_treatment.id
             )
             session.add(db_odontogram)

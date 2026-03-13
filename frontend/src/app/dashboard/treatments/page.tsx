@@ -1,51 +1,33 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
-  LayoutList,
-  CheckCircle2,
   Activity,
   Calendar,
-  Clock,
-  User,
-  MoreVertical,
-  Pencil,
-  Trash2,
-  Filter,
   Search,
+  Stethoscope,
+  CheckCircle2,
+  RefreshCw
 } from "lucide-react";
-import { tenantApi, Treatment, Patient } from "@/lib/api";
-import { Button } from "@/components/ui/button";
+import { tenantApi, Treatment, Odontogram } from "@/lib/api";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CustomModal, ConfirmModal, SuccessModal } from "@/components/ui/custom-modal";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 type FilterType = "today" | "week" | "month" | "all";
+
+interface FlattenedProcedure extends Odontogram {
+  patient_name: string;
+  treatment_description: string;
+}
 
 export default function TreatmentsPage() {
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
-
-  // State for modals
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingTreatment, setEditingTreatment] = useState<Treatment | null>(null);
-  const [editForm, setEditForm] = useState({
-    description: "",
-    price: 0,
-    status_treatments: "",
-    duration_minutes: 0,
-  });
-
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [deletingTreatment, setDeletingTreatment] = useState<Treatment | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-  const [successInfo, setSuccessInfo] = useState({ title: "", message: "" });
-
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -63,11 +45,25 @@ export default function TreatmentsPage() {
     }
   };
 
+  const handleStatusUpdate = async (odontogramId: string, newStatus: string) => {
+    setUpdatingId(odontogramId);
+    try {
+      await tenantApi.updateOdontogram(odontogramId, { procedure_status: newStatus });
+      // Reload data to reflect changes
+      const tData = await tenantApi.getTreatments();
+      setTreatments(tData);
+    } catch (error) {
+      console.error("Error updating procedure status", error);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   const getStatusTheme = (s: string) => {
     switch (s) {
-      case "completed":
+      case "completado":
         return "text-green-400 bg-green-500/10 border-green-500/20";
-      case "in_progress":
+      case "en_progreso":
         return "text-blue-400 bg-blue-500/10 border-blue-500/20";
       default:
         return "text-orange-400 bg-orange-500/10 border-orange-500/20";
@@ -76,122 +72,115 @@ export default function TreatmentsPage() {
 
   const getStatusLabel = (s: string) => {
     switch (s) {
-      case "completed":
+      case "completado":
         return "Completado";
-      case "in_progress":
+      case "en_progreso":
         return "En progreso";
       default:
         return "Pendiente";
     }
   };
 
-  // Filter Logic
-  const filterTreatments = (items: Treatment[]) => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
-    let filtered = items;
+  // 1. Flatten all procedures FIRST
+  const allProcedures = useMemo(() => {
+    const list: FlattenedProcedure[] = [];
+    treatments.forEach(t => {
+      if (t.odontograms && t.odontograms.length > 0) {
+        t.odontograms.forEach(o => {
+          list.push({
+            ...o,
+            patient_name: t.patient ? `${t.patient.first_name} ${t.patient.last_name}` : "Sin Paciente",
+            treatment_description: t.description
+          });
+        });
+      }
+    });
+    return list;
+  }, [treatments]);
 
-    // Filter by date
-    if (activeFilter === "today") {
-      filtered = items.filter(t => t.date && new Date(t.date) >= today);
-    } else if (activeFilter === "week") {
-      const startOfWeek = new Date(today);
-      startOfWeek.setDate(today.getDate() - today.getDay());
-      filtered = items.filter(t => t.date && new Date(t.date) >= startOfWeek);
-    } else if (activeFilter === "month") {
-      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-      filtered = items.filter(t => t.date && new Date(t.date) >= startOfMonth);
+  // 2. Apply Filters (Date & Search) to the flattened list
+  const filteredProcedures = useMemo(() => {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+    let list = allProcedures;
+
+    // A. Date Filtering
+    if (activeFilter !== "all") {
+      list = list.filter(item => {
+        if (!item.treatment_date) return false;
+        
+        const itemDate = new Date(item.treatment_date);
+        
+        if (activeFilter === "today") {
+          return itemDate >= startOfToday && itemDate <= endOfToday;
+        } 
+        
+        if (activeFilter === "week") {
+          const startOfWeek = new Date(startOfToday);
+          startOfWeek.setDate(startOfToday.getDate() - startOfToday.getDay());
+          return itemDate >= startOfWeek && itemDate <= endOfToday;
+        }
+        
+        if (activeFilter === "month") {
+          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+          return itemDate >= startOfMonth && itemDate <= endOfToday;
+        }
+        
+        return true;
+      });
     }
 
-    // Filter by search
+    // B. Search Filtering
     if (search) {
-      filtered = filtered.filter(t => 
-        t.description.toLowerCase().includes(search.toLowerCase()) ||
-        (t.patient && `${t.patient.first_name} ${t.patient.last_name}`.toLowerCase().includes(search.toLowerCase()))
+      const s = search.toLowerCase();
+      list = list.filter(item => 
+        item.patient_name.toLowerCase().includes(s) ||
+        (item.description && item.description.toLowerCase().includes(s)) ||
+        item.treatment_description.toLowerCase().includes(s) ||
+        item.tooth_number.toString().includes(s)
       );
     }
 
-    return filtered.sort((a, b) => {
-      const dateA = a.date ? new Date(a.date).getTime() : 0;
-      const dateB = b.date ? new Date(b.date).getTime() : 0;
-      return dateB - dateA; // Newest first
+    // 3. Sort by date (newest first)
+    return list.sort((a, b) => {
+      const dateA = a.treatment_date ? new Date(a.treatment_date).getTime() : 0;
+      const dateB = b.treatment_date ? new Date(b.treatment_date).getTime() : 0;
+      return dateB - dateA;
     });
-  };
-
-  // Edit Logic
-  const handleOpenEdit = (t: Treatment) => {
-    setEditingTreatment(t);
-    setEditForm({
-      description: t.description,
-      price: t.price,
-      status_treatments: t.status_treatments,
-      duration_minutes: t.duration_minutes || 0,
-    });
-    setIsEditModalOpen(true);
-    setOpenMenuId(null);
-  };
-
-  const handleSaveEdit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingTreatment) return;
-    try {
-      await tenantApi.updateTreatment(editingTreatment.id, editForm);
-      setIsEditModalOpen(false);
-      setSuccessInfo({ title: "Tratamiento Actualizado", message: "Los cambios se guardaron correctamente." });
-      setIsSuccessModalOpen(true);
-      loadData();
-    } catch (error) {
-      console.error("Error updating treatment", error);
-    }
-  };
-
-  // Delete Logic
-  const handleOpenDelete = (t: Treatment) => {
-    setDeletingTreatment(t);
-    setIsDeleteModalOpen(true);
-    setOpenMenuId(null);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!deletingTreatment) return;
-    setIsDeleting(true);
-    try {
-      await tenantApi.deleteTreatment(deletingTreatment.id);
-      setIsDeleteModalOpen(false);
-      setSuccessInfo({ title: "Tratamiento Eliminado", message: "El registro ha sido removido de la vista." });
-      setIsSuccessModalOpen(true);
-      loadData();
-    } catch (error) {
-      console.error("Error deleting treatment", error);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const displayedTreatments = filterTreatments(treatments);
+  }, [allProcedures, activeFilter, search]);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white mb-1">
-            Tratamientos
+          <h1 className="text-3xl font-bold tracking-tight text-white mb-1 flex items-center gap-2">
+            <Stethoscope className="text-indigo-500" />
+            Control de Tratamientos
           </h1>
           <p className="text-slate-400">
-            Administración visual de los procedimientos clínicos realizados.
+            Detalle pormenorizado de procedimientos clínicos por pieza dental.
           </p>
         </div>
+        <Button 
+          variant="outline" 
+          onClick={loadData}
+          className="bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800"
+        >
+          <RefreshCw size={16} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
+          Refrescar
+        </Button>
       </div>
 
       {/* Filter Bar */}
-      <div className="flex flex-col lg:flex-row gap-4 items-center justify-between bg-slate-900/50 p-4 border border-slate-800 rounded-xl backdrop-blur-sm">
+      <div className="flex flex-col lg:flex-row gap-4 items-center justify-between bg-slate-900/50 p-4 border border-slate-800 rounded-xl backdrop-blur-sm shadow-xl">
         <div className="flex items-center gap-2 w-full lg:w-auto">
-          <div className="relative flex-1 lg:w-64">
+          <div className="relative flex-1 lg:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
             <Input 
-              placeholder="Buscar por procedimiento o paciente..."
-              className="pl-10 bg-slate-950/50 border-slate-800 text-white placeholder:text-slate-600 focus-visible:ring-indigo-500/50"
+              placeholder="Buscar paciente o procedimiento..."
+              className="pl-10 bg-slate-950/50 border-slate-800 text-white placeholder:text-slate-600 focus-visible:ring-indigo-500/50 transition-all focus:border-indigo-500/50"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -203,10 +192,10 @@ export default function TreatmentsPage() {
             <button
               key={f}
               onClick={() => setActiveFilter(f)}
-              className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap ${
+              className={`px-5 py-2 text-xs font-bold rounded-md transition-all whitespace-nowrap uppercase tracking-wider ${
                 activeFilter === f 
-                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20" 
-                : "text-slate-400 hover:text-white hover:bg-slate-800"
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30" 
+                : "text-slate-500 hover:text-white hover:bg-slate-800"
               }`}
             >
               {f === "all" ? "Todos" : f === "today" ? "Hoy" : f === "week" ? "Esta Semana" : "Este Mes"}
@@ -215,175 +204,127 @@ export default function TreatmentsPage() {
         </div>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center p-12">
-          <div className="animate-spin w-8 h-8 rounded-full border-2 border-indigo-500 border-t-transparent"></div>
+      {loading && treatments.length === 0 ? (
+        <div className="flex flex-col items-center justify-center p-24 gap-4">
+          <div className="animate-spin w-10 h-10 rounded-full border-2 border-indigo-500 border-t-transparent shadow-[0_0_15px_rgba(99,102,241,0.3)]"></div>
+          <p className="text-slate-500 animate-pulse text-sm font-medium tracking-widest">CARGANDO PROCEDIMIENTOS...</p>
         </div>
-      ) : displayedTreatments.length === 0 ? (
-        <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
-          <CardContent className="flex flex-col items-center justify-center py-20">
-            <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mb-4">
-              <Activity className="text-slate-400" size={32} />
+      ) : filteredProcedures.length === 0 ? (
+        <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mb-6 border border-slate-700/50">
+              <Activity className="text-slate-600" size={40} />
             </div>
-            <h3 className="text-xl font-medium text-white mb-2">
-              No se encontraron tratamientos
+            <h3 className="text-2xl font-bold text-white mb-3">
+              No se encontraron procedimientos registrados
             </h3>
-            <p className="text-slate-400">
-              Prueba cambiando los filtros o el término de búsqueda.
+            <p className="text-slate-500 max-w-sm mx-auto leading-relaxed">
+              {activeFilter !== "all" 
+                ? `No hay registros para el filtro "${activeFilter === "today" ? "Hoy" : activeFilter === "week" ? "Esta Semana" : "Este Mes"}".`
+                : "Los tratamientos deben tener piezas dentales vinculadas en el odontograma para aparecer en este listado detallado."}
             </p>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {displayedTreatments.map((t) => (
-            <Card key={t.id} className="bg-slate-950/50 border-slate-800 hover:border-slate-700 transition-all group relative">
-              <CardHeader className="p-4 pb-0 flex flex-row items-start justify-between space-y-0">
-                <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400 mb-2">
-                  <LayoutList size={20} />
-                </div>
-                
-                <div className="relative">
-                  <button 
-                    onClick={() => setOpenMenuId(openMenuId === t.id ? null : t.id)}
-                    className="p-1 rounded-md text-slate-500 hover:text-white hover:bg-slate-800 transition-colors"
-                  >
-                    <MoreVertical size={18} />
-                  </button>
-
-                  {openMenuId === t.id && (
-                    <div className="absolute right-0 top-8 z-50 w-36 bg-slate-900 border border-slate-800 rounded-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                      <button 
-                        onClick={() => handleOpenEdit(t)}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
-                      >
-                        <Pencil size={14} className="text-blue-400" /> Editar
-                      </button>
-                      <button 
-                        onClick={() => handleOpenDelete(t)}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
-                      >
-                        <Trash2 size={14} /> Eliminar
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </CardHeader>
-
-              <CardContent className="p-4 pt-2">
-                <div className="mb-4">
-                  <CardTitle className="text-white text-lg font-bold mb-1" title={t.description}>
-                    {t.description}
-                  </CardTitle>
-                  <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                    <User size={12} className="text-slate-500" />
-                    <span className="truncate">{t.patient ? `${t.patient.first_name} ${t.patient.last_name}` : "Sin Paciente"}</span>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${getStatusTheme(t.status_treatments)} uppercase tracking-wider`}>
-                      {getStatusLabel(t.status_treatments)}
-                    </span>
-                    <span className="text-lg font-bold text-white flex items-baseline">
-                      <span className="text-indigo-400 text-xs mr-1 opacity-70">Bs.</span>
-                      {t.price.toLocaleString()}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 pt-3 border-t border-slate-800/50">
-                    <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
-                      <Calendar size={12} className="text-slate-600" />
-                      <span>{t.date ? new Date(t.date).toLocaleDateString() : "-"}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-[11px] text-slate-500 justify-end">
-                      <Clock size={12} className="text-slate-600" />
-                      <span>{t.duration_minutes ? `${t.duration_minutes} min` : "-"}</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="bg-slate-900/40 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden backdrop-blur-md">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs whitespace-nowrap">
+              <thead className="bg-slate-950/80 text-slate-500 uppercase tracking-[0.1em] font-black border-b border-slate-800/80">
+                <tr>
+                  <th className="px-6 py-5">Paciente</th>
+                  <th className="px-6 py-5">Pieza</th>
+                  <th className="px-6 py-5">Procedimiento / Detalle</th>
+                  <th className="px-6 py-5">Estado</th>
+                  <th className="px-6 py-5">Fecha</th>
+                  <th className="px-6 py-5 text-right">Monto Acordado</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/30">
+                {filteredProcedures.map((item, idx) => (
+                  <tr key={item.id || idx} className="hover:bg-indigo-500/5 transition-colors group">
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-blue-600 rounded-lg flex items-center justify-center text-white font-black text-[11px] shadow-lg shadow-indigo-600/20 group-hover:scale-110 transition-transform">
+                          {item.patient_name.charAt(0)}
+                        </div>
+                        <span className="text-slate-200 font-bold group-hover:text-white transition-colors">{item.patient_name}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <Badge className="bg-slate-950/60 text-indigo-400 border border-indigo-500/30 px-3 py-1.5 font-black text-[11px] rounded-md">
+                        #{item.tooth_number}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-5">
+                      <p className="font-black text-slate-100 mb-0.5 tracking-tight group-hover:text-indigo-300 transition-colors uppercase">
+                        {item.description || item.treatment_description}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">
+                          Pieza {item.tooth_type === 'adult' ? 'Permanente' : 'Temporal'}
+                        </span>
+                        {item.notes && (
+                            <>
+                                <span className="text-slate-700">•</span>
+                                <span className="text-[10px] text-slate-600 italic truncate max-w-[200px]">{item.notes}</span>
+                            </>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-black border ${getStatusTheme(item.procedure_status)} uppercase tracking-widest shadow-sm`}>
+                          {getStatusLabel(item.procedure_status)}
+                        </span>
+                        {item.procedure_status !== 'completado' && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-slate-500 hover:text-green-500 hover:bg-green-500/10 transition-all rounded-full"
+                            onClick={() => handleStatusUpdate(item.id, 'completado')}
+                            disabled={updatingId === item.id}
+                          >
+                            {updatingId === item.id ? (
+                              <RefreshCw size={14} className="animate-spin" />
+                            ) : (
+                              <CheckCircle2 size={16} />
+                            )}
+                          </Button>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 text-slate-400">
+                      <div className="flex items-center gap-2 font-mono font-medium text-[11px]">
+                        <Calendar size={13} className="text-slate-600 group-hover:text-indigo-400 transition-colors" />
+                        {item.treatment_date ? new Date(item.treatment_date).toLocaleDateString() : "--"}
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 text-right">
+                      <div className="flex flex-col items-end">
+                        <span className="font-black text-amber-500 text-sm tracking-tight group-hover:scale-105 transition-transform origin-right">
+                            Bs. {item.price.toLocaleString()}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {/* Summary Footer */}
+          <div className="bg-slate-950/40 px-6 py-4 flex justify-between items-center border-t border-slate-800">
+            <p className="text-slate-500 text-[10px] uppercase font-black tracking-widest">
+              Total procedimientos listados: {filteredProcedures.length}
+            </p>
+            <div className="flex items-center gap-2">
+                 <p className="text-slate-500 text-[10px] uppercase font-black tracking-widest">Suma Total:</p>
+                 <span className="text-indigo-400 font-black text-sm">
+                    Bs. {filteredProcedures.reduce((acc, curr) => acc + curr.price, 0).toLocaleString()}
+                 </span>
+            </div>
+          </div>
         </div>
       )}
-
-      {/* Edit Modal */}
-      <CustomModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        title="Editar Tratamiento"
-      >
-        <form onSubmit={handleSaveEdit} className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">Descripción</label>
-            <textarea 
-              value={editForm.description}
-              onChange={(e) => setEditForm({...editForm, description: e.target.value})}
-              className="w-full min-h-[100px] p-3 rounded-md bg-slate-950 border border-slate-800 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 resize-none"
-              placeholder="Descripción del tratamiento..."
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">Precio (Bs.)</label>
-              <Input 
-                type="number"
-                value={editForm.price}
-                onChange={(e) => setEditForm({...editForm, price: parseFloat(e.target.value)})}
-                className="bg-slate-950 border-slate-800 text-white"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">Duración (min)</label>
-              <Input 
-                type="number"
-                value={editForm.duration_minutes}
-                onChange={(e) => setEditForm({...editForm, duration_minutes: parseInt(e.target.value)})}
-                className="bg-slate-950 border-slate-800 text-white"
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">Estado</label>
-            <select
-              className="w-full p-2 rounded-md bg-slate-950 border border-slate-800 text-white text-sm"
-              value={editForm.status_treatments}
-              onChange={(e) => setEditForm({...editForm, status_treatments: e.target.value})}
-            >
-              <option value="pending">Pendiente</option>
-              <option value="in_progress">En progreso</option>
-              <option value="completed">Completado</option>
-            </select>
-          </div>
-          <div className="flex justify-end gap-3 mt-6">
-            <Button variant="ghost" onClick={() => setIsEditModalOpen(false)} className="text-slate-400">Cancelar</Button>
-            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white px-6">Guardar Cambios</Button>
-          </div>
-        </form>
-      </CustomModal>
-
-      {/* Delete Confirmation Modal */}
-      <ConfirmModal 
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={handleConfirmDelete}
-        title="¿Eliminar Tratamiento?"
-        message={
-          <>¿Estás seguro de que deseas eliminar <span className="text-white font-medium">{deletingTreatment?.description}</span>? El registro permanecerá en la base de datos pero no será visible.</>
-        }
-        variant="danger"
-        confirmText="Sí, Eliminar"
-        isLoading={isDeleting}
-        icon={<Trash2 size={24} className="text-red-400" />}
-      />
-
-      <SuccessModal 
-        isOpen={isSuccessModalOpen}
-        onClose={() => setIsSuccessModalOpen(false)}
-        title={successInfo.title}
-        message={successInfo.message}
-      />
     </div>
   );
 }

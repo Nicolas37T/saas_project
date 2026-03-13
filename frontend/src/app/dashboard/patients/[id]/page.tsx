@@ -313,7 +313,13 @@ export default function PatientProfilePage({
                           </p>
                           <p className="text-sm text-white capitalize">
                             <span className="text-slate-500">Estado:</span>{" "}
-                            {translateStatus(treatment.status_treatments, treatmentStatusMap)}
+                            {(() => {
+                              const procs = treatment.odontograms || [];
+                              if (procs.length === 0) return "Sin procedimientos";
+                              const allDone = procs.every((p: any) => p.procedure_status === "completado");
+                              const anyDone = procs.some((p: any) => p.procedure_status === "completado");
+                              return allDone ? "Completado" : anyDone ? "En progreso" : "Pendiente";
+                            })()}
                           </p>
                           <p className="text-sm text-white">
                             <span className="text-slate-500">Precio:</span>{" "}

@@ -85,7 +85,7 @@ class Treatment(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     description: str
     price: float = Field(default=0.0)
-    status_treatments: str = Field(default="pending") # e.g. pending, in_progress, completed
+    status_treatments: str = Field(default="pendiente") # e.g. pending, in_progress, completed
     duration_minutes: Optional[int] = None
     date: Optional[datetime] = None
     status: bool = Field(default=True)
@@ -161,6 +161,7 @@ class Odontogram(SQLModel, table=True):
     description: Optional[str] = None  # Treatment name for this tooth
     duration_minutes: Optional[int] = None
     treatment_date: Optional[datetime] = None
+    procedure_status: str = Field(default="pendiente")  # e.g., pendiente, en_progreso, completado
     status: bool = Field(default=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
