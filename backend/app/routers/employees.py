@@ -105,9 +105,7 @@ def get_employees(
     current_user = Depends(get_current_tenant_user)
 ):
     """Lista los empleados activos del tenant actual"""
-    # Verificación básica de permisos integrada
-    if getattr(current_user, "computed_role", "") not in ["admin", "superadmin", "owner"]:
-         raise HTTPException(status_code=403, detail="No tienes permiso para ver empleados")
+    # Permitir a cualquier usuario autenticado ver la lista de empleados para asignaciones.
 
     # Filtrar solo empleados activos
     employees = session.exec(select(User).where(User.status == True)).all()

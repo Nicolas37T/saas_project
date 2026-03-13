@@ -82,6 +82,7 @@ class PatientBase(BaseModel):
     address: Optional[str] = None
     description: Optional[str] = None
     status: bool = True
+    assigned_doctor_id: Optional[uuid.UUID] = None
 
 class PatientCreate(PatientBase):
     pass
@@ -94,6 +95,7 @@ class PatientUpdate(BaseModel):
     address: Optional[str] = None
     description: Optional[str] = None
     status: Optional[bool] = None
+    assigned_doctor_id: Optional[uuid.UUID] = None
 
 class PatientRead(PatientBase):
     id: uuid.UUID
@@ -195,6 +197,7 @@ class AppointmentBase(BaseModel):
     appointment_status: str = "scheduled"
     status: bool = True
     patient_id: uuid.UUID
+    assigned_doctor_id: Optional[uuid.UUID] = None
 
 class AppointmentCreate(AppointmentBase):
     pass
@@ -204,6 +207,7 @@ class AppointmentUpdate(BaseModel):
     notes: Optional[str] = None
     appointment_status: Optional[str] = None
     status: Optional[bool] = None
+    assigned_doctor_id: Optional[uuid.UUID] = None
 
 class AppointmentRead(AppointmentBase):
     id: uuid.UUID
@@ -294,11 +298,7 @@ class FullMedicalHistoryCreate(BaseModel):
     
     # Odontogram data (now contains per-tooth treatment data)
     odontogram_items: List[FullMedicalHistoryItem] = []
-    
-    # Payment data
-    payment_amount: float
-    payment_method: str = "cash"
-    payment_status: str = "completed"
+
 
 
 class FullMedicalHistoryUpdate(BaseModel):
@@ -321,10 +321,8 @@ class FullMedicalHistoryUpdate(BaseModel):
     # Odontogram data
     odontogram_items: List[FullMedicalHistoryItem] = []
     
-    # Payment data
-    payment_amount: Optional[float] = None
-    payment_method: str = "cash"
-    payment_status: str = "completed"
+    # Odontogram data
+    odontogram_items: List[FullMedicalHistoryItem] = []
 
 class TreatmentReadWithRelations(TreatmentRead):
     patient: Optional[PatientRead] = None

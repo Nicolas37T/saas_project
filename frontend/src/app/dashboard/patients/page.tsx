@@ -9,7 +9,6 @@ import {
   MoreVertical,
   Pencil,
   Trash2,
-  X,
   Calendar,
   Share2,
 } from "lucide-react";
@@ -18,14 +17,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { CustomModal, ConfirmModal, SuccessModal } from "@/components/ui/custom-modal";
+import { useRouter } from "next/navigation";
 
 export default function PatientsPage() {
+  const router = useRouter();
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [employeesMap, setEmployeesMap] = useState<Record<string, string>>({});
+  const [employeesList, setEmployeesList] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [mounted, setMounted] = useState(false);
-  const [employeesList, setEmployeesList] = useState<Employee[]>([]);
-  const [employeesMap, setEmployeesMap] = useState<Record<string, string>>({});
 
   // Menú de 3 puntos
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -118,6 +119,7 @@ export default function PatientsPage() {
       await tenantApi.createPatient({
         ...newPatient,
         birth_day: newPatient.birth_day ? newPatient.birth_day : undefined,
+        assigned_doctor_id: newPatient.assigned_doctor_id || undefined,
       });
       setIsAddModalOpen(false);
       setNewPatient({ first_name: "", last_name: "", phone: "", address: "", birth_day: "", description: "", assigned_doctor_id: "" });
@@ -156,6 +158,7 @@ export default function PatientsPage() {
       await tenantApi.updatePatient(editingPatient.id, {
         ...editForm,
         birth_day: editForm.birth_day ? editForm.birth_day : undefined,
+        assigned_doctor_id: editForm.assigned_doctor_id || undefined,
       });
       setIsEditModalOpen(false);
       setEditingPatient(null);
@@ -289,7 +292,7 @@ export default function PatientsPage() {
                         {patient.last_name[0]}
                       </div>
                       <div>
-                        <h4 className="text-white font-medium truncate max-w-[150px]">
+                        <h4 className="text-white font-medium break-words pr-2">
                           {patient.first_name} {patient.last_name}
                         </h4>
                         <span className="text-xs text-slate-500 capitalize">
@@ -360,7 +363,6 @@ export default function PatientsPage() {
                     {patient.created_by && (
                       <div className="flex items-center gap-2 text-xs text-slate-500 mt-2">
                         <User size={12} className="text-slate-600" />
-
                         <span className="truncate" title={`Registrado por: ${patient.creator_name || employeesMap[patient.created_by] || patient.created_by}`}>
                           Registrado por: {patient.creator_name || employeesMap[patient.created_by] || patient.created_by.substring(0, 8) + "..."}
                         </span>
@@ -377,6 +379,7 @@ export default function PatientsPage() {
                       variant="ghost"
                       size="sm"
                       className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 h-8 px-3"
+                      onClick={() => router.push(`/dashboard/patients/${patient.id}`)}
                     >
                       Ver Perfil
                     </Button>
@@ -466,7 +469,7 @@ export default function PatientsPage() {
                     >
                       <option value="">Sin Asignar</option>
                       {employeesList.map(emp => (
-                        <option key={emp.id} value={emp.id}>{emp.full_name}</option>
+                        <option key={emp.id} value={emp.id}>{emp.full_name || emp.username}</option>
                       ))}
                     </select>
                   </div>
@@ -562,7 +565,7 @@ export default function PatientsPage() {
                     >
                       <option value="">Sin Asignar</option>
                       {employeesList.map(emp => (
-                        <option key={emp.id} value={emp.id}>{emp.full_name}</option>
+                        <option key={emp.id} value={emp.id}>{emp.full_name || emp.username}</option>
                       ))}
                     </select>
                   </div>

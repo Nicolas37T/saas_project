@@ -1,14 +1,22 @@
 const RAILWAY_BACKEND = "https://saasproject-production-0c1a.up.railway.app";
-export const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL ||
-  (typeof window !== "undefined" &&
-    (window.location.hostname === "localhost" ||
-      window.location.hostname === "127.0.0.1")
-    ? "http://localhost:8000"
-    : typeof window !== "undefined" &&
-      !window.location.hostname.includes("localhost")
-      ? RAILWAY_BACKEND
-      : "http://localhost:8000");
+
+const getApiBase = () => {
+  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+  if (typeof window === "undefined") return "http://localhost:8000";
+
+  const host = window.location.hostname;
+  if (
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host.startsWith("192.168.") ||
+    host.startsWith("10.")
+  ) {
+    return `http://${host}:8000`;
+  }
+  return RAILWAY_BACKEND;
+};
+
+export const API_BASE = getApiBase();
 
 if (typeof window !== "undefined") {
   console.log("🛠️ SaaS API Base URL:", API_BASE);
@@ -198,6 +206,7 @@ export interface Appointment {
   appointment_status: string;
   status: boolean;
   patient_id: string;
+  assigned_doctor_id?: string;
 }
 
 export interface Treatment {
@@ -245,35 +254,35 @@ export interface Odontogram {
 }
 
 export interface SettingData {
-    business_name: string;
-    logo_url?: string;
-    phone?: string;
-    cellphone?: string;
-    address?: string;
-    currency?: string;
+  business_name: string;
+  logo_url?: string;
+  phone?: string;
+  cellphone?: string;
+  address?: string;
+  currency?: string;
 }
 
 export interface Role {
-    id: string;
-    name: string;
+  id: string;
+  name: string;
 }
 
 export interface Employee {
-    id: string;
-    username: string;
-    email: string;
-    full_name: string;
-    role?: Role;
-    status: boolean;
-    created_at: string;
+  id: string;
+  username: string;
+  email: string;
+  full_name: string;
+  role?: Role;
+  status: boolean;
+  created_at: string;
 }
 
 export interface EmployeeCreate {
-    username: string;
-    email: string;
-    full_name: string;
-    password: string;
-    role_id: string;
+  username: string;
+  email: string;
+  full_name: string;
+  password: string;
+  role_id: string;
 }
 
 export interface PatientShare {
@@ -289,7 +298,9 @@ export const tenantApi = {
   getTenantConfig: async (): Promise<SettingData> => {
     return apiFetch("/api/tenant/settings");
   },
-  updateTenantConfig: async (data: Partial<SettingData>): Promise<SettingData> => {
+  updateTenantConfig: async (
+    data: Partial<SettingData>,
+  ): Promise<SettingData> => {
     return apiFetch("/api/tenant/settings", {
       method: "PUT",
       body: JSON.stringify(data),
@@ -312,7 +323,10 @@ export const tenantApi = {
       body: JSON.stringify(data),
     });
   },
-  updateEmployee: async (id: string, data: Partial<EmployeeCreate>): Promise<Employee> => {
+  updateEmployee: async (
+    id: string,
+    data: Partial<EmployeeCreate>,
+  ): Promise<Employee> => {
     return apiFetch(`/api/tenant/employees/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
@@ -327,6 +341,10 @@ export const tenantApi = {
   // Patients
   getPatients: () => apiFetch<Patient[]>("/api/tenant/patients/"),
   getPatient: (id: string) => apiFetch<Patient>(`/api/tenant/patients/${id}`),
+  checkPatientHistory: (id: string) =>
+    apiFetch<{ has_history: boolean }>(
+      `/api/tenant/patients/${id}/has-history`,
+    ),
   createPatient: (data: Partial<Patient>) =>
     apiFetch<Patient>("/api/tenant/patients/", {
       method: "POST",
