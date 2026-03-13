@@ -90,6 +90,7 @@ export default function HistoryPatientsPage() {
       description: string;
       duration_minutes: number;
       treatment_date: string;
+      procedure_status: string;
     }[]
   >([]);
   const [newTooth, setNewTooth] = useState({
@@ -100,6 +101,7 @@ export default function HistoryPatientsPage() {
     description: "",
     duration_minutes: 30,
     treatment_date: new Date().toISOString().split("T")[0],
+    procedure_status: "pendiente",
   });
 
   useEffect(() => {
@@ -187,6 +189,7 @@ export default function HistoryPatientsPage() {
       description: "",
       duration_minutes: 30,
       treatment_date: new Date().toISOString().split("T")[0],
+      procedure_status: "pendiente",
     });
   };
 
@@ -286,6 +289,7 @@ export default function HistoryPatientsPage() {
       description: "",
       duration_minutes: 30,
       treatment_date: new Date().toISOString().split("T")[0],
+      procedure_status: "pendiente",
     });
   };
 
@@ -797,17 +801,13 @@ export default function HistoryPatientsPage() {
         title="Error en el Sistema"
       >
         <div className="space-y-4">
-          <p className="text-slate-300 text-sm leading-relaxed">
-            {errorModal.message}
-          </p>
-          <div className="flex justify-end pt-4">
-            <Button
-              onClick={() => setErrorModal({ ...errorModal, isOpen: false })}
-              className="bg-rose-600 hover:bg-rose-700 text-white"
-            >
-              Cerrar
-            </Button>
-          </div>
+          <p className="text-slate-300">{errorModal.message}</p>
+          <Button
+            onClick={() => setErrorModal({ ...errorModal, isOpen: false })}
+            className="w-full bg-slate-800 hover:bg-slate-700"
+          >
+            Cerrar
+          </Button>
         </div>
       </CustomModal>
     </div>

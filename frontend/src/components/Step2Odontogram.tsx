@@ -81,8 +81,9 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                   </label>
                   <Input
                     type="number"
+                    placeholder="1"
                     className="bg-slate-900 border-slate-800 text-white"
-                    value={newTooth.tooth_number}
+                    value={newTooth.tooth_number || ""}
                     onChange={(e) =>
                       setNewTooth({
                         ...newTooth,

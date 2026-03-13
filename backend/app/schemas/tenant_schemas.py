@@ -127,7 +127,7 @@ class PatientShareRead(PatientShareBase):
 class TreatmentBase(BaseModel):
     description: str
     price: float = 0.0
-    status_treatments: str = "pending"
+    status_treatments: str = "pendiente"
     duration_minutes: Optional[int] = None
     date: Optional[datetime] = None
     status: bool = True
@@ -248,6 +248,7 @@ class OdontogramBase(BaseModel):
     description: Optional[str] = None
     duration_minutes: Optional[int] = None
     treatment_date: Optional[datetime] = None
+    procedure_status: str = "pendiente"
     status: bool = True
     treatment_id: uuid.UUID
 
@@ -258,6 +259,7 @@ class OdontogramUpdate(BaseModel):
     tooth_number: Optional[int] = None
     tooth_type: Optional[str] = None
     notes: Optional[str] = None
+    procedure_status: Optional[str] = None
     status: Optional[bool] = None
 
 class OdontogramRead(OdontogramBase):
@@ -278,6 +280,7 @@ class FullMedicalHistoryItem(BaseModel):
     description: Optional[str] = None
     duration_minutes: Optional[int] = None
     treatment_date: Optional[datetime] = None
+    procedure_status: str = "pendiente"
 
 class FullMedicalHistoryCreate(BaseModel):
     # Medical History data
@@ -327,5 +330,6 @@ class FullMedicalHistoryUpdate(BaseModel):
 class TreatmentReadWithRelations(TreatmentRead):
     patient: Optional[PatientRead] = None
     payments: List[PaymentRead] = []
+    odontograms: List[OdontogramRead] = []
 
     model_config = ConfigDict(from_attributes=True)

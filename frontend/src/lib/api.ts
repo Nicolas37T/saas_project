@@ -213,13 +213,13 @@ export interface Treatment {
   id: string;
   description: string;
   price: number;
-  status_treatments: string;
   duration_minutes?: number;
   date?: string;
   status: boolean;
   patient_id?: string;
   patient?: Patient;
   payments?: Payment[];
+  odontograms?: Odontogram[];
 }
 
 export interface MedicalHistory {
@@ -249,6 +249,11 @@ export interface Odontogram {
   tooth_number: number;
   tooth_type: string;
   notes?: string;
+  price: number;
+  description?: string;
+  duration_minutes?: number;
+  treatment_date?: string;
+  procedure_status: string;
   status: boolean;
   treatment_id: string;
 }
@@ -457,6 +462,11 @@ export const tenantApi = {
   createOdontogram: (data: Partial<Odontogram>) =>
     apiFetch<Odontogram>("/api/tenant/odontograms/", {
       method: "POST",
+      body: JSON.stringify(data),
+    }),
+  updateOdontogram: (id: string, data: Partial<Odontogram>) =>
+    apiFetch<Odontogram>(`/api/tenant/odontograms/${id}`, {
+      method: "PUT",
       body: JSON.stringify(data),
     }),
 };

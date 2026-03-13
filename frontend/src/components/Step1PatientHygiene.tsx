@@ -264,7 +264,7 @@ export const Step1PatientHygiene: React.FC<Step1Props> = ({
                 </label>
                 <Input
                   className="bg-slate-950/50 border-slate-800 text-white h-11"
-                  placeholder="Ej: 3 veces al día"
+                  placeholder="Ej: 3 "
                   value={formData.brushing_frequency}
                   onChange={(e) =>
                     setFormData({
