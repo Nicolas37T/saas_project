@@ -67,6 +67,17 @@ class Patient(SQLModel, table=True):
     medical_histories: List["MedicalHistory"] = Relationship(back_populates="patient")
     appointments: List["Appointment"] = Relationship(back_populates="patient")
     treatments: List["Treatment"] = Relationship(back_populates="patient")
+    shared_with: List["PatientShare"] = Relationship(back_populates="patient")
+
+class PatientShare(SQLModel, table=True):
+    __tablename__ = "patient_shares"
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    patient_id: uuid.UUID = Field(foreign_key="patients.id")
+    doctor_id: uuid.UUID = Field(foreign_key="users.id")
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    patient: Patient = Relationship(back_populates="shared_with")
+    doctor: User = Relationship()
 
 class Treatment(SQLModel, table=True):
     __tablename__ = "treatments"

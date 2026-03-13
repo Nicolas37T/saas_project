@@ -11,6 +11,7 @@ import {
   Trash2,
   X,
   Calendar,
+  Share2,
 } from "lucide-react";
 import { tenantApi, Patient } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -56,6 +57,12 @@ export default function PatientsPage() {
   const [deletingPatient, setDeletingPatient] = useState<Patient | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Modal: Compartir Paciente
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [sharingPatient, setSharingPatient] = useState<Patient | null>(null);
+  const [selectedShareDoctorId, setSelectedShareDoctorId] = useState("");
+  const [isSharing, setIsSharing] = useState(false);
+
   // Success message modal
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [successInfo, setSuccessInfo] = useState({ title: "", message: "" });
@@ -79,7 +86,22 @@ export default function PatientsPage() {
   const loadPatients = async () => {
     setLoading(true);
     try {
+<<<<<<< Updated upstream
       const data = await tenantApi.getPatients();
+=======
+      const [data, doctors] = await Promise.all([
+        tenantApi.getPatients(),
+        tenantApi.getDoctors().catch(() => [])
+      ]);
+
+      const empMap: Record<string, string> = {};
+      doctors.forEach((emp: Employee) => {
+        empMap[emp.id] = emp.full_name || emp.username || emp.id;
+      });
+      setEmployeesMap(empMap);
+      setEmployeesList(doctors); // El backend ya filtra por cargo DOCTOR y status activo
+
+>>>>>>> Stashed changes
       // Solo mostramos activos (status=true), el backend ya filtra pero doble check
       setPatients(data.filter((p) => p.status));
     } catch (error) {
@@ -165,6 +187,32 @@ export default function PatientsPage() {
       console.error("Error deleting patient", error);
     } finally {
       setIsDeleting(false);
+    }
+  };
+  
+  // ─── COMPARTIR PACIENTE ─────────────────────────────────────────────────────
+  const handleOpenShare = (patient: Patient) => {
+    setOpenMenuId(null);
+    setSharingPatient(patient);
+    setSelectedShareDoctorId("");
+    setIsShareModalOpen(true);
+  };
+
+  const handleConfirmShare = async () => {
+    if (!sharingPatient || !selectedShareDoctorId) return;
+    setIsSharing(true);
+    try {
+      await tenantApi.sharePatient(sharingPatient.id, selectedShareDoctorId);
+      setIsShareModalOpen(false);
+      setSuccessInfo({
+        title: "Paciente Compartido",
+        message: `Se ha compartido el acceso a ${sharingPatient.first_name} con el colega seleccionado. Ahora podrá ver su historial médico y tratamientos.`
+      });
+      setIsSuccessModalOpen(true);
+    } catch (error) {
+      console.error("Error sharing patient", error);
+    } finally {
+      setIsSharing(false);
     }
   };
 
@@ -271,6 +319,13 @@ export default function PatientsPage() {
                             <Pencil size={14} className="text-blue-400" />
                             Editar paciente
                           </button>
+                          <button
+                            onClick={() => handleOpenShare(patient)}
+                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                          >
+                            <Share2 size={14} className="text-green-400" />
+                            Compartir paciente
+                          </button>
                           <div className="border-t border-slate-700" />
                           <button
                             onClick={() => handleOpenDelete(patient)}
@@ -304,8 +359,13 @@ export default function PatientsPage() {
                     {patient.created_by && (
                       <div className="flex items-center gap-2 text-xs text-slate-500 mt-2">
                         <User size={12} className="text-slate-600" />
+<<<<<<< Updated upstream
                         <span className="truncate" title={`Registrado por ID: ${patient.created_by}`}>
                           Registrado por: {patient.created_by.substring(0, 8)}...
+=======
+                        <span className="truncate" title={`Registrado por: ${patient.creator_name || employeesMap[patient.created_by] || patient.created_by}`}>
+                          Registrado por: {patient.creator_name || employeesMap[patient.created_by] || patient.created_by.substring(0, 8) + "..."}
+>>>>>>> Stashed changes
                         </span>
                       </div>
                     )}
@@ -390,6 +450,7 @@ export default function PatientsPage() {
                     className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500"
                   />
                 </div>
+<<<<<<< Updated upstream
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">Descripción / Notas</label>
                   <Input
@@ -398,6 +459,31 @@ export default function PatientsPage() {
                     onChange={(e) => setNewPatient({ ...newPatient, description: e.target.value })}
                     className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500"
                   />
+=======
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-300">Descripción / Notas</label>
+                    <Input
+                      placeholder="Observaciones generales..."
+                      value={newPatient.description}
+                      onChange={(e) => setNewPatient({ ...newPatient, description: e.target.value })}
+                      className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-300">Doctor Asignado</label>
+                    <select
+                      value={newPatient.assigned_doctor_id}
+                      onChange={(e) => setNewPatient({ ...newPatient, assigned_doctor_id: e.target.value })}
+                      className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                    >
+                      <option value="">Sin Asignar</option>
+                      {employeesList.map(emp => (
+                        <option key={emp.id} value={emp.id}>{emp.full_name}</option>
+                      ))}
+                    </select>
+                  </div>
+>>>>>>> Stashed changes
                 </div>
                 <div className="flex gap-3 justify-end mt-8">
                   <Button
@@ -471,6 +557,7 @@ export default function PatientsPage() {
                     className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
                   />
                 </div>
+<<<<<<< Updated upstream
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">Descripción / Notas</label>
                   <Input
@@ -478,6 +565,30 @@ export default function PatientsPage() {
                     onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                     className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
                   />
+=======
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-300">Descripción / Notas</label>
+                    <Input
+                      value={editForm.description}
+                      onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                      className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-300">Doctor Asignado</label>
+                    <select
+                      value={editForm.assigned_doctor_id}
+                      onChange={(e) => setEditForm({ ...editForm, assigned_doctor_id: e.target.value })}
+                      className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                    >
+                      <option value="">Sin Asignar</option>
+                      {employeesList.map(emp => (
+                        <option key={emp.id} value={emp.id}>{emp.full_name}</option>
+                      ))}
+                    </select>
+                  </div>
+>>>>>>> Stashed changes
                 </div>
                 <div className="flex gap-3 justify-end mt-8">
                   <Button
@@ -515,6 +626,55 @@ export default function PatientsPage() {
         isLoading={isDeleting}
         icon={<Trash2 size={26} className="text-red-400" />}
       />
+
+      {/* ─── MODAL: COMPARTIR PACIENTE ────────────────────────────────────────── */}
+      <CustomModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        title="Compartir Paciente"
+      >
+        <div className="space-y-4 py-2">
+          <p className="text-sm text-slate-400">
+            Selecciona un doctor para compartir el historial y datos de{" "}
+            <span className="text-white font-medium">{sharingPatient?.first_name} {sharingPatient?.last_name}</span>.
+          </p>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-300">Doctor Colega</label>
+            <select
+              value={selectedShareDoctorId}
+              onChange={(e) => setSelectedShareDoctorId(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            >
+              <option value="">Seleccionar doctor...</option>
+              {employeesList
+                .filter(emp => emp.id !== (sharingPatient?.assigned_doctor_id || sharingPatient?.created_by))
+                .map(emp => (
+                  <option key={emp.id} value={emp.id}>{emp.full_name}</option>
+                ))
+              }
+            </select>
+          </div>
+
+          <div className="flex gap-3 justify-end mt-8">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setIsShareModalOpen(false)}
+              className="text-slate-400 hover:text-white hover:bg-slate-800"
+            >
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleConfirmShare}
+              disabled={!selectedShareDoctorId || isSharing}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              {isSharing ? "Compartiendo..." : "Compartir Acceso"}
+            </Button>
+          </div>
+        </div>
+      </CustomModal>
 
       {/* Success Modal */}
       <SuccessModal

@@ -100,6 +100,23 @@ class PatientRead(PatientBase):
     created_at: datetime
     updated_at: datetime
     created_by: Optional[uuid.UUID] = None
+    creator_name: Optional[str] = None
+    # No incluimos shared_with aquí para evitar recursión pesada,
+    # pero podemos agregar una lista simple de IDs si fuera necesario.
+
+    model_config = ConfigDict(from_attributes=True)
+
+class PatientShareBase(BaseModel):
+    patient_id: uuid.UUID
+    doctor_id: uuid.UUID
+
+class PatientShareCreate(BaseModel):
+    doctor_id: uuid.UUID
+
+class PatientShareRead(PatientShareBase):
+    id: uuid.UUID
+    created_at: datetime
+    doctor_name: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

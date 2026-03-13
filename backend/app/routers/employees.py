@@ -13,7 +13,8 @@ from app.db.models import UserGlobal, UserRole
 from app.schemas.auth import LoginRequest, Token
 from fastapi import Request
 
-router = APIRouter()
+router = APIRouter(prefix="/employees", tags=["Employees"])
+auth_router = APIRouter(tags=["Auth"])
 
 # --- SCHEMAS ---
 
@@ -47,7 +48,7 @@ class EmployeeUpdate(BaseModel):
 
 # --- ENDPOINTS ---
 
-@router.post("/auth/login", response_model=Token)
+@auth_router.post("/auth/login", response_model=Token)
 def login_employee(
     data: LoginRequest,
     request: Request,
@@ -89,7 +90,7 @@ def login_employee(
     }
 
 # ... (get_roles remains same)
-@router.get("/roles", response_model=List[RoleRead])
+@auth_router.get("/roles", response_model=List[RoleRead])
 def get_roles(
     session: Session = Depends(get_session_for_tenant),
     current_user = Depends(get_current_tenant_user)
@@ -98,7 +99,7 @@ def get_roles(
     roles = session.exec(select(Role)).all()
     return roles
 
-@router.get("/employees", response_model=List[EmployeeRead])
+@router.get("/", response_model=List[EmployeeRead])
 def get_employees(
     session: Session = Depends(get_session_for_tenant),
     current_user = Depends(get_current_tenant_user)
@@ -112,7 +113,21 @@ def get_employees(
     employees = session.exec(select(User).where(User.status == True)).all()
     return employees
 
-@router.post("/employees", response_model=EmployeeRead)
+@router.get("/doctors", response_model=List[EmployeeRead])
+def get_doctors(
+    session: Session = Depends(get_session_for_tenant),
+    current_user = Depends(get_current_tenant_user)
+):
+    """Lista solo los empleados con rol DOCTOR que están activos"""
+    doctors = session.exec(
+        select(User)
+        .join(Role, User.role_id == Role.id)
+        .where(Role.name == "doctor")
+        .where(User.status == True)
+    ).all()
+    return doctors
+
+@router.post("/", response_model=EmployeeRead)
 def create_employee(
     data: EmployeeCreate,
     session: Session = Depends(get_session_for_tenant),
@@ -149,7 +164,7 @@ def create_employee(
     
     return db_user
 
-@router.put("/employees/{employee_id}", response_model=EmployeeRead)
+@router.put("/{employee_id}", response_model=EmployeeRead)
 def update_employee(
     employee_id: uuid.UUID,
     data: EmployeeUpdate,
@@ -184,7 +199,7 @@ def update_employee(
     session.refresh(db_user)
     return db_user
 
-@router.delete("/employees/{employee_id}")
+@router.delete("/{employee_id}")
 def delete_employee(
     employee_id: uuid.UUID,
     session: Session = Depends(get_session_for_tenant),

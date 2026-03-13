@@ -4,7 +4,8 @@ from typing import List
 import uuid
 
 from app.db.session import get_session_for_tenant
-from app.db.tenant_models import Appointment
+from app.db.tenant_models import Appointment, Patient, User, PatientShare
+from app.core.deps import get_current_tenant_user
 from app.schemas.tenant_schemas import AppointmentCreate, AppointmentRead, AppointmentUpdate
 
 router = APIRouter(prefix="/appointments", tags=["Appointments"])
@@ -23,15 +24,39 @@ def create_appointment(
 @router.get("/", response_model=List[AppointmentRead])
 def get_appointments(
     skip: int = 0, limit: int = 100,
-    session: Session = Depends(get_session_for_tenant)
+    session: Session = Depends(get_session_for_tenant),
+    current_user = Depends(get_current_tenant_user)
 ):
-    appointments = session.exec(
-        select(Appointment)
-        .where(Appointment.status == True)
-        .offset(skip)
-        .limit(limit)
-    ).all()
-    return appointments
+    try:
+        # Base query for active appointments
+        query = select(Appointment).where(Appointment.status == True)
+        
+        # Role-based filtering
+        role = current_user.computed_role.lower()
+        if role not in ['owner', 'admin', 'recepcionista']:
+            # Para doctores: ver solo las citas que le pertenecen (asignadas a él)
+            query = query.where(Appointment.assigned_doctor_id == current_user.id)
+            
+        results = session.exec(
+            query.order_by(Appointment.appointment_date.desc())
+            .offset(skip)
+            .limit(limit)
+        ).all()
+        
+        # Row safety: if join causes Row objects, return only the Appointment (Tuple index 0)
+        appointments_list = []
+        for row in results:
+            if isinstance(row, tuple):
+                appointments_list.append(row[0])
+            else:
+                appointments_list.append(row)
+                
+        return appointments_list
+    except Exception as e:
+        import traceback
+        print(f"❌ ERROR IN get_appointments: {str(e)}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error en get_appointments: {str(e)}")
 
 @router.get("/{appointment_id}", response_model=AppointmentRead)
 def get_appointment(

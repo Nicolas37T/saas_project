@@ -4,7 +4,8 @@ from typing import List
 import uuid
 
 from app.db.session import get_session_for_tenant
-from app.db.tenant_models import Payment
+from app.db.tenant_models import Payment, Treatment, Patient, PatientShare
+from app.core.deps import get_current_tenant_user
 from app.schemas.tenant_schemas import PaymentCreate, PaymentRead, PaymentUpdate
 
 router = APIRouter(prefix="/payments", tags=["Payments"])
@@ -23,10 +24,44 @@ def create_payment(
 @router.get("/", response_model=List[PaymentRead])
 def get_payments(
     skip: int = 0, limit: int = 100,
-    session: Session = Depends(get_session_for_tenant)
+    session: Session = Depends(get_session_for_tenant),
+    current_user = Depends(get_current_tenant_user)
 ):
-    payments = session.exec(select(Payment).offset(skip).limit(limit)).all()
-    return payments
+    try:
+        # Base query
+        query = select(Payment)
+        
+        # Role-based filtering
+        role = current_user.computed_role.lower()
+        if role not in ['owner', 'admin', 'recepcionista']:
+            # For doctors: see payments of treatments linked to patients they have access to
+            shared_query = select(PatientShare.patient_id).where(PatientShare.doctor_id == current_user.id)
+            query = query.join(Treatment, Payment.treatment_id == Treatment.id).join(Patient, Treatment.patient_id == Patient.id).where(
+                (Patient.created_by == current_user.id) | 
+                (Patient.assigned_doctor_id == current_user.id) |
+                (Patient.id.in_(shared_query))
+            )
+            
+        results = session.exec(
+            query.order_by(Payment.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+        ).all()
+        
+        # Row safety: unpacking if join causes Tuple results
+        payments_list = []
+        for row in results:
+            if isinstance(row, tuple):
+                payments_list.append(row[0])
+            else:
+                payments_list.append(row)
+                
+        return payments_list
+    except Exception as e:
+        import traceback
+        print(f"❌ ERROR IN get_payments: {str(e)}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error en get_payments: {str(e)}")
 
 @router.get("/{payment_id}", response_model=PaymentRead)
 def get_payment(
