@@ -7,13 +7,14 @@ import uuid
 from datetime import datetime
 
 from app.db.session import get_session_for_tenant
-from app.db.tenant_models import Patient, MedicalHistory, Treatment, Odontogram, Payment, User
+from app.db.tenant_models import Patient, MedicalHistory, Treatment, Odontogram, Payment, User, PatientShare, Appointment
 from app.db.models import UserGlobal
 from app.core.deps import get_current_tenant_user
 from app.schemas.tenant_schemas import (
     PatientCreate, PatientRead, PatientUpdate,
     MedicalHistoryCreate, MedicalHistoryRead, MedicalHistoryUpdate,
-    FullMedicalHistoryCreate, FullMedicalHistoryUpdate
+    FullMedicalHistoryCreate, FullMedicalHistoryUpdate,
+    PatientShareCreate, PatientShareRead
 )
 
 router = APIRouter(prefix="/patients", tags=["Patients"])
@@ -26,17 +27,20 @@ def get_all_medical_histories(
     current_user = Depends(get_current_tenant_user)
 ):
     try:
-        tenant_user = session.exec(select(User).where(User.email == current_user.email)).first()
-        if not tenant_user:
-            return []
+        query = select(MedicalHistory, Patient).join(Patient, MedicalHistory.patient_id == Patient.id).where(MedicalHistory.status == True)
+        
+        # Role-based filtering
+        role = current_user.computed_role.lower()
+        if role not in ['owner', 'admin', 'recepcionista']:
+            # For doctors: see histories of patients they created, are assigned to, OR shared with them
+            shared_query = select(PatientShare.patient_id).where(PatientShare.doctor_id == current_user.id)
+            query = query.where(
+                (Patient.created_by == current_user.id) | 
+                (Patient.assigned_doctor_id == current_user.id) |
+                (Patient.id.in_(shared_query))
+            )
             
-        results = session.exec(
-            select(MedicalHistory, Patient)
-            .join(Patient, MedicalHistory.patient_id == Patient.id)
-            .where(MedicalHistory.status == True)
-            .where(MedicalHistory.created_by == tenant_user.id) # Filter by logged-in user
-            .order_by(MedicalHistory.created_at.desc())
-        ).all()
+        results = session.exec(query.order_by(MedicalHistory.created_at.desc())).all()
         
         histories_list = [
             {
@@ -200,22 +204,144 @@ def create_patient(
     tenant_user = session.exec(select(User).where(User.email == current_user.email)).first()
     if tenant_user:
         db_patient.created_by = tenant_user.id
+        # El campo creator_name solo va en el esquema de respuesta, no en el modelo DB
         
     session.add(db_patient)
     session.commit()
     session.refresh(db_patient)
-    return db_patient
+    
+    # Poblar creator_name para la respuesta
+    res = PatientRead.model_validate(db_patient)
+    if tenant_user:
+        res.creator_name = tenant_user.full_name
+    return res
 
 @router.get("/", response_model=List[PatientRead])
 def get_patients(
     skip: int = 0, limit: int = 100,
-    session: Session = Depends(get_session_for_tenant)
+    session: Session = Depends(get_session_for_tenant),
+    current_user = Depends(get_current_tenant_user)
 ):
-    # Solo devuelve pacientes con status=True (eliminación suave)
-    patients = session.exec(
-        select(Patient).where(Patient.status == True).offset(skip).limit(limit)
-    ).all()
-    return patients
+    try:
+        # Base query for active patients
+        # Join with User to get the creator's name
+        query = (
+            select(Patient, User.full_name)
+            .outerjoin(User, Patient.created_by == User.id)
+            .where(Patient.status == True)
+        )
+        
+        # Apply privacy filter based on role
+        role = current_user.computed_role.lower()
+        if role not in ['owner', 'admin', 'recepcionista']:
+            # For doctors: see patients they created OR assigned to OR shared with them OR have appointments with
+            shared_query = select(PatientShare.patient_id).where(PatientShare.doctor_id == current_user.id)
+            appointment_query = select(Appointment.patient_id).where(Appointment.assigned_doctor_id == current_user.id)
+            
+            query = query.where(
+                (Patient.created_by == current_user.id) | 
+                (Patient.assigned_doctor_id == current_user.id) |
+                (Patient.id.in_(shared_query)) |
+                (Patient.id.in_(appointment_query))
+            )
+            
+        results = session.exec(query.offset(skip).limit(limit)).all()
+        
+        patients = []
+        for row in results:
+            # SQLAlchemy Row supports unpacking similar to a tuple
+            try:
+                p, creator_name = row
+            except (ValueError, TypeError):
+                p = row
+                creator_name = None
+
+            p_read = PatientRead.model_validate(p)
+            p_read.creator_name = creator_name
+            patients.append(p_read)
+            
+        return patients
+    except Exception as e:
+        import traceback
+        print(f"❌ ERROR IN get_patients: {str(e)}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error en get_patients: {str(e)}")
+
+@router.post("/{patient_id}/share", response_model=PatientShareRead)
+def share_patient(
+    patient_id: uuid.UUID,
+    data: PatientShareCreate,
+    session: Session = Depends(get_session_for_tenant),
+    current_user = Depends(get_current_tenant_user)
+):
+    """Permite compartir un paciente con otro doctor"""
+    patient = session.get(Patient, patient_id)
+    if not patient:
+        raise HTTPException(status_code=404, detail="Paciente no encontrado")
+        
+    # Verificar que el usuario tenga permiso para compartir (dueño o asignado o admin)
+    role = current_user.computed_role.lower()
+    is_owner_or_admin = role in ['owner', 'admin']
+    is_assigned = patient.assigned_doctor_id == current_user.id
+    is_creator = patient.created_by == current_user.id
+    
+    if not (is_owner_or_admin or is_assigned or is_creator):
+        raise HTTPException(status_code=403, detail="No tienes permiso para compartir este paciente")
+        
+    # Verificar que el destino sea un doctor (opcional pero recomendado)
+    target_doctor = session.get(User, data.doctor_id)
+    if not target_doctor:
+        raise HTTPException(status_code=404, detail="Doctor no encontrado")
+        
+    # Crear el registro de compartir
+    existing_share = session.exec(select(PatientShare).where(
+        PatientShare.patient_id == patient_id, 
+        PatientShare.doctor_id == data.doctor_id
+    )).first()
+    
+    if existing_share:
+        return existing_share
+        
+    db_share = PatientShare(patient_id=patient_id, doctor_id=data.doctor_id)
+    session.add(db_share)
+    session.commit()
+    session.refresh(db_share)
+    
+    # Poblar nombre para la respuesta
+    res = PatientShareRead.model_validate(db_share)
+    res.doctor_name = target_doctor.full_name
+    return res
+
+@router.delete("/{patient_id}/share/{doctor_id}")
+def unshare_patient(
+    patient_id: uuid.UUID,
+    doctor_id: uuid.UUID,
+    session: Session = Depends(get_session_for_tenant),
+    current_user = Depends(get_current_tenant_user)
+):
+    """Quitar el acceso compartido de un doctor"""
+    patient = session.get(Patient, patient_id)
+    if not patient:
+         raise HTTPException(status_code=404, detail="Paciente no encontrado")
+         
+    role = current_user.computed_role.lower()
+    is_owner_or_admin = role in ['owner', 'admin']
+    is_assigned = patient.assigned_doctor_id == current_user.id
+    is_creator = patient.created_by == current_user.id
+    
+    if not (is_owner_or_admin or is_assigned or is_creator):
+        raise HTTPException(status_code=403, detail="No tienes permiso para dejar de compartir este paciente")
+
+    share_record = session.exec(select(PatientShare).where(
+        PatientShare.patient_id == patient_id, 
+        PatientShare.doctor_id == doctor_id
+    )).first()
+    
+    if share_record:
+        session.delete(share_record)
+        session.commit()
+        
+    return {"ok": True}
 
 @router.get("/{patient_id}", response_model=PatientRead)
 def get_patient(

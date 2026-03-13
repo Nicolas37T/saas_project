@@ -195,6 +195,7 @@ export interface Patient {
   created_at: string;
   updated_at: string;
   created_by?: string;
+  creator_name?: string;
   assigned_doctor_id?: string;
 }
 
@@ -284,6 +285,14 @@ export interface EmployeeCreate {
   role_id: string;
 }
 
+export interface PatientShare {
+  id: string;
+  patient_id: string;
+  doctor_id: string;
+  created_at: string;
+  doctor_name?: string;
+}
+
 export const tenantApi = {
   // Config / Settings
   getTenantConfig: async (): Promise<SettingData> => {
@@ -300,10 +309,13 @@ export const tenantApi = {
 
   // Employees
   getEmployees: async (): Promise<Employee[]> => {
-    return apiFetch("/api/tenant/employees");
+    return apiFetch("/api/tenant/employees/");
+  },
+  getDoctors: async (): Promise<Employee[]> => {
+    return apiFetch("/api/tenant/employees/doctors/");
   },
   getRoles: async (): Promise<Role[]> => {
-    return apiFetch("/api/tenant/roles");
+    return apiFetch("/api/tenant/roles/");
   },
   createEmployee: async (data: EmployeeCreate): Promise<Employee> => {
     return apiFetch("/api/tenant/employees", {
@@ -347,6 +359,18 @@ export const tenantApi = {
     apiFetch<{ ok: boolean }>(`/api/tenant/patients/${id}`, {
       method: "DELETE",
     }),
+  sharePatient: (patientId: string, doctorId: string) =>
+    apiFetch<PatientShare>(`/api/tenant/patients/${patientId}/share`, {
+      method: "POST",
+      body: JSON.stringify({ doctor_id: doctorId }),
+    }),
+  unsharePatient: (patientId: string, doctorId: string) =>
+    apiFetch<{ ok: boolean }>(
+      `/api/tenant/patients/${patientId}/share/${doctorId}`,
+      {
+        method: "DELETE",
+      },
+    ),
 
   // Medical History
   getMedicalHistories: (patientId: string) =>
@@ -397,6 +421,10 @@ export const tenantApi = {
     apiFetch<Treatment>(`/api/tenant/treatments/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
+    }),
+  deleteTreatment: (id: string) =>
+    apiFetch<{ ok: boolean }>(`/api/tenant/treatments/${id}`, {
+      method: "DELETE",
     }),
 
   // Appointments

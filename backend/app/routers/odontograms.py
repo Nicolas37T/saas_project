@@ -4,7 +4,8 @@ from typing import List
 import uuid
 
 from app.db.session import get_session_for_tenant
-from app.db.tenant_models import Odontogram
+from app.db.tenant_models import Odontogram, Treatment, Patient, PatientShare
+from app.core.deps import get_current_tenant_user
 from app.schemas.tenant_schemas import OdontogramCreate, OdontogramRead, OdontogramUpdate
 
 router = APIRouter(prefix="/odontograms", tags=["Odontograms"])
@@ -23,10 +24,44 @@ def create_odontogram(
 @router.get("/", response_model=List[OdontogramRead])
 def get_odontograms(
     skip: int = 0, limit: int = 100,
-    session: Session = Depends(get_session_for_tenant)
+    session: Session = Depends(get_session_for_tenant),
+    current_user = Depends(get_current_tenant_user)
 ):
-    odontograms = session.exec(select(Odontogram).offset(skip).limit(limit)).all()
-    return odontograms
+    try:
+        # Base query
+        query = select(Odontogram)
+        
+        # Role-based filtering
+        role = current_user.computed_role.lower()
+        if role not in ['owner', 'admin', 'recepcionista']:
+            # For doctors: see odontograms of treatments linked to patients they have access to
+            shared_query = select(PatientShare.patient_id).where(PatientShare.doctor_id == current_user.id)
+            query = query.join(Treatment, Odontogram.treatment_id == Treatment.id).join(Patient, Treatment.patient_id == Patient.id).where(
+                (Patient.created_by == current_user.id) | 
+                (Patient.assigned_doctor_id == current_user.id) |
+                (Patient.id.in_(shared_query))
+            )
+            
+        results = session.exec(
+            query.order_by(Odontogram.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+        ).all()
+        
+        # Row safety: unpacking if join causes Tuple results
+        odontograms_list = []
+        for row in results:
+            if isinstance(row, tuple):
+                odontograms_list.append(row[0])
+            else:
+                odontograms_list.append(row)
+                
+        return odontograms_list
+    except Exception as e:
+        import traceback
+        print(f"❌ ERROR IN get_odontograms: {str(e)}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error en get_odontograms: {str(e)}")
 
 @router.get("/{odontogram_id}", response_model=OdontogramRead)
 def get_odontogram(

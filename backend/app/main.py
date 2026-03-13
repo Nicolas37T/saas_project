@@ -313,4 +313,5 @@ app.include_router(appointments.router, prefix="/api/tenant", tags=["Tenant - Ap
 app.include_router(payments.router, prefix="/api/tenant", tags=["Tenant - Payments"])
 app.include_router(odontograms.router, prefix="/api/tenant", tags=["Tenant - Odontograms"])
 app.include_router(settings.router, prefix="/api/tenant", tags=["Tenant - Settings"])
+app.include_router(employees.auth_router, prefix="/api/tenant", tags=["Tenant - Auth"])
 app.include_router(employees.router, prefix="/api/tenant", tags=["Tenant - Employees"])
