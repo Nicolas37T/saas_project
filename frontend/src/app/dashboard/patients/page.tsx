@@ -105,6 +105,11 @@ export default function PatientsPage() {
 
       // Solo mostramos activos (status=true), el backend ya filtra pero doble check
       setPatients(data.filter((p) => p.status));
+
+      // Auto-select first doctor if creating new patient and none selected
+      if (doctors.length > 0 && !newPatient.assigned_doctor_id) {
+        setNewPatient(prev => ({ ...prev, assigned_doctor_id: doctors[0].id }));
+      }
     } catch (error) {
       console.error("Failed to load patients", error);
     } finally {
@@ -291,9 +296,10 @@ export default function PatientsPage() {
                         {patient.first_name[0]}
                         {patient.last_name[0]}
                       </div>
-                      <div>
-                        <h4 className="text-white font-medium break-words pr-2">
-                          {patient.first_name} {patient.last_name}
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-white font-medium leading-tight">
+                          <div className="break-all">{patient.first_name}</div>
+                          <div className="break-all text-slate-400 text-sm mt-0.5">{patient.last_name}</div>
                         </h4>
                         <span className="text-xs text-slate-500 capitalize">
                           Activo
@@ -366,6 +372,11 @@ export default function PatientsPage() {
                         <span className="truncate" title={`Registrado por: ${patient.creator_name || employeesMap[patient.created_by] || patient.created_by}`}>
                           Registrado por: {patient.creator_name || employeesMap[patient.created_by] || patient.created_by.substring(0, 8) + "..."}
                         </span>
+                      </div>
+                    )}
+                    {patient.assigned_doctor_id && (
+                      <div className="flex items-center gap-2 text-xs text-blue-400 font-medium mt-1">
+                        <span>👨‍⚕️ Doctor: {employeesMap[patient.assigned_doctor_id] || "Asignado"}</span>
                       </div>
                     )}
                   </div>
@@ -463,11 +474,11 @@ export default function PatientsPage() {
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-300">Doctor Asignado</label>
                     <select
+                      required
                       value={newPatient.assigned_doctor_id}
                       onChange={(e) => setNewPatient({ ...newPatient, assigned_doctor_id: e.target.value })}
                       className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                     >
-                      <option value="">Sin Asignar</option>
                       {employeesList.map(emp => (
                         <option key={emp.id} value={emp.id}>{emp.full_name || emp.username}</option>
                       ))}
@@ -559,11 +570,11 @@ export default function PatientsPage() {
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-300">Doctor Asignado</label>
                     <select
+                      required
                       value={editForm.assigned_doctor_id}
                       onChange={(e) => setEditForm({ ...editForm, assigned_doctor_id: e.target.value })}
                       className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                     >
-                      <option value="">Sin Asignar</option>
                       {employeesList.map(emp => (
                         <option key={emp.id} value={emp.id}>{emp.full_name || emp.username}</option>
                       ))}

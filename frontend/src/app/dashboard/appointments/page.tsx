@@ -56,7 +56,7 @@ export default function AppointmentsPage() {
       const [appData, patData, empData] = await Promise.all([
         tenantApi.getAppointments(),
         tenantApi.getPatients(),
-        tenantApi.getEmployees().catch(() => []),
+        tenantApi.getDoctors().catch(() => []),
       ]);
       // Sort appointments by date
       const sorted = appData.sort(
@@ -67,6 +67,11 @@ export default function AppointmentsPage() {
       setAppointments(sorted);
       setPatients(patData);
       setEmployees(empData.filter((e: Employee) => e.status));
+      
+      // Auto-select first doctor if creating new appointment
+      if (empData.length > 0 && !newAppointment.assigned_doctor_id) {
+        setNewAppointment(prev => ({ ...prev, assigned_doctor_id: empData[0].id }));
+      }
     } catch (error) {
       console.error("Failed to load appointments data", error);
     } finally {
@@ -179,7 +184,7 @@ export default function AppointmentsPage() {
   const getDoctorName = (id?: string) => {
     if (!id) return "Sin Asignar";
     const d = employees.find((e) => e.id === id);
-    return d ? d.username || d.full_name : "Desconocido";
+    return d ? d.full_name || d.username : "Desconocido";
   };
 
   // Helper for status styling
@@ -373,6 +378,7 @@ export default function AppointmentsPage() {
                     Doctor Asignado
                   </label>
                   <select
+                    required
                     className="w-full p-2.5 rounded-md bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                     value={newAppointment.assigned_doctor_id}
                     onChange={(e) =>
@@ -382,10 +388,9 @@ export default function AppointmentsPage() {
                       })
                     }
                   >
-                    <option value="">Sin doctor asignado...</option>
                     {employees.map((emp) => (
                       <option key={emp.id} value={emp.id}>
-                        {emp.username || emp.full_name}
+                        {emp.full_name || emp.username}
                       </option>
                     ))}
                   </select>
@@ -517,6 +522,7 @@ export default function AppointmentsPage() {
                     Doctor Asignado
                   </label>
                   <select
+                    required
                     className="w-full p-2.5 rounded-md bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                     value={editingAppointment.assigned_doctor_id}
                     onChange={(e) =>
@@ -526,10 +532,9 @@ export default function AppointmentsPage() {
                       })
                     }
                   >
-                    <option value="">Sin doctor asignado...</option>
                     {employees.map((emp) => (
                       <option key={emp.id} value={emp.id}>
-                        {emp.username || emp.full_name}
+                        {emp.full_name || emp.username}
                       </option>
                     ))}
                   </select>
