@@ -62,6 +62,20 @@ export default function DashboardLayout({
     loadTenantData();
   }, [router]);
 
+  const role = typeof window !== 'undefined' ? localStorage.getItem("user_role") : "empleado";
+  const isPrivileged = role === "owner" || role === "admin" || role === "superadmin" || role === "administrador";
+  const isReceptionist = role === "recepcionista";
+
+  // Protection: Redirect if receptionist tries to access restricted routes
+  useEffect(() => {
+    if (!loading && isReceptionist) {
+      const restrictedPaths = ["/dashboard/historyPatients", "/dashboard/treatments", "/dashboard/settings", "/dashboard/employees"];
+      if (restrictedPaths.some(path => pathname.startsWith(path))) {
+        router.push("/dashboard");
+      }
+    }
+  }, [loading, isReceptionist, pathname, router]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
@@ -70,9 +84,6 @@ export default function DashboardLayout({
     );
   }
 
-  const role = typeof window !== 'undefined' ? localStorage.getItem("user_role") : "empleado";
-  const isPrivileged = role === "owner" || role === "admin" || role === "superadmin" || role === "administrador";
-
   const navItems = [
     { name: "Inicio", href: "/dashboard", icon: <Activity size={20} /> },
     {
@@ -80,21 +91,25 @@ export default function DashboardLayout({
       href: "/dashboard/patients",
       icon: <Users size={20} />,
     },
-    {
-      name: "Historial Médico",
-      href: "/dashboard/historyPatients",
-      icon: <ClipboardClock size={20} />,
-    },
+    ...(!isReceptionist ? [
+      {
+        name: "Historial Médico",
+        href: "/dashboard/historyPatients",
+        icon: <ClipboardClock size={20} />,
+      },
+    ] : []),
     {
       name: "Citas",
       href: "/dashboard/appointments",
       icon: <CalendarDays size={20} />,
     },
-    {
-      name: "Tratamientos",
-      href: "/dashboard/treatments",
-      icon: <Stethoscope size={20} />,
-    },
+    ...(!isReceptionist ? [
+      {
+        name: "Tratamientos",
+        href: "/dashboard/treatments",
+        icon: <Stethoscope size={20} />,
+      },
+    ] : []),
     {
       name: "Pagos",
       href: "/dashboard/payments",
