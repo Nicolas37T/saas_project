@@ -187,11 +187,8 @@ export interface Patient {
   created_at: string;
   updated_at: string;
   created_by?: string;
-<<<<<<< Updated upstream
-=======
   creator_name?: string;
   assigned_doctor_id?: string;
->>>>>>> Stashed changes
 }
 
 export interface Appointment {

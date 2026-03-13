@@ -13,7 +13,7 @@ import {
   Calendar,
   Share2,
 } from "lucide-react";
-import { tenantApi, Patient } from "@/lib/api";
+import { tenantApi, Patient, Employee } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,6 +24,8 @@ export default function PatientsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [employeesList, setEmployeesList] = useState<Employee[]>([]);
+  const [employeesMap, setEmployeesMap] = useState<Record<string, string>>({});
 
   // Menú de 3 puntos
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -38,6 +40,7 @@ export default function PatientsPage() {
     address: "",
     birth_day: "",
     description: "",
+    assigned_doctor_id: "",
   });
 
   // Modal: Editar Paciente
@@ -50,6 +53,7 @@ export default function PatientsPage() {
     address: "",
     birth_day: "",
     description: "",
+    assigned_doctor_id: "",
   });
 
   // Modal: Confirmar Eliminación
@@ -86,9 +90,6 @@ export default function PatientsPage() {
   const loadPatients = async () => {
     setLoading(true);
     try {
-<<<<<<< Updated upstream
-      const data = await tenantApi.getPatients();
-=======
       const [data, doctors] = await Promise.all([
         tenantApi.getPatients(),
         tenantApi.getDoctors().catch(() => [])
@@ -101,7 +102,6 @@ export default function PatientsPage() {
       setEmployeesMap(empMap);
       setEmployeesList(doctors); // El backend ya filtra por cargo DOCTOR y status activo
 
->>>>>>> Stashed changes
       // Solo mostramos activos (status=true), el backend ya filtra pero doble check
       setPatients(data.filter((p) => p.status));
     } catch (error) {
@@ -120,7 +120,7 @@ export default function PatientsPage() {
         birth_day: newPatient.birth_day ? newPatient.birth_day : undefined,
       });
       setIsAddModalOpen(false);
-      setNewPatient({ first_name: "", last_name: "", phone: "", address: "", birth_day: "", description: "" });
+      setNewPatient({ first_name: "", last_name: "", phone: "", address: "", birth_day: "", description: "", assigned_doctor_id: "" });
       
       setSuccessInfo({ title: "Paciente Registrado", message: "El paciente ha sido creado con éxito." });
       setIsSuccessModalOpen(true);
@@ -143,6 +143,7 @@ export default function PatientsPage() {
         ? new Date(patient.birth_day).toISOString().split("T")[0]
         : "",
       description: patient.description || "",
+      assigned_doctor_id: patient.assigned_doctor_id || "",
     });
     setIsEditModalOpen(true);
   };
@@ -359,13 +360,9 @@ export default function PatientsPage() {
                     {patient.created_by && (
                       <div className="flex items-center gap-2 text-xs text-slate-500 mt-2">
                         <User size={12} className="text-slate-600" />
-<<<<<<< Updated upstream
-                        <span className="truncate" title={`Registrado por ID: ${patient.created_by}`}>
-                          Registrado por: {patient.created_by.substring(0, 8)}...
-=======
+
                         <span className="truncate" title={`Registrado por: ${patient.creator_name || employeesMap[patient.created_by] || patient.created_by}`}>
                           Registrado por: {patient.creator_name || employeesMap[patient.created_by] || patient.created_by.substring(0, 8) + "..."}
->>>>>>> Stashed changes
                         </span>
                       </div>
                     )}
@@ -450,16 +447,6 @@ export default function PatientsPage() {
                     className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500"
                   />
                 </div>
-<<<<<<< Updated upstream
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Descripción / Notas</label>
-                  <Input
-                    placeholder="Observaciones generales..."
-                    value={newPatient.description}
-                    onChange={(e) => setNewPatient({ ...newPatient, description: e.target.value })}
-                    className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500"
-                  />
-=======
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-300">Descripción / Notas</label>
@@ -483,7 +470,6 @@ export default function PatientsPage() {
                       ))}
                     </select>
                   </div>
->>>>>>> Stashed changes
                 </div>
                 <div className="flex gap-3 justify-end mt-8">
                   <Button
@@ -557,15 +543,7 @@ export default function PatientsPage() {
                     className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
                   />
                 </div>
-<<<<<<< Updated upstream
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Descripción / Notas</label>
-                  <Input
-                    value={editForm.description}
-                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                    className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
-                  />
-=======
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-300">Descripción / Notas</label>
@@ -588,7 +566,6 @@ export default function PatientsPage() {
                       ))}
                     </select>
                   </div>
->>>>>>> Stashed changes
                 </div>
                 <div className="flex gap-3 justify-end mt-8">
                   <Button
