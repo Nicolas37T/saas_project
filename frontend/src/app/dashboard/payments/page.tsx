@@ -24,12 +24,11 @@ export default function PaymentsPage() {
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedPatientId, setSelectedPatientId] = useState("");
-  const [newPayment, setNewPayment] = useState({
-    amount: 0,
+  const [paymentOptions, setPaymentOptions] = useState({
     payment_method: "cash",
     payment_status: "completed",
-    treatment_id: "",
   });
+  const [selectedTreatments, setSelectedTreatments] = useState<Record<string, number>>({});
 
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
@@ -57,15 +56,31 @@ export default function PaymentsPage() {
 
   const handleCreatePayment = async (e: React.FormEvent) => {
     e.preventDefault();
+    const treatmentIds = Object.keys(selectedTreatments);
+    if (treatmentIds.length === 0) {
+      alert("Por favor seleccione al menos un tratamiento para pagar.");
+      return;
+    }
+
     try {
-      await tenantApi.createPayment(newPayment);
-      setIsAddModalOpen(false);
-      setNewPayment({
-        amount: 0,
-        payment_method: "cash",
-        payment_status: "completed",
-        treatment_id: "",
+      const promises = treatmentIds.map(tId => {
+        const amt = selectedTreatments[tId];
+        if (amt > 0) {
+          return tenantApi.createPayment({
+            treatment_id: tId,
+            amount: amt,
+            payment_method: paymentOptions.payment_method,
+            payment_status: paymentOptions.payment_status,
+          });
+        }
+        return Promise.resolve();
       });
+
+      await Promise.all(promises);
+
+      setIsAddModalOpen(false);
+      setSelectedTreatments({});
+      setPaymentOptions({ payment_method: "cash", payment_status: "completed" });
       setIsSuccessModalOpen(true);
       loadData(); // refresh
     } catch (error) {
@@ -123,9 +138,13 @@ export default function PaymentsPage() {
     let totalPagado = 0;
 
     patientTreatments.forEach(t => {
-      totalCosto += t.price;
-      const tPaid = t.payments?.reduce((acc, pay) => acc + pay.amount, 0) || 0;
-      totalPagado += tPaid;
+      // Si el precio es 0 (oculto por el backend), significa que pertenece a otro doctor
+      // y no debemos sumar ni su costo ni sus pagos al saldo deudor de nuestro dashboard
+      if (t.price > 0) {
+        totalCosto += t.price;
+        const tPaid = t.payments?.reduce((acc, pay) => acc + pay.amount, 0) || 0;
+        totalPagado += tPaid;
+      }
     });
 
     const saldoDeudor = Math.max(0, totalCosto - totalPagado);
@@ -152,7 +171,15 @@ export default function PaymentsPage() {
           </p>
         </div>
         <Button
-          onClick={() => setIsAddModalOpen(true)}
+          onClick={() => {
+            setSelectedPatientId("");
+            setSelectedTreatments({});
+            setPaymentOptions({
+              payment_method: "cash",
+              payment_status: "completed",
+            });
+            setIsAddModalOpen(true);
+          }}
           className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all"
         >
           <Plus className="mr-2" size={18} /> Registrar Pago
@@ -354,12 +381,10 @@ export default function PaymentsPage() {
                             className="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white"
                             onClick={() => {
                               setSelectedPatientId(d.patient.id);
-                              // Limpia el form por si acaso
-                              setNewPayment({
-                                amount: 0,
+                              setSelectedTreatments({});
+                              setPaymentOptions({
                                 payment_method: "cash",
                                 payment_status: "completed",
-                                treatment_id: "",
                               });
                               setIsAddModalOpen(true);
                             }}
@@ -394,7 +419,7 @@ export default function PaymentsPage() {
                       value={selectedPatientId}
                       onChange={(e) => {
                         setSelectedPatientId(e.target.value);
-                        setNewPayment({ ...newPayment, treatment_id: "", amount: 0 });
+                        setSelectedTreatments({});
                       }}
                     >
                       <option value="">Todos los pacientes</option>
@@ -408,102 +433,107 @@ export default function PaymentsPage() {
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-300">
-                      Seleccionar Tratamiento
+                      Tratamientos Pendientes
                     </label>
-                    <select
-                      required
-                      className="w-full p-2.5 rounded-md bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                      value={newPayment.treatment_id}
-                      onChange={(e) => {
-                        const tId = e.target.value;
-                        const sel = treatments.find((t) => t.id === tId);
-                        const paid = sel?.payments?.reduce((acc, p) => acc + p.amount, 0) || 0;
-                        const bal = sel ? Math.max(0, sel.price - paid) : 0;
+                    <div className="max-h-60 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                      {(() => {
+                        if (!selectedPatientId) {
+                          return <div className="text-sm text-slate-500 p-4 border border-slate-800 rounded-lg text-center bg-slate-900/50">Por favor, seleccione un paciente primero para ver sus tratamientos pendientes.</div>;
+                        }
 
-                        setNewPayment({
-                          ...newPayment,
-                          treatment_id: tId,
-                          amount: bal, // Auto-fill con el saldo pendiente
+                        const availableTreatments = treatments.filter((t) => {
+                          if (t.odontogram?.patient_id !== selectedPatientId) return false;
+                          if (t.price <= 0) return false;
+                          const paid = t.payments?.reduce((acc, p) => acc + p.amount, 0) || 0;
+                          return t.price - paid > 0;
                         });
-                      }}
-                    >
-                      <option value="">Buscar tratamiento...</option>
-                      {treatments
-                        .filter(t => !selectedPatientId || t.odontogram?.patient_id === selectedPatientId)
-                        .map((t) => {
-                          const alreadyPaid = t.payments?.reduce((acc, p) => acc + p.amount, 0) || 0;
-                          const balance = Math.max(0, t.price - alreadyPaid);
+
+                        if (availableTreatments.length === 0) {
+                          return <div className="text-sm text-slate-500 p-4 border border-slate-800 rounded-lg text-center bg-slate-900/50">No hay tratamientos validos pendientes de pago para mostrar.</div>;
+                        }
+
+                        return availableTreatments.map((t) => {
+                          const paid = t.payments?.reduce((acc, p) => acc + p.amount, 0) || 0;
+                          const balance = t.price - paid;
+                          const isSelected = selectedTreatments[t.id] !== undefined;
+
                           return (
-                            <option key={t.id} value={t.id}>
-                              {t.description} - Total: Bs. {t.price} (Saldo: Bs. {balance})
-                            </option>
+                            <div key={t.id} className={`p-3 rounded-lg border flex flex-col gap-3 transition-colors ${isSelected ? "bg-emerald-950/20 border-emerald-500/30" : "bg-slate-900 border-slate-800"}`}>
+                              <div className="flex items-start justify-between gap-2">
+                                <label className="flex items-start gap-3 cursor-pointer flex-1">
+                                  <input 
+                                    type="checkbox" 
+                                    className="mt-1 flex-shrink-0 w-4 h-4 rounded border-slate-700 text-emerald-600 focus:ring-emerald-500/50 bg-slate-950 cursor-pointer"
+                                    checked={isSelected}
+                                    onChange={(e) => {
+                                      if (e.target.checked) {
+                                        setSelectedTreatments(prev => ({ ...prev, [t.id]: balance }));
+                                      } else {
+                                        setSelectedTreatments(prev => {
+                                          const next = { ...prev };
+                                          delete next[t.id];
+                                          return next;
+                                        });
+                                      }
+                                    }}
+                                  />
+                                  <div>
+                                    <p className={`text-sm font-medium ${isSelected ? "text-emerald-400" : "text-slate-300"}`}>{t.description}</p>
+                                    <p className="text-xs text-slate-500 mt-0.5">
+                                      Total: {formatCurrency(t.price)} • Saldo: {formatCurrency(balance)}
+                                    </p>
+                                  </div>
+                                </label>
+                              </div>
+                              {isSelected && (
+                                <div className="pl-7 flex items-center gap-2">
+                                  <span className="text-xs text-slate-400">Abonar:</span>
+                                  <div className="relative flex-1 max-w-[150px]">
+                                    <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none text-slate-500 font-medium text-xs">
+                                      Bs
+                                    </div>
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      step="0.01"
+                                      max={balance}
+                                      value={selectedTreatments[t.id] ?? ""}
+                                      onChange={(e) => {
+                                        const val = parseFloat(e.target.value);
+                                        setSelectedTreatments(prev => ({ ...prev, [t.id]: isNaN(val) ? 0 : val }));
+                                      }}
+                                      className="h-8 pl-7 text-sm bg-slate-950/50 border-slate-800 text-white focus-visible:ring-emerald-500/50"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           );
-                        })}
-                    </select>
+                        });
+                      })()}
+                    </div>
                   </div>
                 </div>
 
-                {newPayment.treatment_id && (
-                  <div className="p-4 bg-slate-950/50 rounded-lg border border-slate-800/50 space-y-1">
-                    {(() => {
-                      const sel = treatments.find(t => t.id === newPayment.treatment_id);
-                      if (!sel) return null;
-                      const paid = sel.payments?.reduce((acc, p) => acc + p.amount, 0) || 0;
-                      const bal = Math.max(0, sel.price - paid);
-                      return (
-                        <>
-                          <div className="flex justify-between text-sm">
-                            <span className="text-slate-400">Costo Total:</span>
-                            <span className="text-white font-medium">Bs. {sel.price.toFixed(2)}</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="text-slate-400">Pagado Acumulado:</span>
-                            <span className="text-emerald-400 font-medium">Bs. {paid.toFixed(2)}</span>
-                          </div>
-                          <div className="flex justify-between text-sm border-t border-slate-800 mt-2 pt-2">
-                            <span className="text-slate-300 font-medium">Saldo Deudor:</span>
-                            <span className="text-orange-400 font-bold">Bs. {bal.toFixed(2)}</span>
-                          </div>
-                        </>
-                      );
-                    })()}
+                <div className="space-y-2 pt-2 border-t border-slate-800/50">
+                  <div className="flex justify-between items-center bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+                    <span className="text-sm font-medium text-slate-300">
+                      Total a Cobrar
+                    </span>
+                    <span className="text-lg font-bold text-emerald-400">
+                      {formatCurrency(Object.values(selectedTreatments).reduce((acc, val) => acc + (val || 0), 0))}
+                    </span>
                   </div>
-                )}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">
-                    Monto Cobrado
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 font-medium text-sm">
-                      Bs
-                    </div>
-                    <Input
-                      type="number"
-                      required
-                      min="0"
-                      step="0.01"
-                      value={newPayment.amount}
-                      onChange={(e) =>
-                        setNewPayment({
-                          ...newPayment,
-                          amount: parseFloat(e.target.value),
-                        })
-                      }
-                      className="pl-8 bg-slate-950/50 border-slate-800 text-white focus-visible:ring-emerald-500/50 font-medium"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-300">
                       Método Operativo
                     </label>
                     <select
                       className="w-full p-2.5 rounded-md bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                      value={newPayment.payment_method}
+                      value={paymentOptions.payment_method}
                       onChange={(e) =>
-                        setNewPayment({
-                          ...newPayment,
+                        setPaymentOptions({
+                          ...paymentOptions,
                           payment_method: e.target.value,
                         })
                       }
@@ -511,24 +541,6 @@ export default function PaymentsPage() {
                       <option value="cash">Efectivo</option>
                       <option value="card">Tarjeta</option>
                       <option value="transfer">Transferencia</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">
-                      Estado de Pago
-                    </label>
-                    <select
-                      className="w-full p-2.5 rounded-md bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                      value={newPayment.payment_status}
-                      onChange={(e) =>
-                        setNewPayment({
-                          ...newPayment,
-                          payment_status: e.target.value,
-                        })
-                      }
-                    >
-                      <option value="completed">Completado</option>
-                      <option value="pending">Pendiente</option>
                     </select>
                   </div>
                 </div>
@@ -544,6 +556,7 @@ export default function PaymentsPage() {
                   <Button
                     type="submit"
                     className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                    disabled={Object.keys(selectedTreatments).length === 0}
                   >
                     Procesar
                   </Button>
