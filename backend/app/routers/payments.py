@@ -4,7 +4,7 @@ from typing import List
 import uuid
 
 from app.db.session import get_session_for_tenant
-from app.db.tenant_models import Payment, Treatment, Patient, PatientShare
+from app.db.tenant_models import Payment, Treatment, Patient, PatientShare, Odontogram
 from app.core.deps import get_current_tenant_user
 from app.schemas.tenant_schemas import PaymentCreate, PaymentRead, PaymentUpdate
 
@@ -33,13 +33,23 @@ def get_payments(
         
         # Role-based filtering
         role = current_user.computed_role.lower()
-        if role not in ['owner', 'admin', 'recepcionista']:
-            # For doctors: see payments of treatments linked to patients they have access to
-            shared_query = select(PatientShare.patient_id).where(PatientShare.doctor_id == current_user.id)
-            query = query.join(Treatment, Payment.treatment_id == Treatment.id).join(Patient, Treatment.patient_id == Patient.id).where(
-                (Patient.created_by == current_user.id) | 
-                (Patient.assigned_doctor_id == current_user.id) |
-                (Patient.id.in_(shared_query))
+        if role not in ['admin', 'recepcionista']:
+            # For doctors and owner: see payments of treatments linked to patients they have access to
+            query = (
+                query
+                .join(Treatment, Payment.treatment_id == Treatment.id)
+                .join(Odontogram, Treatment.odontogram_id == Odontogram.id)
+                .join(Patient, Odontogram.patient_id == Patient.id)
+                .where(
+                    (Treatment.created_by == current_user.id) |
+                    (
+                        (Treatment.created_by.is_(None)) & 
+                        (
+                            (Patient.created_by == current_user.id) | 
+                            (Patient.assigned_doctor_id == current_user.id)
+                        )
+                    )
+                )
             )
             
         results = session.exec(

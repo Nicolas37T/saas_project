@@ -62,7 +62,8 @@ def get_all_medical_histories(
 @router.get("/medical-history-detail/{history_id}")
 def get_medical_history_detail(
     history_id: uuid.UUID,
-    session: Session = Depends(get_session_for_tenant)
+    session: Session = Depends(get_session_for_tenant),
+    current_user = Depends(get_current_tenant_user)
 ):
     try:
         history = session.get(MedicalHistory, history_id)
@@ -70,21 +71,59 @@ def get_medical_history_detail(
             raise HTTPException(status_code=404, detail="History not found")
             
         patient = session.get(Patient, history.patient_id)
-        treatment = session.get(Treatment, history.treatment_id) if history.treatment_id else None
         
-        odontogram = []
-        payments = []
+        # Load odontograms for this patient with their treatments
+        odontograms = session.exec(
+            select(Odontogram).where(
+                Odontogram.patient_id == history.patient_id,
+                Odontogram.status == True
+            )
+        ).all()
         
-        if treatment:
-            odontogram = treatment.odontograms
-            payments = treatment.payments
+        # Role-based filtering for treatments
+        role = current_user.computed_role.lower()
+
+        # Build a structured list: each odontogram with its treatments
+        odontogram_data = []
+        for o in odontograms:
+            treatments_query = select(Treatment).where(
+                Treatment.odontogram_id == o.id,
+                Treatment.status == True
+            )
+            
+            treatments = session.exec(treatments_query).all()
+            
+            mapped_treatments = []
+            for t in treatments:
+                price = t.price
+                if role not in ['admin', 'recepcionista']:
+                    is_creator = t.created_by == current_user.id
+                    owns_patient = patient.created_by == current_user.id or patient.assigned_doctor_id == current_user.id
+                    if not is_creator and not (t.created_by is None and owns_patient):
+                        price = 0
+                        
+                mapped_treatments.append({
+                    "id": str(t.id),
+                    "description": t.description,
+                    "price": price,
+                    "procedure_status": t.procedure_status,
+                    "treatment_date": t.treatment_date,
+                    "status": t.status,
+                })
+            
+            odontogram_data.append({
+                "id": str(o.id),
+                "tooth_number": o.tooth_number,
+                "tooth_type": o.tooth_type,
+                "notes": o.notes,
+                "status": o.status,
+                "treatments": mapped_treatments
+            })
             
         return jsonable_encoder({
             "history": history,
             "patient": patient,
-            "treatment": treatment,
-            "odontogram": odontogram,
-            "payments": payments
+            "odontograms": odontogram_data,
         })
     except Exception as e:
         print(f"❌ Error in get_medical_history_detail: {e}")
@@ -95,7 +134,8 @@ def get_medical_history_detail(
 def update_full_medical_history(
     history_id: uuid.UUID,
     update_data: FullMedicalHistoryUpdate,
-    session: Session = Depends(get_session_for_tenant)
+    session: Session = Depends(get_session_for_tenant),
+    current_user = Depends(get_current_tenant_user)
 ):
     try:
         db_history = session.get(MedicalHistory, history_id)
@@ -115,70 +155,81 @@ def update_full_medical_history(
         db_history.updated_at = datetime.utcnow()
         session.add(db_history)
 
-        # 2. Update Treatment summary
-        if db_history.treatment_id:
-            db_treatment = session.get(Treatment, db_history.treatment_id)
-            if db_treatment:
-                # Calculate total price and build summary description
-                total_price = sum(item.price for item in update_data.odontogram_items)
-                total_duration = sum(item.duration_minutes for item in update_data.odontogram_items if item.duration_minutes)
-                
-                dates = [item.treatment_date for item in update_data.odontogram_items if item.treatment_date]
-                latest_date = max(dates) if dates else datetime.utcnow()
+        # 2. Upsert Odontogram + Treatments per tooth
+        patient_id = db_history.patient_id
+        existing_odontograms = session.exec(
+            select(Odontogram).where(
+                Odontogram.patient_id == patient_id,
+                Odontogram.status == True
+            )
+        ).all()
+        existing_by_tooth = {o.tooth_number: o for o in existing_odontograms}
+        incoming_tooth_numbers = set()
 
-                db_treatment.description = update_data.medical_description or "Tratamiento dental"
-                db_treatment.price = total_price if total_price > 0 else update_data.price
-                db_treatment.duration_minutes = total_duration
-                db_treatment.date = latest_date
-                db_treatment.updated_at = datetime.utcnow()
-                session.add(db_treatment)
+        for item in update_data.odontogram_items:
+            incoming_tooth_numbers.add(item.tooth_number)
+            
+            if item.tooth_number in existing_by_tooth:
+                db_odontogram = existing_by_tooth[item.tooth_number]
+                db_odontogram.tooth_type = item.tooth_type
+                db_odontogram.notes = item.notes
+                db_odontogram.updated_at = datetime.utcnow()
+                session.add(db_odontogram)
+            else:
+                db_odontogram = Odontogram(
+                    tooth_number=item.tooth_number,
+                    tooth_type=item.tooth_type,
+                    notes=item.notes,
+                    patient_id=patient_id
+                )
+                session.add(db_odontogram)
+                session.flush()
 
-                # 3. Upsert Odontogram items (preserve existing procedure_status)
-                old_odontograms = session.exec(
-                    select(Odontogram).where(Odontogram.treatment_id == db_treatment.id)
-                ).all()
-                # Build a lookup by tooth_number for existing items
-                existing_by_tooth = {o.tooth_number: o for o in old_odontograms}
-                incoming_tooth_numbers = set()
+            # Upsert treatments for this tooth
+            old_treatments = session.exec(
+                select(Treatment).where(Treatment.odontogram_id == db_odontogram.id)
+            ).all()
+            old_treatment_dict = {str(t.id): t for t in old_treatments}
+            incoming_treatment_ids = set()
 
-                for item in update_data.odontogram_items:
-                    incoming_tooth_numbers.add(item.tooth_number)
-                    if item.tooth_number in existing_by_tooth:
-                        # Update existing odontogram, preserving its procedure_status
-                        existing = existing_by_tooth[item.tooth_number]
-                        existing.tooth_type = item.tooth_type
-                        existing.notes = item.notes
-                        existing.price = item.price
-                        existing.description = item.description
-                        existing.duration_minutes = item.duration_minutes
-                        existing.treatment_date = item.treatment_date
-                        # Only update procedure_status if explicitly provided and not default
-                        if item.procedure_status and item.procedure_status != "pendiente":
-                            existing.procedure_status = item.procedure_status
-                        existing.updated_at = datetime.utcnow()
-                        session.add(existing)
-                    else:
-                        # Create new odontogram entry
-                        db_odontogram = Odontogram(
-                            tooth_number=item.tooth_number,
-                            tooth_type=item.tooth_type,
-                            notes=item.notes,
-                            price=item.price,
-                            description=item.description,
-                            duration_minutes=item.duration_minutes,
-                            treatment_date=item.treatment_date,
-                            procedure_status=item.procedure_status,
-                            treatment_id=db_treatment.id
-                        )
-                        session.add(db_odontogram)
+            for t_item in item.treatments:
+                t_item_id_str = str(t_item.id) if getattr(t_item, "id", None) else None
+                if t_item_id_str and t_item_id_str in old_treatment_dict:
+                    incoming_treatment_ids.add(t_item_id_str)
+                    db_treatment = old_treatment_dict[t_item_id_str]
+                    
+                    # Only update if the user created it, or it's a legacy treatment
+                    if db_treatment.created_by == current_user.id or db_treatment.created_by is None:
+                        db_treatment.description = t_item.description
+                        db_treatment.price = t_item.price
+                        if t_item.treatment_date:
+                            db_treatment.treatment_date = t_item.treatment_date
+                        db_treatment.procedure_status = t_item.procedure_status
+                    
+                    session.add(db_treatment)
+                else:
+                    db_treatment = Treatment(
+                        description=t_item.description,
+                        price=t_item.price,
+                        treatment_date=t_item.treatment_date,
+                        procedure_status=t_item.procedure_status,
+                        odontogram_id=db_odontogram.id,
+                        created_by=current_user.id
+                    )
+                    session.add(db_treatment)
+                    
+            for old_id, old_t in old_treatment_dict.items():
+                if old_id not in incoming_treatment_ids:
+                    # Only soft delete if the user owns it
+                    if old_t.created_by == current_user.id or old_t.created_by is None:
+                        old_t.status = False
+                    session.add(old_t)
 
-                # Remove odontograms that were deleted by the user
-                for tooth_num, old_odontogram in existing_by_tooth.items():
-                    if tooth_num not in incoming_tooth_numbers:
-                        session.delete(old_odontogram)
-
-                # Removed Payment Update
-
+        # Soft-delete teeth removed from the incoming list
+        for tooth_num, old_o in existing_by_tooth.items():
+            if tooth_num not in incoming_tooth_numbers:
+                old_o.status = False
+                session.add(old_o)
 
         session.commit()
         session.refresh(db_history)
@@ -476,42 +527,7 @@ def create_full_medical_history(
         if existing_history:
             raise HTTPException(status_code=400, detail="Este paciente ya tiene un historial médico activo. Solo se permite un historial por paciente.")
 
-        total_price = sum(item.price for item in full_data.odontogram_items)
-        final_price = total_price if total_price > 0 else full_data.price
-        
-        total_duration = sum(item.duration_minutes for item in full_data.odontogram_items if item.duration_minutes)
-        dates = [item.treatment_date for item in full_data.odontogram_items if item.treatment_date]
-        latest_date = max(dates) if dates else datetime.utcnow()
-
-        # 1. Create Treatment (as a summary)
-        db_treatment = Treatment(
-            description=full_data.medical_description or "Tratamiento dental",
-            price=final_price,
-            duration_minutes=total_duration,
-            date=latest_date,
-            patient_id=patient_id
-        )
-        session.add(db_treatment)
-        session.flush()
-
-        # 2. Create Odontogram items with individual treatment data
-        for item in full_data.odontogram_items:
-            db_odontogram = Odontogram(
-                tooth_number=item.tooth_number,
-                tooth_type=item.tooth_type,
-                notes=item.notes,
-                price=item.price,
-                description=item.description,
-                duration_minutes=item.duration_minutes,
-                treatment_date=item.treatment_date,
-                procedure_status=item.procedure_status,
-                treatment_id=db_treatment.id
-            )
-            session.add(db_odontogram)
-
-        # Removed Payment Creation
-
-        # 3. Create Medical History entry
+        # 1. Create Medical History entry
         db_history = MedicalHistory(
             conditions=full_data.conditions,
             allergies=full_data.allergies,
@@ -523,14 +539,35 @@ def create_full_medical_history(
             brushing_technique=full_data.brushing_technique,
             uses_floss=full_data.uses_floss,
             patient_id=patient_id,
-            treatment_id=db_treatment.id
         )
-        # Buscar el usuario dentro del esquema del tenant por email
         tenant_user = session.exec(select(User).where(User.email == current_user.email)).first()
         if tenant_user:
             db_history.created_by = tenant_user.id
             
         session.add(db_history)
+        session.flush()
+
+        # 2. Create Odontogram (tooth) records + Treatments per tooth
+        for item in full_data.odontogram_items:
+            db_odontogram = Odontogram(
+                tooth_number=item.tooth_number,
+                tooth_type=item.tooth_type,
+                notes=item.notes,
+                patient_id=patient_id
+            )
+            session.add(db_odontogram)
+            session.flush()
+
+            for t_item in item.treatments:
+                db_treatment = Treatment(
+                    description=t_item.description,
+                    price=t_item.price,
+                    treatment_date=t_item.treatment_date,
+                    procedure_status=t_item.procedure_status,
+                    odontogram_id=db_odontogram.id,
+                    created_by=db_history.created_by
+                )
+                session.add(db_treatment)
 
         session.commit()
         session.refresh(db_history)

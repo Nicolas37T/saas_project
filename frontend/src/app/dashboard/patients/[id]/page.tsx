@@ -96,7 +96,7 @@ export default function PatientProfilePage({
               a.appointment_status !== "cancelled",
           ),
         );
-        setTreatments(treatmentsData.filter((t) => t.patient_id === id));
+        setTreatments(treatmentsData);
         setEmployeesList(employees.filter((emp: Employee) => emp.status));
       } catch (error) {
         console.error("Error loading patient data:", error);
@@ -340,12 +340,12 @@ export default function PatientProfilePage({
                       <Card className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-slate-900/80 border-slate-800 backdrop-blur-sm group-hover:border-slate-700 transition-colors">
                         <CardHeader className="p-4 pb-2">
                           <CardTitle className="text-sm text-slate-400 font-medium">
-                            {treatment.date
-                              ? new Date(treatment.date).toLocaleDateString()
+                            {treatment.treatment_date
+                              ? new Date(treatment.treatment_date).toLocaleDateString()
                               : "Sin fecha"}
-                            {treatment.date &&
+                            {treatment.treatment_date &&
                               ` a las ${new Date(
-                                treatment.date,
+                                treatment.treatment_date,
                               ).toLocaleTimeString([], {
                                 hour: "2-digit",
                                 minute: "2-digit",
@@ -362,24 +362,11 @@ export default function PatientProfilePage({
                             </p>
                             <p className="text-sm text-white capitalize">
                               <span className="text-slate-500">Estado:</span>{" "}
-                              {(() => {
-                                const procs = treatment.odontograms || [];
-                                if (procs.length === 0)
-                                  return "Sin procedimientos";
-                                const allDone = procs.every(
-                                  (p: any) =>
-                                    p.procedure_status === "completado",
-                                );
-                                const anyDone = procs.some(
-                                  (p: any) =>
-                                    p.procedure_status === "completado",
-                                );
-                                return allDone
-                                  ? "Completado"
-                                  : anyDone
-                                    ? "En progreso"
-                                    : "Pendiente";
-                              })()}
+                              {treatment.procedure_status === "completado"
+                                ? "Completado"
+                                : treatment.procedure_status === "en_progreso"
+                                ? "En progreso"
+                                : "Pendiente"}
                             </p>
                             <p className="text-sm text-white">
                               <span className="text-slate-500">Precio:</span> $

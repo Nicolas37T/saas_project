@@ -213,13 +213,14 @@ export interface Treatment {
   id: string;
   description: string;
   price: number;
-  duration_minutes?: number;
-  date?: string;
+  procedure_status: string;
+  treatment_date?: string;
   status: boolean;
-  patient_id?: string;
-  patient?: Patient;
+  odontogram_id?: string;
+  odontogram?: Odontogram;
   payments?: Payment[];
-  odontograms?: Odontogram[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface MedicalHistory {
@@ -249,13 +250,12 @@ export interface Odontogram {
   tooth_number: number;
   tooth_type: string;
   notes?: string;
-  price: number;
-  description?: string;
-  duration_minutes?: number;
-  treatment_date?: string;
-  procedure_status: string;
   status: boolean;
-  treatment_id: string;
+  patient_id?: string;
+  patient?: Patient;
+  treatments?: Treatment[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface SettingData {
@@ -415,24 +415,9 @@ export const tenantApi = {
       },
     ),
 
-  // Treatments
-  getTreatments: () => apiFetch<Treatment[]>("/api/tenant/treatments/"),
-  createTreatment: (data: Partial<Treatment>) =>
-    apiFetch<Treatment>("/api/tenant/treatments/", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-  updateTreatment: (id: string, data: Partial<Treatment>) =>
-    apiFetch<Treatment>(`/api/tenant/treatments/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    }),
-  deleteTreatment: (id: string) =>
-    apiFetch<{ ok: boolean }>(`/api/tenant/treatments/${id}`, {
-      method: "DELETE",
-    }),
 
   // Appointments
+
   getAppointments: () => apiFetch<Appointment[]>("/api/tenant/appointments/"),
   createAppointment: (data: Partial<Appointment>) =>
     apiFetch<Appointment>("/api/tenant/appointments/", {
@@ -459,6 +444,8 @@ export const tenantApi = {
 
   // Odontograms
   getOdontograms: () => apiFetch<Odontogram[]>("/api/tenant/odontograms/"),
+  getOdontogramsByPatient: (patientId: string) =>
+    apiFetch<Odontogram[]>(`/api/tenant/odontograms/?patient_id=${patientId}`),
   createOdontogram: (data: Partial<Odontogram>) =>
     apiFetch<Odontogram>("/api/tenant/odontograms/", {
       method: "POST",
@@ -468,5 +455,28 @@ export const tenantApi = {
     apiFetch<Odontogram>(`/api/tenant/odontograms/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
+    }),
+  deleteOdontogram: (id: string) =>
+    apiFetch<{ ok: boolean }>(`/api/tenant/odontograms/${id}`, {
+      method: "DELETE",
+    }),
+
+  // Treatments per tooth
+  getTreatments: () => apiFetch<Treatment[]>("/api/tenant/treatments/"),
+  getTreatmentsByOdontogram: (odontogramId: string) =>
+    apiFetch<Treatment[]>(`/api/tenant/treatments/?odontogram_id=${odontogramId}`),
+  createTreatment: (data: Partial<Treatment>) =>
+    apiFetch<Treatment>("/api/tenant/treatments/", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  updateTreatment: (id: string, data: Partial<Treatment>) =>
+    apiFetch<Treatment>(`/api/tenant/treatments/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  deleteTreatment: (id: string) =>
+    apiFetch<{ ok: boolean }>(`/api/tenant/treatments/${id}`, {
+      method: "DELETE",
     }),
 };

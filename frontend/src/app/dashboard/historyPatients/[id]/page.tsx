@@ -9,7 +9,7 @@ import { CustomModal, SuccessModal } from "@/components/ui/custom-modal";
 import { useParams, useRouter } from "next/navigation";
 import { Stepper } from "../../../../components/Stepper";
 import { Step1PatientHygiene } from "../../../../components/Step1PatientHygiene";
-import { Step2Odontogram } from "../../../../components/Step2Odontogram";
+import { Step2Odontogram, OdontogramItem } from "../../../../components/Step2Odontogram";
 import { Step3Evolution } from "../../../../components/Step3Evolution";
 import { FormNavigation } from "../../../../components/FormNavigation";
 
@@ -49,25 +49,12 @@ export default function EditHistoryPatientPage() {
     price: 0,
   });
 
-  const [odontogramItems, setOdontogramItems] = useState<
-    {
-      tooth_number: number;
-      tooth_type: string;
-      notes: string;
-      price: number;
-      description: string;
-      duration_minutes: number;
-      treatment_date: string;
-    }[]
-  >([]);
-  const [newTooth, setNewTooth] = useState({
+  const [odontogramItems, setOdontogramItems] = useState<OdontogramItem[]>([]);
+  const [newTooth, setNewTooth] = useState<OdontogramItem>({
     tooth_number: 1,
     tooth_type: "adult",
     notes: "",
-    price: 0,
-    description: "",
-    duration_minutes: 30,
-    treatment_date: new Date().toISOString().split("T")[0],
+    treatments: [],
   });
 
   useEffect(() => {
@@ -113,65 +100,35 @@ export default function EditHistoryPatientPage() {
       brushing_frequency: history.brushing_frequency || "",
       brushing_technique: history.brushing_technique || "",
       uses_floss: history.uses_floss ?? false,
-      price: treatment?.price || 0,
+      price: 0,
     });
+    // Map new API format: each odontogram has tooth info + treatments array
     setOdontogramItems(
-      (odontogram || []).map((item: any) => ({
+      (selectedHistory.odontograms || []).map((item: any) => ({
         tooth_number: item.tooth_number,
         tooth_type: item.tooth_type,
         notes: item.notes || "",
-        price: item.price || 0,
-        description: item.description || "",
-        duration_minutes: item.duration_minutes || 30,
-        treatment_date: item.treatment_date
-          ? new Date(item.treatment_date).toISOString().split("T")[0]
-          : new Date().toISOString().split("T")[0],
-      })),
+        treatments: (item.treatments || []).map((t: any) => ({
+          id: t.id,
+          description: t.description || "",
+          price: t.price || 0,
+          treatment_date: t.treatment_date
+            ? new Date(t.treatment_date).toISOString().split("T")[0]
+            : new Date().toISOString().split("T")[0],
+          procedure_status: t.procedure_status || "pendiente",
+        })),
+      }))
     );
   };
 
   const handleAddTooth = () => {
-    const updatedItems = [...odontogramItems, { ...newTooth }];
-    setOdontogramItems(updatedItems);
-    // Auto-calculate total price
-    const totalPrice = updatedItems.reduce(
-      (sum, item) => sum + (item.price || 0),
-      0,
-    );
-    setFormData((prev) => ({
-      ...prev,
-      price: totalPrice,
-      payment_amount: totalPrice,
-    }));
-    setNewTooth({
-      tooth_number: 1,
-      tooth_type: "adult",
-      notes: "",
-      price: 0,
-      description: "",
-      duration_minutes: 30,
-      treatment_date: new Date().toISOString().split("T")[0],
-    });
+    if (!newTooth.tooth_number) return;
+    setOdontogramItems([...odontogramItems, { ...newTooth, treatments: [] }]);
+    setNewTooth({ tooth_number: 1, tooth_type: "adult", notes: "", treatments: [] });
   };
 
   const handleRemoveTooth = (index: number) => {
-    const updatedItems = odontogramItems.filter((_, i) => i !== index);
-    setOdontogramItems(updatedItems);
-    const totalPrice = updatedItems.reduce(
-      (sum, item) => sum + (item.price || 0),
-      0,
-    );
-    setFormData((prev) => ({
-      ...prev,
-      price: totalPrice,
-      payment_amount: totalPrice,
-    }));
-  };
-
-  const handleEditTooth = (index: number) => {
-    const itemToEdit = odontogramItems[index];
-    setNewTooth({ ...itemToEdit });
-    handleRemoveTooth(index);
+    setOdontogramItems(odontogramItems.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -269,12 +226,11 @@ export default function EditHistoryPatientPage() {
 
         {currentStep === 2 && (
           <Step2Odontogram
-            formData={formData}
             odontogramItems={odontogramItems}
+            setOdontogramItems={setOdontogramItems}
             newTooth={newTooth}
             setNewTooth={setNewTooth}
             handleAddTooth={handleAddTooth}
-            handleEditTooth={handleEditTooth}
             handleRemoveTooth={handleRemoveTooth}
           />
         )}
