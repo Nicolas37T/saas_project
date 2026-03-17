@@ -123,9 +123,13 @@ export default function PaymentsPage() {
     let totalPagado = 0;
 
     patientTreatments.forEach(t => {
-      totalCosto += t.price;
-      const tPaid = t.payments?.reduce((acc, pay) => acc + pay.amount, 0) || 0;
-      totalPagado += tPaid;
+      // Si el precio es 0 (oculto por el backend), significa que pertenece a otro doctor
+      // y no debemos sumar ni su costo ni sus pagos al saldo deudor de nuestro dashboard
+      if (t.price > 0) {
+        totalCosto += t.price;
+        const tPaid = t.payments?.reduce((acc, pay) => acc + pay.amount, 0) || 0;
+        totalPagado += tPaid;
+      }
     });
 
     const saldoDeudor = Math.max(0, totalCosto - totalPagado);
