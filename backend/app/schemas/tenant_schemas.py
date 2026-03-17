@@ -329,3 +329,20 @@ class TreatmentReadWithRelations(TreatmentRead):
     payments: List[PaymentRead] = []
 
     model_config = ConfigDict(from_attributes=True)
+
+# --- Medicine ---
+class MedicineBase(BaseModel):
+    name: str
+
+class MedicineCreate(MedicineBase):
+    pass
+
+class MedicineUpdate(BaseModel):
+    name: Optional[str] = None
+
+class MedicineRead(MedicineBase):
+    id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)

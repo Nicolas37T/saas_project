@@ -15,6 +15,9 @@ export default function RegisterForm() {
     const [error, setError] = useState("")
     const [plans, setPlans] = useState<Plan[]>([])
     const [loadingPlans, setLoadingPlans] = useState(true)
+    const [subdomainError, setSubdomainError] = useState("")
+
+    const forbiddenSubdomains = ["api", "admin", "dashboard", "login", "register", "auth", "tenant", "public", "localhost", "www", "", null]
 
     useEffect(() => {
         publicApi.getPlans()
@@ -23,12 +26,54 @@ export default function RegisterForm() {
             .finally(() => setLoadingPlans(false))
     }, [])
 
+    const validateSubdomain = (subdomain: string) => {
+        if (!subdomain) {
+            setSubdomainError("El subdominio es requerido")
+            return false
+        }
+        
+        if (forbiddenSubdomains.includes(subdomain.toLowerCase())) {
+            setSubdomainError(`El subdominio "${subdomain}" no está disponible`)
+            return false
+        }
+        
+        // Validación adicional: solo letras minúsculas, números y guiones
+        const subdomainRegex = /^[a-z0-9-]+$/
+        if (!subdomainRegex.test(subdomain)) {
+            setSubdomainError("Solo se permiten letras minúsculas, números y guiones")
+            return false
+        }
+        
+        // Validación: no puede empezar o terminar con guión
+        if (subdomain.startsWith("-") || subdomain.endsWith("-")) {
+            setSubdomainError("El subdominio no puede empezar o terminar con guión")
+            return false
+        }
+        
+        setSubdomainError("")
+        return true
+    }
+
+    const handleSubdomainChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')
+        e.target.value = value
+        validateSubdomain(value)
+    }
+
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
+        
+        // Validar subdominio antes de enviar
+        const formData = new FormData(e.currentTarget)
+        const subdomain = formData.get("subdomain") as string
+        
+        if (!validateSubdomain(subdomain)) {
+            return
+        }
+        
         setLoading(true)
         setError("")
 
-        const formData = new FormData(e.currentTarget)
         const data = Object.fromEntries(formData.entries())
 
         try {
@@ -112,12 +157,26 @@ export default function RegisterForm() {
                         <div className="space-y-2">
                             <Label htmlFor="subdomain">Subdominio deseado</Label>
                             <div className="flex items-center">
-                                <Input id="subdomain" name="subdomain" placeholder="tienda" className="rounded-r-none" required />
-                                <span className="bg-slate-100 border border-l-0 px-3 py-2 rounded-r-md text-sm text-gray-500 whitespace-nowrap">
+                                <Input 
+                                    id="subdomain" 
+                                    name="subdomain" 
+                                    placeholder="tienda" 
+                                    className={`rounded-r-none ${subdomainError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                                    onChange={handleSubdomainChange}
+                                    required 
+                                />
+                                <span className={`border ${subdomainError ? 'border-red-500' : 'border-input'} border-l-0 px-3 py-2 rounded-r-md text-sm text-gray-500 whitespace-nowrap`}>
                                     .tuapp.com
                                 </span>
                             </div>
-                            <p className="text-xs text-gray-400">Dirección inicial del sistema.</p>
+                            <div className="space-y-1">
+                                {subdomainError && (
+                                    <p className="text-xs text-red-500">{subdomainError}</p>
+                                )}
+                                <p className="text-xs text-gray-400">
+                                    Dirección inicial del sistema. No usar: www, admin, api, localhost
+                                </p>
+                            </div>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="domain">Dominio propio (Opcional)</Label>
@@ -139,7 +198,7 @@ export default function RegisterForm() {
                     {error && <p className="text-sm text-red-500 font-medium bg-red-50 p-2 rounded">{error}</p>}
                 </CardContent>
                 <CardFooter>
-                    <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={loading}>
+                    <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 mt-6" disabled={loading || !!subdomainError}>
                         {loading ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

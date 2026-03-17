@@ -164,3 +164,12 @@ class Odontogram(SQLModel, table=True):
     patient_id: uuid.UUID = Field(foreign_key="patients.id")
     patient: Patient = Relationship(back_populates="odontograms")
     treatments: List["Treatment"] = Relationship(back_populates="odontogram")
+
+class Medicine(SQLModel, table=True):
+    __tablename__ = "medicines"
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    name: str = Field(index=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    created_by: Optional[uuid.UUID] = Field(default=None, foreign_key="users.id")

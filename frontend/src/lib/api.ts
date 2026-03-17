@@ -269,6 +269,13 @@ export interface SettingData {
   currency?: string;
 }
 
+export interface Medicine {
+  id: string;
+  name: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Role {
   id: string;
   name: string;
@@ -479,6 +486,23 @@ export const tenantApi = {
     }),
   deleteTreatment: (id: string) =>
     apiFetch<{ ok: boolean }>(`/api/tenant/treatments/${id}`, {
+      method: "DELETE",
+    }),
+
+  // Medicines
+  getMedicines: () => apiFetch<Medicine[]>("/api/tenant/medicines/"),
+  createMedicine: (data: { name: string }) =>
+    apiFetch<Medicine>("/api/tenant/medicines/", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  updateMedicine: (id: string, name: string) =>
+    apiFetch<Medicine>(`/api/tenant/medicines/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ name }),
+    }),
+  deleteMedicine: (id: string) =>
+    apiFetch<{ ok: boolean }>(`/api/tenant/medicines/${id}`, {
       method: "DELETE",
     }),
 };
