@@ -78,7 +78,7 @@ export default function PaymentsPage() {
     if (!t) return { desc: "Desconocido", patientName: "Desconocido" };
     return {
       desc: t.description,
-      patientName: t.patient ? `${t.patient.first_name} ${t.patient.last_name}` : "Sin asignar",
+      patientName: t.odontogram?.patient ? `${t.odontogram.patient.first_name} ${t.odontogram.patient.last_name}` : "Sin asignar",
     };
   };
 
@@ -118,7 +118,7 @@ export default function PaymentsPage() {
 
   const debtors = patients.map(p => {
     // Find all treatments for this patient
-    const patientTreatments = treatments.filter(t => t.patient_id === p.id);
+    const patientTreatments = treatments.filter(t => t.odontogram?.patient_id === p.id);
     let totalCosto = 0;
     let totalPagado = 0;
 
@@ -429,7 +429,7 @@ export default function PaymentsPage() {
                     >
                       <option value="">Buscar tratamiento...</option>
                       {treatments
-                        .filter(t => !selectedPatientId || t.patient_id === selectedPatientId)
+                        .filter(t => !selectedPatientId || t.odontogram?.patient_id === selectedPatientId)
                         .map((t) => {
                           const alreadyPaid = t.payments?.reduce((acc, p) => acc + p.amount, 0) || 0;
                           const balance = Math.max(0, t.price - alreadyPaid);

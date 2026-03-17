@@ -127,11 +127,10 @@ class PatientShareRead(PatientShareBase):
 class TreatmentBase(BaseModel):
     description: str
     price: float = 0.0
-    status_treatments: str = "pendiente"
-    duration_minutes: Optional[int] = None
-    date: Optional[datetime] = None
+    procedure_status: str = "pendiente"
+    treatment_date: Optional[datetime] = None
     status: bool = True
-    patient_id: Optional[uuid.UUID] = None
+    odontogram_id: Optional[uuid.UUID] = None
 
 class TreatmentCreate(TreatmentBase):
     pass
@@ -139,9 +138,8 @@ class TreatmentCreate(TreatmentBase):
 class TreatmentUpdate(BaseModel):
     description: Optional[str] = None
     price: Optional[float] = None
-    status_treatments: Optional[str] = None
-    duration_minutes: Optional[int] = None
-    date: Optional[datetime] = None
+    procedure_status: Optional[str] = None
+    treatment_date: Optional[datetime] = None
     status: Optional[bool] = None
 
 class TreatmentRead(TreatmentBase):
@@ -244,13 +242,8 @@ class OdontogramBase(BaseModel):
     tooth_number: int
     tooth_type: str
     notes: Optional[str] = None
-    price: float = 0.0
-    description: Optional[str] = None
-    duration_minutes: Optional[int] = None
-    treatment_date: Optional[datetime] = None
-    procedure_status: str = "pendiente"
     status: bool = True
-    treatment_id: uuid.UUID
+    patient_id: uuid.UUID
 
 class OdontogramCreate(OdontogramBase):
     pass
@@ -259,26 +252,34 @@ class OdontogramUpdate(BaseModel):
     tooth_number: Optional[int] = None
     tooth_type: Optional[str] = None
     notes: Optional[str] = None
-    procedure_status: Optional[str] = None
     status: Optional[bool] = None
 
 class OdontogramRead(OdontogramBase):
     id: uuid.UUID
     created_at: datetime
     updated_at: datetime
+    treatments: List[TreatmentRead] = []
 
+    model_config = ConfigDict(from_attributes=True)
+
+class OdontogramReadWithPatient(OdontogramRead):
+    patient: Optional["PatientRead"] = None
     model_config = ConfigDict(from_attributes=True)
 
 
 # --- Composite Creation Schemas ---
 
-class FullMedicalHistoryItem(BaseModel):
+class FullOdontogramItem(BaseModel):
+    """A single tooth record to add to the odontogram"""
     tooth_number: int
     tooth_type: str
     notes: Optional[str] = None
+
+class FullTreatmentItem(BaseModel):
+    """A single procedure applied to a tooth"""
+    id: Optional[uuid.UUID] = None
+    description: str
     price: float = 0.0
-    description: Optional[str] = None
-    duration_minutes: Optional[int] = None
     treatment_date: Optional[datetime] = None
     procedure_status: str = "pendiente"
 
@@ -296,13 +297,15 @@ class FullMedicalHistoryCreate(BaseModel):
     brushing_technique: Optional[str] = None
     uses_floss: bool = False
     
-    # Treatment summary price
-    price: float = 0.0
-    
-    # Odontogram data (now contains per-tooth treatment data)
-    odontogram_items: List[FullMedicalHistoryItem] = []
+    # Odontogram items: each tooth with its treatments
+    odontogram_items: List["OdontogramWithTreatments"] = []
 
-
+class OdontogramWithTreatments(BaseModel):
+    """A tooth entry for the composite history form"""
+    tooth_number: int
+    tooth_type: str
+    notes: Optional[str] = None
+    treatments: List[FullTreatmentItem] = []
 
 class FullMedicalHistoryUpdate(BaseModel):
     # Medical History data
@@ -318,18 +321,11 @@ class FullMedicalHistoryUpdate(BaseModel):
     brushing_technique: Optional[str] = None
     uses_floss: bool = False
     
-    # Treatment data summary
-    price: float = 0.0
-    
-    # Odontogram data
-    odontogram_items: List[FullMedicalHistoryItem] = []
-    
-    # Odontogram data
-    odontogram_items: List[FullMedicalHistoryItem] = []
+    # Odontogram items: each tooth with its treatments
+    odontogram_items: List[OdontogramWithTreatments] = []
 
 class TreatmentReadWithRelations(TreatmentRead):
-    patient: Optional[PatientRead] = None
+    odontogram: Optional[OdontogramReadWithPatient] = None
     payments: List[PaymentRead] = []
-    odontograms: List[OdontogramRead] = []
 
     model_config = ConfigDict(from_attributes=True)

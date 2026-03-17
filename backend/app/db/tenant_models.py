@@ -67,7 +67,7 @@ class Patient(SQLModel, table=True):
     created_by: Optional[uuid.UUID] = Field(default=None, foreign_key="users.id")
     medical_histories: List["MedicalHistory"] = Relationship(back_populates="patient")
     appointments: List["Appointment"] = Relationship(back_populates="patient")
-    treatments: List["Treatment"] = Relationship(back_populates="patient")
+    odontograms: List["Odontogram"] = Relationship(back_populates="patient")
     shared_with: List["PatientShare"] = Relationship(back_populates="patient")
 
 class PatientShare(SQLModel, table=True):
@@ -85,19 +85,19 @@ class Treatment(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     description: str
     price: float = Field(default=0.0)
-    status_treatments: str = Field(default="pendiente") # e.g. pending, in_progress, completed
-    duration_minutes: Optional[int] = None
-    date: Optional[datetime] = None
+    procedure_status: str = Field(default="pendiente")  # pendiente, en_progreso, completado
+    treatment_date: Optional[datetime] = None
     status: bool = Field(default=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     payments: List["Payment"] = Relationship(back_populates="treatment")
-    odontograms: List["Odontogram"] = Relationship(back_populates="treatment")
     medical_histories: List["MedicalHistory"] = Relationship(back_populates="treatment")
 
-    patient_id: Optional[uuid.UUID] = Field(default=None, foreign_key="patients.id")
-    patient: Optional["Patient"] = Relationship(back_populates="treatments")
+    odontogram_id: Optional[uuid.UUID] = Field(default=None, foreign_key="odontogram.id")
+    odontogram: Optional["Odontogram"] = Relationship(back_populates="treatments")
+
+    created_by: Optional[uuid.UUID] = Field(default=None, foreign_key="users.id")
 
 class MedicalHistory(SQLModel, table=True):
     __tablename__ = "medical_history"
@@ -155,16 +155,12 @@ class Odontogram(SQLModel, table=True):
     __tablename__ = "odontogram"
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     tooth_number: int
-    tooth_type: str  # e.g., adult, child, molar, incisor etc.
+    tooth_type: str  # adult, child
     notes: Optional[str] = None
-    price: float = Field(default=0.0)
-    description: Optional[str] = None  # Treatment name for this tooth
-    duration_minutes: Optional[int] = None
-    treatment_date: Optional[datetime] = None
-    procedure_status: str = Field(default="pendiente")  # e.g., pendiente, en_progreso, completado
     status: bool = Field(default=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    treatment_id: uuid.UUID = Field(foreign_key="treatments.id")
-    treatment: Treatment = Relationship(back_populates="odontograms")
+    patient_id: uuid.UUID = Field(foreign_key="patients.id")
+    patient: Patient = Relationship(back_populates="odontograms")
+    treatments: List["Treatment"] = Relationship(back_populates="odontogram")

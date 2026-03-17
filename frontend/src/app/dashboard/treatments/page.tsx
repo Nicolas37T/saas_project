@@ -17,9 +17,11 @@ import { Button } from "@/components/ui/button";
 
 type FilterType = "today" | "week" | "month" | "all";
 
-interface FlattenedProcedure extends Odontogram {
+interface DisplayProcedure extends Treatment {
   patient_name: string;
-  treatment_description: string;
+  tooth_number: string | number;
+  tooth_type: string;
+  notes?: string;
 }
 
 export default function TreatmentsPage() {
@@ -45,10 +47,10 @@ export default function TreatmentsPage() {
     }
   };
 
-  const handleStatusUpdate = async (odontogramId: string, newStatus: string) => {
-    setUpdatingId(odontogramId);
+  const handleStatusUpdate = async (treatmentId: string, newStatus: string) => {
+    setUpdatingId(treatmentId);
     try {
-      await tenantApi.updateOdontogram(odontogramId, { procedure_status: newStatus });
+      await tenantApi.updateTreatment(treatmentId, { procedure_status: newStatus });
       // Reload data to reflect changes
       const tData = await tenantApi.getTreatments();
       setTreatments(tData);
@@ -81,21 +83,18 @@ export default function TreatmentsPage() {
     }
   };
 
-  // 1. Flatten all procedures FIRST
+  // 1. Map treatments to display format
   const allProcedures = useMemo(() => {
-    const list: FlattenedProcedure[] = [];
-    treatments.forEach(t => {
-      if (t.odontograms && t.odontograms.length > 0) {
-        t.odontograms.forEach(o => {
-          list.push({
-            ...o,
-            patient_name: t.patient ? `${t.patient.first_name} ${t.patient.last_name}` : "Sin Paciente",
-            treatment_description: t.description
-          });
-        });
-      }
+    return treatments.map(t => {
+      const patient = t.odontogram?.patient;
+      return {
+        ...t,
+        patient_name: patient ? `${patient.first_name} ${patient.last_name}` : "Sin Paciente",
+        tooth_number: t.odontogram?.tooth_number || "-",
+        tooth_type: t.odontogram?.tooth_type || "-",
+        notes: t.odontogram?.notes
+      } as DisplayProcedure;
     });
-    return list;
   }, [treatments]);
 
   // 2. Apply Filters (Date & Search) to the flattened list
@@ -137,8 +136,7 @@ export default function TreatmentsPage() {
       const s = search.toLowerCase();
       list = list.filter(item => 
         item.patient_name.toLowerCase().includes(s) ||
-        (item.description && item.description.toLowerCase().includes(s)) ||
-        item.treatment_description.toLowerCase().includes(s) ||
+        item.description.toLowerCase().includes(s) ||
         item.tooth_number.toString().includes(s)
       );
     }
@@ -257,7 +255,7 @@ export default function TreatmentsPage() {
                     </td>
                     <td className="px-6 py-5">
                       <p className="font-black text-slate-100 mb-0.5 tracking-tight group-hover:text-indigo-300 transition-colors uppercase">
-                        {item.description || item.treatment_description}
+                        {item.description}
                       </p>
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">
@@ -301,8 +299,8 @@ export default function TreatmentsPage() {
                     </td>
                     <td className="px-6 py-5 text-right">
                       <div className="flex flex-col items-end">
-                        <span className="font-black text-amber-500 text-sm tracking-tight group-hover:scale-105 transition-transform origin-right">
-                            Bs. {item.price.toLocaleString()}
+                        <span className={`font-black tracking-tight group-hover:scale-105 transition-transform origin-right text-sm ${item.price === 0 ? "text-slate-500 italic" : "text-amber-500"}`}>
+                            {item.price === 0 ? "Privado" : `Bs. ${item.price.toLocaleString()}`}
                         </span>
                       </div>
                     </td>
@@ -317,10 +315,17 @@ export default function TreatmentsPage() {
               Total procedimientos listados: {filteredProcedures.length}
             </p>
             <div className="flex items-center gap-2">
-                 <p className="text-slate-500 text-[10px] uppercase font-black tracking-widest">Suma Total:</p>
-                 <span className="text-indigo-400 font-black text-sm">
-                    Bs. {filteredProcedures.reduce((acc, curr) => acc + curr.price, 0).toLocaleString()}
-                 </span>
+                 <p className="text-slate-500 text-[10px] uppercase font-bold tracking-widest leading-tight text-right w-40">
+                    Calculado excluyendo
+                    <br />
+                    tratamientos privados
+                 </p>
+                 <div className="flex flex-col border-l border-slate-800 ml-2 pl-4">
+                    <p className="text-slate-500 text-[10px] uppercase font-black tracking-widest text-right">Suma Mostrada:</p>
+                     <span className="text-indigo-400 font-black text-sm text-right">
+                        Bs. {filteredProcedures.reduce((acc, curr) => acc + (curr.price || 0), 0).toLocaleString()}
+                     </span>
+                 </div>
             </div>
           </div>
         </div>

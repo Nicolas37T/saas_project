@@ -35,7 +35,7 @@ import {
 import { useRouter } from "next/navigation";
 import { Stepper } from "../../../components/Stepper";
 import { Step1PatientHygiene } from "../../../components/Step1PatientHygiene";
-import { Step2Odontogram } from "../../../components/Step2Odontogram";
+import { Step2Odontogram, OdontogramItem } from "../../../components/Step2Odontogram";
 import { Step3Evolution } from "../../../components/Step3Evolution";
 import { FormNavigation } from "../../../components/FormNavigation";
 
@@ -81,27 +81,12 @@ export default function HistoryPatientsPage() {
     price: 0,
   });
 
-  const [odontogramItems, setOdontogramItems] = useState<
-    {
-      tooth_number: number;
-      tooth_type: string;
-      notes: string;
-      price: number;
-      description: string;
-      duration_minutes: number;
-      treatment_date: string;
-      procedure_status: string;
-    }[]
-  >([]);
-  const [newTooth, setNewTooth] = useState({
+  const [odontogramItems, setOdontogramItems] = useState<OdontogramItem[]>([]);
+  const [newTooth, setNewTooth] = useState<OdontogramItem>({
     tooth_number: 1,
     tooth_type: "adult",
     notes: "",
-    price: 0,
-    description: "",
-    duration_minutes: 30,
-    treatment_date: new Date().toISOString().split("T")[0],
-    procedure_status: "pendiente",
+    treatments: [],
   });
 
   useEffect(() => {
@@ -170,46 +155,13 @@ export default function HistoryPatientsPage() {
   };
 
   const handleAddTooth = () => {
-    const updatedItems = [...odontogramItems, { ...newTooth }];
-    setOdontogramItems(updatedItems);
-    // Auto-calculate total price
-    const totalPrice = updatedItems.reduce(
-      (sum, item) => sum + (item.price || 0),
-      0,
-    );
-    setFormData((prev) => ({
-      ...prev,
-      price: totalPrice,
-    }));
-    setNewTooth({
-      tooth_number: 1,
-      tooth_type: "adult",
-      notes: "",
-      price: 0,
-      description: "",
-      duration_minutes: 30,
-      treatment_date: new Date().toISOString().split("T")[0],
-      procedure_status: "pendiente",
-    });
+    if (!newTooth.tooth_number) return;
+    setOdontogramItems([...odontogramItems, { ...newTooth, treatments: [] }]);
+    setNewTooth({ tooth_number: 1, tooth_type: "adult", notes: "", treatments: [] });
   };
 
   const handleRemoveTooth = (index: number) => {
-    const updatedItems = odontogramItems.filter((_, i) => i !== index);
-    setOdontogramItems(updatedItems);
-    const totalPrice = updatedItems.reduce(
-      (sum, item) => sum + (item.price || 0),
-      0,
-    );
-    setFormData((prev) => ({
-      ...prev,
-      price: totalPrice,
-    }));
-  };
-
-  const handleEditTooth = (index: number) => {
-    const itemToEdit = odontogramItems[index];
-    setNewTooth({ ...itemToEdit });
-    handleRemoveTooth(index);
+    setOdontogramItems(odontogramItems.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -285,11 +237,7 @@ export default function HistoryPatientsPage() {
       tooth_number: 1,
       tooth_type: "adult",
       notes: "",
-      price: 0,
-      description: "",
-      duration_minutes: 30,
-      treatment_date: new Date().toISOString().split("T")[0],
-      procedure_status: "pendiente",
+      treatments: [],
     });
   };
 
@@ -463,8 +411,8 @@ export default function HistoryPatientsPage() {
           </div>
 
           {(() => {
-            const { history, patient, treatment, odontogram, payments } =
-              selectedHistory;
+            const { history, patient, odontograms } = selectedHistory;
+            const totalPrice = odontograms?.reduce((sum: number, o: any) => sum + (o.treatments?.reduce((tSum: number, t: any) => tSum + t.price, 0) || 0), 0) || 0;
             return (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-1 space-y-6">
@@ -585,20 +533,14 @@ export default function HistoryPatientsPage() {
                           Evolución Clínica
                         </p>
                         <h3 className="text-2xl font-bold text-white">
-                          {treatment?.name || "Registro de Seguimiento"}
+                          Registro de Seguimiento
                         </h3>
                         <div className="flex items-center gap-6 mt-2">
                           <div className="flex items-center gap-2 text-slate-400 text-sm">
                             <Calendar size={14} className="text-blue-500" />
-                            {treatment?.date
-                              ? new Date(treatment.date).toLocaleDateString()
-                              : new Date(
-                                  history.created_at,
-                                ).toLocaleDateString()}
-                          </div>
-                          <div className="flex items-center gap-2 text-slate-400 text-sm">
-                            <Clock size={14} className="text-blue-500" />
-                            {treatment?.duration_minutes || "--"} min
+                            {history.created_at
+                              ? new Date(history.created_at).toLocaleDateString()
+                              : "--"}
                           </div>
                         </div>
                       </div>
@@ -629,39 +571,53 @@ export default function HistoryPatientsPage() {
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800/40">
-                              {odontogram.map((item: any, idx: number) => (
-                                <tr
-                                  key={idx}
-                                  className="hover:bg-slate-800/30 transition-colors"
-                                >
-                                  <td className="px-4 py-3">
-                                    <Badge className="bg-slate-800 text-slate-300 border-none">
-                                      #{item.tooth_number}
-                                    </Badge>
-                                  </td>
-                                  <td className="px-4 py-3">
-                                    <p className="font-semibold text-slate-200">
-                                      {item.description}
-                                    </p>
-                                    <p className="text-[10px] text-slate-500">
-                                      {item.tooth_type === "adult"
-                                        ? "Adulto"
-                                        : "Niño"}{" "}
-                                      • {item.duration_minutes}min
-                                    </p>
-                                  </td>
-                                  <td className="px-4 py-3 text-slate-400">
-                                    {item.treatment_date
-                                      ? new Date(
-                                          item.treatment_date,
-                                        ).toLocaleDateString()
-                                      : "--"}
-                                  </td>
-                                  <td className="px-4 py-3 text-right font-bold text-amber-400">
-                                    Bs {item.price}
+                              {odontograms?.flatMap((item: any) => 
+                                item.treatments?.map((t: any, idx: number) => (
+                                  <tr
+                                    key={`${item.id}-${idx}`}
+                                    className="hover:bg-slate-800/30 transition-colors"
+                                  >
+                                    <td className="px-4 py-3">
+                                      <Badge className="bg-slate-800 text-slate-300 border-none">
+                                        #{item.tooth_number}
+                                      </Badge>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                      <p className="font-semibold text-slate-200">
+                                        {t.description}
+                                      </p>
+                                      <p className="text-[10px] text-slate-500 uppercase tracking-tighter">
+                                        {item.tooth_type === "adult" ? "Permanente" : "Temporal"}{" "}
+                                        • {t.procedure_status}
+                                      </p>
+                                    </td>
+                                    <td className="px-4 py-3 text-slate-400">
+                                      {t.treatment_date
+                                        ? new Date(
+                                            t.treatment_date,
+                                          ).toLocaleDateString()
+                                        : "--"}
+                                    </td>
+                                    <td className="px-4 py-3 text-right font-bold text-amber-400">
+                                      {t.price === 0 ? (
+                                        <span className="text-slate-500 italic text-xs font-normal relative pr-4">
+                                          Privado
+                                          <span className="absolute top-1/2 right-1 w-1.5 h-1.5 bg-slate-600 rounded-full -translate-y-1/2"></span>
+                                        </span>
+                                      ) : (
+                                        `Bs. ${t.price}`
+                                      )}
+                                    </td>
+                                  </tr>
+                                )) || []
+                              )}
+                              {!odontograms?.length && (
+                                <tr>
+                                  <td colSpan={4} className="py-8 text-center text-slate-500 text-sm">
+                                    No hay procedimientos registrados en este historial.
                                   </td>
                                 </tr>
-                              ))}
+                              )}
                             </tbody>
                           </table>
                         </div>
@@ -675,7 +631,7 @@ export default function HistoryPatientsPage() {
                             </p>
                             <div className="flex items-center gap-3">
                               <span className="text-white font-bold text-lg">
-                                Bs {treatment?.price || 0}
+                                Bs {totalPrice}
                               </span>
                             </div>
                           </div>
@@ -739,12 +695,11 @@ export default function HistoryPatientsPage() {
 
             {currentStep === 2 && (
               <Step2Odontogram
-                formData={formData}
                 odontogramItems={odontogramItems}
+                setOdontogramItems={setOdontogramItems}
                 newTooth={newTooth}
                 setNewTooth={setNewTooth}
                 handleAddTooth={handleAddTooth}
-                handleEditTooth={handleEditTooth}
                 handleRemoveTooth={handleRemoveTooth}
               />
             )}
