@@ -169,7 +169,7 @@ export default function EmployeesPage() {
             <User className="mx-auto text-slate-700 mb-4" size={48} />
             <p className="text-slate-500 text-lg">No se encontraron empleados activos.</p>
           </div>
-        ) : (
+        ) : ( 
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>

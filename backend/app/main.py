@@ -290,6 +290,7 @@ async def login(data: LoginRequest):
         token_data = {
             "sub": str(user.id),
             "email": user.email,
+            "full_name": user.full_name or "",
             "role": role_name,
         }
         access_token = create_access_token(data=token_data)
@@ -304,7 +305,7 @@ async def login(data: LoginRequest):
 
 # ─── Routers ──────────────────────────────────────────────────────────────────
 from app.routers import admin as admin_router
-from app.routers import patients, treatments, appointments, payments, odontograms, settings, employees
+from app.routers import patients, treatments, appointments, payments, odontograms, settings, employees, medicines
 
 app.include_router(admin_router.router)
 app.include_router(patients.router, prefix="/api/tenant", tags=["Tenant - Patients"])
@@ -315,3 +316,4 @@ app.include_router(odontograms.router, prefix="/api/tenant", tags=["Tenant - Odo
 app.include_router(settings.router, prefix="/api/tenant", tags=["Tenant - Settings"])
 app.include_router(employees.auth_router, prefix="/api/tenant", tags=["Tenant - Auth"])
 app.include_router(employees.router, prefix="/api/tenant", tags=["Tenant - Employees"])
+app.include_router(medicines.router, prefix="/api/tenant", tags=["Tenant - Medicines"])

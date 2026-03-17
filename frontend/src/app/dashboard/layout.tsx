@@ -17,9 +17,23 @@ import {
   X,
   ClipboardClock,
   User as UserIcon,
-  Contact
+  Contact,
+  Pill
 } from "lucide-react";
 import { tenantApi } from "@/lib/api";
+
+// Helper function to decode JWT and get user info
+function decodeJWT(token: string): { email?: string; full_name?: string; sub?: string } | null {
+  try {
+    const base64Url = token.split('.')[1];
+    if (!base64Url) return null;
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
 
 export default function DashboardLayout({
   children,
@@ -31,6 +45,7 @@ export default function DashboardLayout({
   const [subdomain, setSubdomain] = useState("");
   const [tenantName, setTenantName] = useState("");
   const [tenantLogo, setTenantLogo] = useState("");
+  const [userName, setUserName] = useState("");
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -46,7 +61,15 @@ export default function DashboardLayout({
       }
 
       setSubdomain(sub);
-      
+
+      // Decode token to get user name
+      const decoded = decodeJWT(token);
+      if (decoded?.full_name) {
+        setUserName(decoded.full_name);
+      } else if (decoded?.email) {
+        setUserName(decoded.email.split('@')[0]);
+      }
+
       try {
         const config = await tenantApi.getTenantConfig();
         if (config) {
@@ -109,6 +132,11 @@ export default function DashboardLayout({
         href: "/dashboard/treatments",
         icon: <Stethoscope size={20} />,
       },
+      {
+        name: "Recetas",
+        href: "/dashboard/prescription",
+        icon: <Pill size={20} />,
+      },
     ] : []),
     {
       name: "Pagos",
@@ -133,17 +161,25 @@ export default function DashboardLayout({
     <div className="min-h-screen bg-slate-950 text-slate-300 flex">
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 border-r border-slate-800 bg-slate-900/50 backdrop-blur-md fixed h-full z-20">
-        <div className="p-6 flex items-center gap-3">
+        <div className="p-6 flex items-start gap-3">
           {tenantLogo ? (
-            <img src={tenantLogo} alt="Logo" className="h-8 w-8 object-contain rounded-full shadow-lg" />
+            <img src={tenantLogo} alt="Logo" className="h-8 w-8 object-contain rounded-full shadow-lg flex-shrink-0" />
           ) : (
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 flex-shrink-0">
               <Building2 size={18} />
             </div>
           )}
-          <span className="text-white font-bold text-lg tracking-tight capitalize truncate" title={tenantName || subdomain}>
-            {tenantName || subdomain}
-          </span>
+          <div className="flex flex-col min-w-0">
+            <span className="text-white font-bold text-lg tracking-tight truncate" title={tenantName || subdomain}>
+              {tenantName || subdomain}
+            </span>
+            {userName && (
+              <span className="text-xs text-slate-400 truncate flex items-center gap-1 mt-0.5">
+                <UserIcon size={12} />
+                {userName}
+              </span>
+            )}
+          </div>
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-2">
@@ -186,19 +222,27 @@ export default function DashboardLayout({
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md z-30 flex items-center justify-between px-4">
         <div className="flex items-center gap-3">
           {tenantLogo ? (
-            <img src={tenantLogo} alt="Logo" className="h-8 w-8 object-contain rounded-full shadow-lg" />
+            <img src={tenantLogo} alt="Logo" className="h-8 w-8 object-contain rounded-full shadow-lg flex-shrink-0" />
           ) : (
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white flex-shrink-0">
               <Building2 size={18} />
             </div>
           )}
-          <span className="text-white font-bold tracking-tight capitalize truncate max-w-[150px]" title={tenantName || subdomain}>
-            {tenantName || subdomain}
-          </span>
+          <div className="flex flex-col min-w-0">
+            <span className="text-white font-bold tracking-tight capitalize truncate max-w-[120px]" title={tenantName || subdomain}>
+              {tenantName || subdomain}
+            </span>
+            {userName && (
+              <span className="text-xs text-slate-400 truncate flex items-center gap-1">
+                <UserIcon size={10} />
+                {userName}
+              </span>
+            )}
+          </div>
         </div>
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="text-slate-400"
+          className="text-slate-400 flex-shrink-0"
         >
           {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
         </button>

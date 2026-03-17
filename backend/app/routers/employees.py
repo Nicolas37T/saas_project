@@ -70,15 +70,16 @@ def login_employee(
         raise HTTPException(status_code=400, detail="Tenant no especificado o inválido")
         
     role_name = user.role.name if getattr(user, "role", None) else "empleado"
-    
+
     token_data = {
         "sub": str(user.id),
         "email": user.email,
+        "full_name": user.full_name or "",
         "role": role_name,
         "is_employee": True,
         "tenant_subdomain": tenant_obj.subdomain
     }
-    
+
     access_token = create_access_token(data=token_data)
     
     return {

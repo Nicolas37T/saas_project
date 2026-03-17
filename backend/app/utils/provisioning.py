@@ -52,12 +52,12 @@ def create_tenant_schema(schema_name: str) -> bool:
         from sqlmodel import SQLModel
         from app.db.session import engine
         from sqlalchemy import text
-        from app.db.tenant_models import Role, User, Setting, Patient, Treatment, MedicalHistory, Appointment, Payment, Odontogram, PatientShare
+        from app.db.tenant_models import Role, User, Setting, Patient, Treatment, MedicalHistory, Appointment, Payment, Odontogram, PatientShare, Medicine
         
         with engine.connect() as sqla_conn:
             sqla_conn.execute(text(f'SET search_path TO "{schema_name}", public'))
             
-            tenant_models = [Role, User, Setting, Patient, Treatment, MedicalHistory, Appointment, Payment, Odontogram, PatientShare]
+            tenant_models = [Role, User, Setting, Patient, Treatment, MedicalHistory, Appointment, Payment, Odontogram, PatientShare, Medicine]
             tenant_tables = [m.__table__ for m in tenant_models]
             
             for table in tenant_tables:
