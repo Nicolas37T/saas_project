@@ -606,7 +606,7 @@ export default function HistoryPatientsPage() {
                                         </span>
                                       ) : (
                                         `Bs. ${t.price}`
-                                      )}
+                                      )} 
                                     </td>
                                   </tr>
                                 )) || []

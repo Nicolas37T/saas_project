@@ -370,7 +370,7 @@ export default function PatientProfilePage({
                             </p>
                             <p className="text-sm text-white">
                               <span className="text-slate-500">Precio:</span> $
-                              {treatment.price}
+                              {treatment.price === 0 ? "Privado" : treatment.price}
                             </p>
                           </div>
                         </CardContent>
