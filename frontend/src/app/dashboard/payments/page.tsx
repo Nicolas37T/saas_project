@@ -524,9 +524,6 @@ export default function PaymentsPage() {
                       {formatCurrency(Object.values(selectedTreatments).reduce((acc, val) => acc + (val || 0), 0))}
                     </span>
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-300">
                       Método Operativo
@@ -544,24 +541,6 @@ export default function PaymentsPage() {
                       <option value="cash">Efectivo</option>
                       <option value="card">Tarjeta</option>
                       <option value="transfer">Transferencia</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">
-                      Estado de Pago
-                    </label>
-                    <select
-                      className="w-full p-2.5 rounded-md bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                      value={paymentOptions.payment_status}
-                      onChange={(e) =>
-                        setPaymentOptions({
-                          ...paymentOptions,
-                          payment_status: e.target.value,
-                        })
-                      }
-                    >
-                      <option value="completed">Completado</option>
-                      <option value="pending">Pendiente</option>
                     </select>
                   </div>
                 </div>
