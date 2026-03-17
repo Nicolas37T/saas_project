@@ -7,10 +7,24 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { tenantApi, Medicine, SettingData, Patient } from "@/lib/api";
 
+// Helper function to decode JWT and get user info
+function decodeJWT(token: string): { email?: string; full_name?: string; sub?: string } | null {
+  try {
+    const base64Url = token.split('.')[1];
+    if (!base64Url) return null;
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
+
 export default function PrescriptionPage() {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [settings, setSettings] = useState<SettingData | null>(null);
+  const [doctorName, setDoctorName] = useState("");
   const [loading, setLoading] = useState(true);
 
   // Form State
@@ -36,6 +50,17 @@ export default function PrescriptionPage() {
         setMedicines(medsRes);
         setPatients(patientsRes);
         setSettings(settingsRes);
+
+        // Get doctor name from token
+        const token = localStorage.getItem("token");
+        if (token) {
+          const decoded = decodeJWT(token);
+          if (decoded?.full_name) {
+            setDoctorName(decoded.full_name);
+          } else if (decoded?.email) {
+            setDoctorName(decoded.email.split('@')[0]);
+          }
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -132,7 +157,7 @@ export default function PrescriptionPage() {
               </CardTitle>
               <div className="relative w-64">
                 <Input
-                  placeholder="Buscar medicamento..."
+                  placeholder="Buscar o agrega un medicamento..."
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value);
@@ -249,8 +274,11 @@ export default function PrescriptionPage() {
                     </h2>
                     <div className="text-[10px] text-slate-500 space-y-0.5 font-medium">
                       {settings?.address && <p>{settings.address}</p>}
-                      {(settings?.phone || settings?.cellphone) && (
-                        <p>Tel: {settings.phone || settings.cellphone}</p>
+                      {(settings?.phone) && (
+                        <p>Tel: {settings.phone}</p>
+                      )}
+                      {(settings?.cellphone) && (
+                        <p>Cel: {settings.cellphone}</p>
                       )}
                     </div>
                   </div>
@@ -306,6 +334,7 @@ export default function PrescriptionPage() {
               <div className="mt-auto pt-12 flex justify-end">
                 <div className="w-48 text-center">
                   <div className="border-b border-slate-400 w-full mb-2"></div>
+                  <p className="text-sm font-bold text-slate-800 uppercase leading-none mb-1">{doctorName || "Doctor"}</p>
                   <p className="text-[10px] font-bold uppercase text-slate-500">Firma y Sello</p>
                 </div>
               </div>

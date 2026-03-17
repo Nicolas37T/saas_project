@@ -175,7 +175,7 @@ export default function DashboardLayout({
             </span>
             {userName && (
               <span className="text-xs text-slate-400 truncate flex items-center gap-1 mt-0.5">
-                <UserIcon size={12} />
+                <UserIcon size={16} />
                 {userName}
               </span>
             )}

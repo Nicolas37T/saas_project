@@ -4,7 +4,23 @@ import { Activity, Settings, ArrowRight, Stethoscope } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
+function decodeJWT(token: string): { email?: string; full_name?: string; sub?: string } | null {
+  try {
+    const base64Url = token.split('.')[1];
+    if (!base64Url) return null;
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
+
 export default function TenantDashboard() {
+
+  const token = localStorage.getItem("token");
+  const user = decodeJWT(token!);
+
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mb-12 max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -12,7 +28,7 @@ export default function TenantDashboard() {
           <Activity size={14} className="animate-pulse" /> Sistema en Línea
         </div>
         <h1 className="text-4xl sm:text-5xl tracking-tight text-white font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
-          Bienvenido a tu Clínica.
+          Bienvenido a tu Clínica {user?.full_name}
         </h1>
         <p className="text-xl text-slate-400 leading-relaxed">
           Tu sistema de gestión dental multi-tenant está en funcionamiento.

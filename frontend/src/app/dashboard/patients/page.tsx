@@ -16,7 +16,11 @@ import { tenantApi, Patient, Employee } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { CustomModal, ConfirmModal, SuccessModal } from "@/components/ui/custom-modal";
+import {
+  CustomModal,
+  ConfirmModal,
+  SuccessModal,
+} from "@/components/ui/custom-modal";
 import { useRouter } from "next/navigation";
 
 export default function PatientsPage() {
@@ -93,7 +97,7 @@ export default function PatientsPage() {
     try {
       const [data, doctors] = await Promise.all([
         tenantApi.getPatients(),
-        tenantApi.getDoctors().catch(() => [])
+        tenantApi.getDoctors().catch(() => []),
       ]);
 
       const empMap: Record<string, string> = {};
@@ -108,7 +112,10 @@ export default function PatientsPage() {
 
       // Auto-select first doctor if creating new patient and none selected
       if (doctors.length > 0 && !newPatient.assigned_doctor_id) {
-        setNewPatient(prev => ({ ...prev, assigned_doctor_id: doctors[0].id }));
+        setNewPatient((prev) => ({
+          ...prev,
+          assigned_doctor_id: doctors[0].id,
+        }));
       }
     } catch (error) {
       console.error("Failed to load patients", error);
@@ -127,9 +134,20 @@ export default function PatientsPage() {
         assigned_doctor_id: newPatient.assigned_doctor_id || undefined,
       });
       setIsAddModalOpen(false);
-      setNewPatient({ first_name: "", last_name: "", phone: "", address: "", birth_day: "", description: "", assigned_doctor_id: "" });
-      
-      setSuccessInfo({ title: "Paciente Registrado", message: "El paciente ha sido creado con éxito." });
+      setNewPatient({
+        first_name: "",
+        last_name: "",
+        phone: "",
+        address: "",
+        birth_day: "",
+        description: "",
+        assigned_doctor_id: "",
+      });
+
+      setSuccessInfo({
+        title: "Paciente Registrado",
+        message: "El paciente ha sido creado con éxito.",
+      });
       setIsSuccessModalOpen(true);
       loadPatients();
     } catch (error) {
@@ -167,8 +185,11 @@ export default function PatientsPage() {
       });
       setIsEditModalOpen(false);
       setEditingPatient(null);
-      
-      setSuccessInfo({ title: "Datos Actualizados", message: "La información del paciente se actualizó correctamente." });
+
+      setSuccessInfo({
+        title: "Datos Actualizados",
+        message: "La información del paciente se actualizó correctamente.",
+      });
       setIsSuccessModalOpen(true);
       loadPatients();
     } catch (error) {
@@ -198,7 +219,7 @@ export default function PatientsPage() {
       setIsDeleting(false);
     }
   };
-  
+
   // ─── COMPARTIR PACIENTE ─────────────────────────────────────────────────────
   const handleOpenShare = (patient: Patient) => {
     setOpenMenuId(null);
@@ -215,7 +236,7 @@ export default function PatientsPage() {
       setIsShareModalOpen(false);
       setSuccessInfo({
         title: "Paciente Compartido",
-        message: `Se ha compartido el acceso a ${sharingPatient.first_name} con el colega seleccionado. Ahora podrá ver su historial médico y tratamientos.`
+        message: `Se ha compartido el acceso a ${sharingPatient.first_name} con el colega seleccionado. Ahora podrá ver su historial médico y tratamientos.`,
       });
       setIsSuccessModalOpen(true);
     } catch (error) {
@@ -299,20 +320,25 @@ export default function PatientsPage() {
                       <div className="min-w-0 flex-1">
                         <h4 className="text-white font-medium leading-tight">
                           <div className="break-all">{patient.first_name}</div>
-                          <div className="break-all text-slate-400 text-sm mt-0.5">{patient.last_name}</div>
+                          <div className="break-all text-slate-400 text-sm mt-0.5">
+                            {patient.last_name}
+                          </div>
                         </h4>
-                        <span className="text-xs text-slate-500 capitalize">
+                        <span className="text-xs text-black font-bold capitalize bg-green-500 px-2 py-1 rounded-full">
                           Activo
                         </span>
                       </div>
                     </div>
 
                     {/* Menú de 3 puntos */}
-                    <div className="relative" ref={openMenuId === patient.id ? menuRef : null}>
+                    <div
+                      className="relative"
+                      ref={openMenuId === patient.id ? menuRef : null}
+                    >
                       <button
                         onClick={() =>
                           setOpenMenuId(
-                            openMenuId === patient.id ? null : patient.id
+                            openMenuId === patient.id ? null : patient.id,
                           )
                         }
                         className="text-slate-500 hover:text-white transition-colors p-1 rounded hover:bg-slate-700"
@@ -359,7 +385,9 @@ export default function PatientsPage() {
                     {patient.birth_day && mounted && (
                       <div className="flex items-center gap-2 text-sm text-slate-400">
                         <Calendar size={14} className="text-slate-500" />
-                        <span>{new Date(patient.birth_day).toLocaleDateString()}</span>
+                        <span>
+                          {new Date(patient.birth_day).toLocaleDateString()}
+                        </span>
                       </div>
                     )}
                     <div className="flex items-center gap-2 text-sm text-slate-400">
@@ -369,14 +397,24 @@ export default function PatientsPage() {
                     {patient.created_by && (
                       <div className="flex items-center gap-2 text-xs text-slate-500 mt-2">
                         <User size={12} className="text-slate-600" />
-                        <span className="truncate" title={`Registrado por: ${patient.creator_name || employeesMap[patient.created_by] || patient.created_by}`}>
-                          Registrado por: {patient.creator_name || employeesMap[patient.created_by] || patient.created_by.substring(0, 8) + "..."}
+                        <span
+                          className="truncate"
+                          title={`Registrado por: ${patient.creator_name || employeesMap[patient.created_by] || patient.created_by}`}
+                        >
+                          Registrado por:{" "}
+                          {patient.creator_name ||
+                            employeesMap[patient.created_by] ||
+                            patient.created_by.substring(0, 8) + "..."}
                         </span>
                       </div>
                     )}
                     {patient.assigned_doctor_id && (
                       <div className="flex items-center gap-2 text-xs text-blue-400 font-medium mt-1">
-                        <span>👨‍⚕️ Doctor: {employeesMap[patient.assigned_doctor_id] || "Asignado"}</span>
+                        <span>
+                          👨‍⚕️ Doctor:{" "}
+                          {employeesMap[patient.assigned_doctor_id] ||
+                            "Asignado"}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -384,13 +422,17 @@ export default function PatientsPage() {
                   <div className="mt-6 pt-4 border-t border-slate-800/50 flex justify-between items-center">
                     <div className="text-xs text-slate-500">
                       Unido el{" "}
-                      {mounted ? new Date(patient.created_at).toLocaleDateString() : ""}
+                      {mounted
+                        ? new Date(patient.created_at).toLocaleDateString()
+                        : ""}
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
                       className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 h-8 px-3"
-                      onClick={() => router.push(`/dashboard/patients/${patient.id}`)}
+                      onClick={() =>
+                        router.push(`/dashboard/patients/${patient.id}`)
+                      }
                     >
                       Ver Perfil
                     </Button>
@@ -408,97 +450,133 @@ export default function PatientsPage() {
         onClose={() => setIsAddModalOpen(false)}
         title="Nuevo Paciente"
       >
-              <form onSubmit={handleCreatePatient} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">Nombre *</label>
-                    <Input
-                      required
-                      placeholder="Juan"
-                      value={newPatient.first_name}
-                      onChange={(e) => setNewPatient({ ...newPatient, first_name: e.target.value })}
-                      className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">Apellidos *</label>
-                    <Input
-                      required
-                      placeholder="Pérez"
-                      value={newPatient.last_name}
-                      onChange={(e) => setNewPatient({ ...newPatient, last_name: e.target.value })}
-                      className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">Teléfono</label>
-                    <Input
-                      type="tel"
-                      placeholder="555-0000"
-                      value={newPatient.phone}
-                      onChange={(e) => setNewPatient({ ...newPatient, phone: e.target.value })}
-                      className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">Fecha de Nacimiento</label>
-                    <Input
-                      type="date"
-                      value={newPatient.birth_day}
-                      onChange={(e) => setNewPatient({ ...newPatient, birth_day: e.target.value })}
-                      className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Dirección</label>
-                  <Input
-                    placeholder="Calle 123..."
-                    value={newPatient.address}
-                    onChange={(e) => setNewPatient({ ...newPatient, address: e.target.value })}
-                    className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">Descripción / Notas</label>
-                    <Input
-                      placeholder="Observaciones generales..."
-                      value={newPatient.description}
-                      onChange={(e) => setNewPatient({ ...newPatient, description: e.target.value })}
-                      className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">Doctor Asignado</label>
-                    <select
-                      required
-                      value={newPatient.assigned_doctor_id}
-                      onChange={(e) => setNewPatient({ ...newPatient, assigned_doctor_id: e.target.value })}
-                      className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                    >
-                      {employeesList.map(emp => (
-                        <option key={emp.id} value={emp.id}>{emp.full_name || emp.username}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <div className="flex gap-3 justify-end mt-8">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => setIsAddModalOpen(false)}
-                    className="text-slate-400 hover:text-white hover:bg-slate-800"
-                  >
-                    Cancelar
-                  </Button>
-                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
-                    Crear Paciente
-                  </Button>
-                </div>
-              </form>
+        <form onSubmit={handleCreatePatient} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-300">
+                Nombre *
+              </label>
+              <Input
+                required
+                placeholder="Juan"
+                value={newPatient.first_name}
+                onChange={(e) =>
+                  setNewPatient({ ...newPatient, first_name: e.target.value })
+                }
+                className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-300">
+                Apellidos *
+              </label>
+              <Input
+                required
+                placeholder="Pérez"
+                value={newPatient.last_name}
+                onChange={(e) =>
+                  setNewPatient({ ...newPatient, last_name: e.target.value })
+                }
+                className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-300">
+                Teléfono
+              </label>
+              <Input
+                type="tel"
+                placeholder="555-0000"
+                value={newPatient.phone}
+                onChange={(e) =>
+                  setNewPatient({ ...newPatient, phone: e.target.value })
+                }
+                className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-300">
+                Fecha de Nacimiento
+              </label>
+              <Input
+                type="date"
+                value={newPatient.birth_day}
+                onChange={(e) =>
+                  setNewPatient({ ...newPatient, birth_day: e.target.value })
+                }
+                className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500 [color-scheme:dark]"
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-300">
+              Dirección
+            </label>
+            <Input
+              placeholder="Calle 123..."
+              value={newPatient.address}
+              onChange={(e) =>
+                setNewPatient({ ...newPatient, address: e.target.value })
+              }
+              className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-300">
+                Descripción / Notas
+              </label>
+              <Input
+                placeholder="Observaciones generales..."
+                value={newPatient.description}
+                onChange={(e) =>
+                  setNewPatient({ ...newPatient, description: e.target.value })
+                }
+                className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-300">
+                Doctor Asignado
+              </label>
+              <select
+                required
+                value={newPatient.assigned_doctor_id}
+                onChange={(e) =>
+                  setNewPatient({
+                    ...newPatient,
+                    assigned_doctor_id: e.target.value,
+                  })
+                }
+                className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              >
+                {employeesList.map((emp) => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.full_name || emp.username}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="flex gap-3 justify-end mt-8">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setIsAddModalOpen(false)}
+              className="text-slate-400 hover:text-white hover:bg-slate-800"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Crear Paciente
+            </Button>
+          </div>
+        </form>
       </CustomModal>
 
       {/* ─── MODAL: EDITAR PACIENTE ────────────────────────────────────────────── */}
@@ -508,93 +586,129 @@ export default function PatientsPage() {
         title="Editar Paciente"
       >
         {editingPatient && (
-              <form onSubmit={handleSaveEdit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">Nombre *</label>
-                    <Input
-                      required
-                      value={editForm.first_name}
-                      onChange={(e) => setEditForm({ ...editForm, first_name: e.target.value })}
-                      className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">Apellidos *</label>
-                    <Input
-                      required
-                      value={editForm.last_name}
-                      onChange={(e) => setEditForm({ ...editForm, last_name: e.target.value })}
-                      className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">Teléfono</label>
-                    <Input
-                      type="tel"
-                      value={editForm.phone}
-                      onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                      className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">Fecha de Nacimiento</label>
-                    <Input
-                      type="date"
-                      value={editForm.birth_day}
-                      onChange={(e) => setEditForm({ ...editForm, birth_day: e.target.value })}
-                      className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Dirección</label>
-                  <Input
-                    value={editForm.address}
-                    onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
-                    className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
-                  />
-                </div>
+          <form onSubmit={handleSaveEdit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-300">
+                  Nombre *
+                </label>
+                <Input
+                  required
+                  value={editForm.first_name}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, first_name: e.target.value })
+                  }
+                  className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-300">
+                  Apellidos *
+                </label>
+                <Input
+                  required
+                  value={editForm.last_name}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, last_name: e.target.value })
+                  }
+                  className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-300">
+                  Teléfono
+                </label>
+                <Input
+                  type="tel"
+                  value={editForm.phone}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, phone: e.target.value })
+                  }
+                  className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-300">
+                  Fecha de Nacimiento
+                </label>
+                <Input
+                  type="date"
+                  value={editForm.birth_day}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, birth_day: e.target.value })
+                  }
+                  className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-300">
+                Dirección
+              </label>
+              <Input
+                value={editForm.address}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, address: e.target.value })
+                }
+                className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+              />
+            </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">Descripción / Notas</label>
-                    <Input
-                      value={editForm.description}
-                      onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                      className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">Doctor Asignado</label>
-                    <select
-                      required
-                      value={editForm.assigned_doctor_id}
-                      onChange={(e) => setEditForm({ ...editForm, assigned_doctor_id: e.target.value })}
-                      className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-                    >
-                      {employeesList.map(emp => (
-                        <option key={emp.id} value={emp.id}>{emp.full_name || emp.username}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <div className="flex gap-3 justify-end mt-8">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => setIsEditModalOpen(false)}
-                    className="text-slate-400 hover:text-white hover:bg-slate-800"
-                  >
-                    Cancelar
-                  </Button>
-                  <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                    Guardar Cambios
-                  </Button>
-                </div>
-              </form>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-300">
+                  Descripción / Notas
+                </label>
+                <Input
+                  value={editForm.description}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, description: e.target.value })
+                  }
+                  className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-300">
+                  Doctor Asignado
+                </label>
+                <select
+                  required
+                  value={editForm.assigned_doctor_id}
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      assigned_doctor_id: e.target.value,
+                    })
+                  }
+                  className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                >
+                  {employeesList.map((emp) => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.full_name || emp.username}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end mt-8">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setIsEditModalOpen(false)}
+                className="text-slate-400 hover:text-white hover:bg-slate-800"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                Guardar Cambios
+              </Button>
+            </div>
+          </form>
         )}
       </CustomModal>
 
@@ -609,7 +723,8 @@ export default function PatientsPage() {
             <span className="text-white font-medium">
               {deletingPatient?.first_name} {deletingPatient?.last_name}
             </span>{" "}
-            será desactivado del sistema. Sus datos se conservarán en la base de datos.
+            será desactivado del sistema. Sus datos se conservarán en la base de
+            datos.
           </>
         }
         variant="danger"
@@ -627,11 +742,16 @@ export default function PatientsPage() {
         <div className="space-y-4 py-2">
           <p className="text-sm text-slate-400">
             Selecciona un doctor para compartir el historial y datos de{" "}
-            <span className="text-white font-medium">{sharingPatient?.first_name} {sharingPatient?.last_name}</span>.
+            <span className="text-white font-medium">
+              {sharingPatient?.first_name} {sharingPatient?.last_name}
+            </span>
+            .
           </p>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">Doctor Colega</label>
+            <label className="text-sm font-medium text-slate-300">
+              Doctor Colega
+            </label>
             <select
               value={selectedShareDoctorId}
               onChange={(e) => setSelectedShareDoctorId(e.target.value)}
@@ -639,11 +759,17 @@ export default function PatientsPage() {
             >
               <option value="">Seleccionar doctor...</option>
               {employeesList
-                .filter(emp => emp.id !== (sharingPatient?.assigned_doctor_id || sharingPatient?.created_by))
-                .map(emp => (
-                  <option key={emp.id} value={emp.id}>{emp.full_name}</option>
-                ))
-              }
+                .filter(
+                  (emp) =>
+                    emp.id !==
+                    (sharingPatient?.assigned_doctor_id ||
+                      sharingPatient?.created_by),
+                )
+                .map((emp) => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.full_name}
+                  </option>
+                ))}
             </select>
           </div>
 
@@ -656,7 +782,7 @@ export default function PatientsPage() {
             >
               Cancelar
             </Button>
-            <Button 
+            <Button
               onClick={handleConfirmShare}
               disabled={!selectedShareDoctorId || isSharing}
               className="bg-green-600 hover:bg-green-700 text-white"

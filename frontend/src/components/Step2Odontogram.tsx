@@ -200,7 +200,7 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                     <div className="flex items-center gap-2">
                       <span className="text-amber-400 font-bold text-sm">
                         Bs.{" "}
-                        {tooth.treatments.reduce((a, t) => a + t.price, 0).toFixed(2)}
+                        {tooth.treatments.reduce((a, t) => a + t.price, 0) === 0 ? "Privado" : tooth.treatments.reduce((a, t) => a + t.price, 0).toFixed(2)}
                       </span>
                       <button
                         type="button"
