@@ -9,7 +9,7 @@ import { CustomModal, SuccessModal } from "@/components/ui/custom-modal";
 import { useParams, useRouter } from "next/navigation";
 import { Stepper } from "../../../../components/Stepper";
 import { Step1PatientHygiene } from "../../../../components/Step1PatientHygiene";
-import { Step2Odontogram, OdontogramItem } from "../../../../components/Step2Odontogram";
+import { Step2Odontogram, OdontogramItem, NewToothWithTreatment, DEFAULT_NEW_TOOTH } from "../../../../components/Step2Odontogram";
 import { Step3Evolution } from "../../../../components/Step3Evolution";
 import { FormNavigation } from "../../../../components/FormNavigation";
 
@@ -50,12 +50,7 @@ export default function EditHistoryPatientPage() {
   });
 
   const [odontogramItems, setOdontogramItems] = useState<OdontogramItem[]>([]);
-  const [newTooth, setNewTooth] = useState<OdontogramItem>({
-    tooth_number: 1,
-    tooth_type: "adult",
-    notes: "",
-    treatments: [],
-  });
+  const [newTooth, setNewTooth] = useState<NewToothWithTreatment>({ ...DEFAULT_NEW_TOOTH });
 
   useEffect(() => {
     const initializeData = async () => {
@@ -122,9 +117,23 @@ export default function EditHistoryPatientPage() {
   };
 
   const handleAddTooth = () => {
-    if (!newTooth.tooth_number) return;
-    setOdontogramItems([...odontogramItems, { ...newTooth, treatments: [] }]);
-    setNewTooth({ tooth_number: 1, tooth_type: "adult", notes: "", treatments: [] });
+    if (!newTooth.tooth_number || !newTooth.first_treatment_description.trim()) return;
+    const firstTreatment = {
+      description: newTooth.first_treatment_description,
+      price: newTooth.first_treatment_price,
+      treatment_date: newTooth.first_treatment_date,
+      procedure_status: newTooth.first_treatment_status,
+    };
+    setOdontogramItems([
+      ...odontogramItems,
+      {
+        tooth_number: newTooth.tooth_number,
+        tooth_type: newTooth.tooth_type,
+        notes: newTooth.notes,
+        treatments: [firstTreatment],
+      },
+    ]);
+    setNewTooth({ ...DEFAULT_NEW_TOOTH });
   };
 
   const handleRemoveTooth = (index: number) => {

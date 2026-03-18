@@ -169,7 +169,7 @@ export default function LoginForm() {
                     {error && <p className="text-sm text-red-500 text-center font-medium bg-red-500/10 p-2 rounded">{error}</p>}
                 </CardContent>
                 <CardFooter>
-                    <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={loading}>
+                    <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 mt-4" disabled={loading}>
                         {loading ? (
                             <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Validando...</>
                         ) : (
