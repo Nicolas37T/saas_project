@@ -152,12 +152,12 @@ export default function PatientProfilePage({
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin w-8 h-8 flex border-2 border-blue-500 rounded-full border-t-transparent"></div>
+        <div className="animate-spin w-8 h-8 flex border-2 border-primary rounded-full border-t-transparent"></div>
       </div>
     );
   }
 
-  if (!patient) return <div className="text-white">Paciente no encontrado</div>;
+  if (!patient) return <div className="text-muted-foreground">Paciente no encontrado</div>;
 
   const role =
     typeof window !== "undefined"
@@ -169,7 +169,7 @@ export default function PatientProfilePage({
     <div className="space-y-6 max-w-5xl mx-auto">
       <button
         onClick={() => router.back()}
-        className="flex items-center text-slate-400 hover:text-white transition-colors text-sm mb-4"
+        className="flex items-center text-muted-foreground hover:text-foreground transition-colors text-sm mb-4"
       >
         <ArrowLeft size={16} className="mr-2" /> Volver a pacientes
       </button>
@@ -177,25 +177,25 @@ export default function PatientProfilePage({
       {/* Header Profile */}
       <div className="flex flex-col md:flexg-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center gap-6">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-3xl font-bold text-white shadow-lg shadow-blue-500/20">
+          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-blue-700 flex items-center justify-center text-3xl font-bold text-primary-foreground shadow-lg shadow-primary/20">
             {patient.first_name[0]}
             {patient.last_name[0]}
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl md:text-3xl font-bold text-white mb-1 leading-tight">
+            <h1 className="text-2xl md:text-3xl font-bold mb-1 leading-tight">
               <div className="break-all">{patient.first_name}</div>
-              <div className="break-all text-slate-300">
+              <div className="break-all text-muted-foreground">
                 {patient.last_name}
               </div>
             </h1>
-            <div className="flex flex-wrap gap-4 text-sm text-slate-400">
+            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
               {patient.phone && <span>📞 {patient.phone}</span>}
               <span>🗓️ {patient.status ? "Activo" : "Inactivo"}</span>
               <span>
                 ⏳ Registro: {new Date(patient.created_at).toLocaleDateString()}
               </span>
               {patient.assigned_doctor_id && (
-                <span className="text-blue-400">
+                <span className="text-primary">
                   👨‍⚕️ Doctor:{" "}
                   {employeesList.find(
                     (e) => e.id === patient.assigned_doctor_id,
@@ -209,11 +209,11 @@ export default function PatientProfilePage({
           <Button
             variant="outline"
             onClick={handleOpenEdit}
-            className="border-slate-700 bg-slate-900 text-white hover:bg-slate-800"
+            className="border-border bg-muted hover:bg-accent"
           >
             Editar Perfil
           </Button>
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)]">
+          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_15px_rgba(37,99,235,0.3)]">
             Nueva Cita
           </Button>
         </div>
@@ -223,28 +223,28 @@ export default function PatientProfilePage({
         {/* Information Column */}
         <div className="space-y-6">
           {!isReceptionist && (
-            <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
+            <Card className="bg-card border-border backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-lg text-white font-semibold flex items-center gap-2">
-                  <Activity size={18} className="text-blue-400" />
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <Activity size={18} className="text-primary" />
                   Historial Clínico
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {history.length === 0 ? (
-                  <p className="text-sm text-slate-500 italic">
+                  <p className="text-sm text-muted-foreground italic">
                     No hay registros médicos.
                   </p>
                 ) : (
                   <div className="space-y-4">
                     {/* Muestra el más reciente en el resumen */}
-                    <div className="p-3 bg-slate-950 rounded-lg border border-slate-800/50">
-                      <p className="text-sm text-slate-300 mb-2">
-                        <span className="text-slate-500">Condiciones:</span>{" "}
+                    <div className="p-3 bg-muted rounded-lg border border-border/50">
+                      <p className="text-sm mb-2">
+                        <span className="text-muted-foreground">Condiciones:</span>{" "}
                         {history[history.length - 1].conditions || "Ninguna"}
                       </p>
-                      <p className="text-sm text-slate-300">
-                        <span className="text-slate-500">Alergias:</span>{" "}
+                      <p className="text-sm">
+                        <span className="text-muted-foreground">Alergias:</span>{" "}
                         {history[history.length - 1].allergies || "Ninguna"}
                       </p>
                     </div>
@@ -254,15 +254,15 @@ export default function PatientProfilePage({
             </Card>
           )}
 
-          <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
+          <Card className="bg-card border-border backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="text-lg text-white flex items-center gap-2">
-                <Calendar size={18} className="text-blue-400" /> Citas Próximas
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Calendar size={18} className="text-primary" /> Citas Próximas
               </CardTitle>
             </CardHeader>
             <CardContent>
               {appointments.length === 0 ? (
-                <p className="text-sm text-slate-500 text-center py-4">
+                <p className="text-sm text-muted-foreground text-center py-4">
                   No hay citas programadas.
                 </p>
               ) : (
@@ -270,9 +270,9 @@ export default function PatientProfilePage({
                   {appointments.map((apt) => (
                     <div
                       key={apt.id}
-                      className="p-3 bg-slate-800/50 rounded-lg border border-slate-700/50"
+                      className="p-3 bg-muted/50 rounded-lg border border-border/50"
                     >
-                      <p className="text-white text-sm font-medium">
+                      <p className="text-sm font-medium">
                         {new Date(apt.appointment_date).toLocaleDateString()} a
                         las{" "}
                         {new Date(apt.appointment_date).toLocaleTimeString([], {
@@ -280,7 +280,7 @@ export default function PatientProfilePage({
                           minute: "2-digit",
                         })}
                       </p>
-                      <p className="text-xs text-slate-400 mt-1 uppercase">
+                      <p className="text-xs text-muted-foreground mt-1 uppercase">
                         Estado:{" "}
                         {translateStatus(
                           apt.appointment_status,
@@ -288,7 +288,7 @@ export default function PatientProfilePage({
                         )}
                       </p>
                       {apt.assigned_doctor_id && (
-                        <p className="text-xs text-blue-400 mt-1 font-medium">
+                        <p className="text-xs text-primary mt-1 font-medium">
                           👨‍⚕️ Dr.{" "}
                           {employeesList.find(
                             (e) => e.id === apt.assigned_doctor_id,
@@ -300,7 +300,7 @@ export default function PatientProfilePage({
                         </p>
                       )}
                       {apt.notes && (
-                        <p className="text-xs text-slate-500 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           {apt.notes}
                         </p>
                       )}
@@ -317,29 +317,29 @@ export default function PatientProfilePage({
           {/* Timeline of treatments */}
           {!isReceptionist && (
             <div className="space-y-4">
-              <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                <FileText size={20} className="text-blue-500" /> Historial de
+              <h3 className="text-xl font-bold flex items-center gap-2">
+                <FileText size={20} className="text-primary" /> Historial de
                 Tratamientos
               </h3>
               {treatments.length === 0 ? (
-                <div className="p-8 text-center border border-dashed border-slate-800 rounded-xl bg-slate-900/30">
-                  <p className="text-slate-500">
+                <div className="p-8 text-center border border-dashed border-border rounded-xl bg-muted/30">
+                  <p className="text-muted-foreground">
                     Este paciente no tiene tratamientos registrados.
                   </p>
                 </div>
               ) : (
-                <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-800 before:to-transparent">
+                <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
                   {treatments.map((treatment) => (
                     <div
                       key={treatment.id}
                       className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active"
                     >
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-slate-950 bg-slate-800 group-hover:bg-blue-500 text-slate-500 group-hover:text-white shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-lg transition-colors duration-300">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-background bg-muted group-hover:bg-primary text-muted-foreground group-hover:text-primary-foreground shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-lg transition-colors duration-300">
                         <Activity size={16} />
                       </div>
-                      <Card className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-slate-900/80 border-slate-800 backdrop-blur-sm group-hover:border-slate-700 transition-colors">
+                      <Card className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-card border-border backdrop-blur-sm group-hover:border-border transition-colors">
                         <CardHeader className="p-4 pb-2">
-                          <CardTitle className="text-sm text-slate-400 font-medium">
+                          <CardTitle className="text-sm font-medium">
                             {treatment.treatment_date
                               ? new Date(treatment.treatment_date).toLocaleDateString()
                               : "Sin fecha"}
@@ -354,22 +354,22 @@ export default function PatientProfilePage({
                         </CardHeader>
                         <CardContent className="p-4 pt-0">
                           <div className="space-y-2 mt-2">
-                            <p className="text-sm text-white">
-                              <span className="text-slate-500">
+                            <p className="text-sm">
+                              <span className="text-muted-foreground">
                                 Tratamiento:
                               </span>{" "}
                               {treatment.description}
                             </p>
-                            <p className="text-sm text-white capitalize">
-                              <span className="text-slate-500">Estado:</span>{" "}
+                            <p className="text-sm capitalize">
+                              <span className="text-muted-foreground">Estado:</span>{" "}
                               {treatment.procedure_status === "completado"
                                 ? "Completado"
                                 : treatment.procedure_status === "en_progreso"
                                 ? "En progreso"
                                 : "Pendiente"}
                             </p>
-                            <p className="text-sm text-white">
-                              <span className="text-slate-500">Precio:</span> $
+                            <p className="text-sm">
+                              <span className="text-muted-foreground">Precio:</span> $
                               {treatment.price === 0 ? "Privado" : treatment.price}
                             </p>
                           </div>
@@ -394,7 +394,7 @@ export default function PatientProfilePage({
           <form onSubmit={handleSaveEdit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">
+                <label className="text-sm font-medium">
                   Nombre *
                 </label>
                 <Input
@@ -403,11 +403,11 @@ export default function PatientProfilePage({
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setEditForm({ ...editForm, first_name: e.target.value })
                   }
-                  className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+                  className="bg-muted/50 border-border focus-visible:ring-primary"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">
+                <label className="text-sm font-medium">
                   Apellidos *
                 </label>
                 <Input
@@ -416,11 +416,11 @@ export default function PatientProfilePage({
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setEditForm({ ...editForm, last_name: e.target.value })
                   }
-                  className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+                  className="bg-muted/50 border-border focus-visible:ring-primary"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">
+                <label className="text-sm font-medium">
                   Teléfono
                 </label>
                 <Input
@@ -429,11 +429,11 @@ export default function PatientProfilePage({
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setEditForm({ ...editForm, phone: e.target.value })
                   }
-                  className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+                  className="bg-muted/50 border-border focus-visible:ring-primary"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">
+                <label className="text-sm font-medium">
                   Fecha de Nacimiento
                 </label>
                 <Input
@@ -442,12 +442,12 @@ export default function PatientProfilePage({
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setEditForm({ ...editForm, birth_day: e.target.value })
                   }
-                  className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+                  className="bg-muted/50 border-border focus-visible:ring-primary"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">
+              <label className="text-sm font-medium">
                 Dirección
               </label>
               <Input
@@ -455,12 +455,12 @@ export default function PatientProfilePage({
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setEditForm({ ...editForm, address: e.target.value })
                 }
-                className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+                className="bg-muted/50 border-border focus-visible:ring-primary"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">
+                <label className="text-sm font-medium">
                   Descripción / Notas
                 </label>
                 <Input
@@ -468,11 +468,11 @@ export default function PatientProfilePage({
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setEditForm({ ...editForm, description: e.target.value })
                   }
-                  className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+                  className="bg-muted/50 border-border focus-visible:ring-primary"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">
+                <label className="text-sm font-medium">
                   Doctor Asignado
                 </label>
                 <select
@@ -484,7 +484,7 @@ export default function PatientProfilePage({
                       assigned_doctor_id: e.target.value,
                     })
                   }
-                  className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                  className="flex h-10 w-full rounded-md border border-border bg-muted/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   {employeesList.map((emp) => (
                     <option key={emp.id} value={emp.id}>
@@ -499,13 +499,13 @@ export default function PatientProfilePage({
                 type="button"
                 variant="ghost"
                 onClick={() => setIsEditModalOpen(false)}
-                className="text-slate-400 hover:text-white hover:bg-slate-800"
+                className="hover:bg-accent"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
-                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 Guardar Cambios
               </Button>

@@ -61,11 +61,11 @@ export const Step1PatientHygiene: React.FC<Step1Props> = ({
       {/* SECCIÓN PACIENTE */}
       <div className="lg:col-span-1">
         <Card
-          className={`bg-slate-900/50 border-slate-800 backdrop-blur-sm shadow-xl h-full transition-all duration-300 ${isPatientMenuOpen ? "relative z-[60]" : "relative z-0"}`}
+          className={`bg-card border-border backdrop-blur-sm shadow-xl h-full transition-all duration-300 ${isPatientMenuOpen ? "relative z-[60]" : "relative z-0"}`}
         >
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-white text-lg">
-              <Users size={18} className="text-blue-400" />
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Users size={18} className="text-primary" />
               Paciente
             </CardTitle>
             <CardDescription>
@@ -76,12 +76,12 @@ export const Step1PatientHygiene: React.FC<Step1Props> = ({
           </CardHeader>
           <CardContent className="pt-0">
             {mode === "edit" ? (
-              <div className="flex items-center gap-3 p-4 rounded-xl border bg-blue-600/10 border-blue-500/50 text-white">
-                <div className="p-2 rounded-lg bg-blue-500/20 text-blue-400">
+              <div className="flex items-center gap-3 p-4 rounded-xl border bg-primary/10 border-primary/50">
+                <div className="p-2 rounded-lg bg-primary/20 text-primary">
                   <User size={18} />
                 </div>
                 <div className="truncate">
-                  <p className="text-[10px] uppercase font-bold tracking-wider opacity-50">
+                  <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
                     Paciente Seleccionado
                   </p>
                   <p className="font-semibold truncate">
@@ -95,18 +95,18 @@ export const Step1PatientHygiene: React.FC<Step1Props> = ({
                   onClick={() => setIsPatientMenuOpen(!isPatientMenuOpen)}
                   className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all duration-200 ${
                     selectedPatientId
-                      ? "bg-blue-600/10 border-blue-500/50 text-white"
-                      : "bg-slate-950/50 border-slate-800 text-slate-400 hover:border-slate-700"
+                      ? "bg-primary/10 border-primary/50"
+                      : "bg-muted/50 border-border hover:border-muted-foreground/50"
                   }`}
                 >
                   <div className="flex items-center gap-3 truncate">
                     <div
-                      className={`p-2 rounded-lg ${selectedPatientId ? "bg-blue-500/20 text-blue-400" : "bg-slate-900 text-slate-500"}`}
+                      className={`p-2 rounded-lg ${selectedPatientId ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}
                     >
                       <User size={18} />
                     </div>
                     <div className="truncate">
-                      <p className="text-[10px] uppercase font-bold tracking-wider opacity-50">
+                      <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
                         Paciente
                       </p>
                       <p className="font-semibold truncate">
@@ -118,18 +118,18 @@ export const Step1PatientHygiene: React.FC<Step1Props> = ({
                   </div>
                   <ChevronDown
                     size={20}
-                    className={`text-slate-500 transition-transform duration-300 ${isPatientMenuOpen ? "rotate-180" : ""}`}
+                    className={`text-muted-foreground transition-transform duration-300 ${isPatientMenuOpen ? "rotate-180" : ""}`}
                   />
                 </div>
 
                 {isPatientMenuOpen && (
-                  <div className="absolute z-50 w-full mt-2 bg-slate-900 border border-slate-700 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                    <div className="p-3 border-b border-slate-800 bg-slate-950/50 flex items-center gap-2">
-                      <Search size={16} className="text-slate-500" />
+                  <div className="absolute z-50 w-full mt-2 bg-popover border border-border rounded-xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                    <div className="p-3 border-b border-border bg-muted/50 flex items-center gap-2">
+                      <Search size={16} className="text-muted-foreground" />
                       <input
                         autoFocus
                         placeholder="Buscar por nombre..."
-                        className="bg-transparent border-none text-white text-sm focus:ring-0 w-full outline-none"
+                        className="bg-transparent border-none text-foreground text-sm focus:ring-0 w-full outline-none"
                         value={searchPatient}
                         onChange={(e) => setSearchPatient(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
@@ -137,11 +137,11 @@ export const Step1PatientHygiene: React.FC<Step1Props> = ({
                     </div>
                     <div className="max-h-60 overflow-y-auto custom-scrollbar">
                       {loadingPatients ? (
-                        <div className="p-6 text-center text-slate-500 text-sm italic">
+                        <div className="p-6 text-center text-muted-foreground text-sm italic">
                           Cargando...
                         </div>
                       ) : filteredPatients.length === 0 ? (
-                        <div className="p-6 text-center text-slate-500 text-sm italic">
+                        <div className="p-6 text-center text-muted-foreground text-sm italic">
                           No hay resultados
                         </div>
                       ) : (
@@ -153,22 +153,22 @@ export const Step1PatientHygiene: React.FC<Step1Props> = ({
                               setSelectedPatientId(p.id);
                               setIsPatientMenuOpen(false);
                             }}
-                            className={`p-3 border-b border-slate-800 flex items-center gap-3 cursor-pointer transition-colors ${selectedPatientId === p.id ? "bg-blue-600/10" : "hover:bg-slate-800"}`}
+                            className={`p-3 border-b border-border flex items-center gap-3 cursor-pointer transition-colors ${selectedPatientId === p.id ? "bg-primary/10" : "hover:bg-accent"}`}
                           >
                             <div className="truncate">
                               <p
-                                className={`text-sm font-medium ${selectedPatientId === p.id ? "text-blue-400" : "text-slate-200"}`}
+                                className={`text-sm font-medium ${selectedPatientId === p.id ? "text-primary" : "text-foreground"}`}
                               >
                                 {p.first_name} {p.last_name}
                               </p>
-                              <p className="text-[10px] text-slate-500 uppercase tracking-tighter">
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-tighter">
                                 {p.phone || "Sin teléfono"}
                               </p>
                             </div>
                             {selectedPatientId === p.id && (
                               <CheckCircle2
                                 size={16}
-                                className="text-blue-400 ml-auto"
+                                className="text-primary ml-auto"
                               />
                             )}
                           </div>
@@ -185,7 +185,7 @@ export const Step1PatientHygiene: React.FC<Step1Props> = ({
                 <p className="text-amber-500 text-xs font-bold uppercase tracking-widest text-center">
                   Aviso del Sistema
                 </p>
-                <p className="text-slate-300 text-xs mt-1 text-center">
+                <p className="text-muted-foreground text-xs mt-1 text-center">
                   Este paciente ya cuenta con un historial médico registrado.
                 </p>
               </div>
@@ -196,10 +196,10 @@ export const Step1PatientHygiene: React.FC<Step1Props> = ({
 
       {/* SECCIÓN HIGIENE */}
       <div className="lg:col-span-2 space-y-6">
-        <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm shadow-xl">
-          <CardHeader className="pb-3 text-white">
+        <Card className="bg-card border-border backdrop-blur-sm shadow-xl">
+          <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <ShieldCheck size={18} className="text-emerald-400" />
+              <ShieldCheck size={18} className="text-green-500" />
               Higiene Bucal
             </CardTitle>
           </CardHeader>
@@ -213,7 +213,7 @@ export const Step1PatientHygiene: React.FC<Step1Props> = ({
                       uses_toothbrush: !formData.uses_toothbrush,
                     })
                   }
-                  className={`flex flex-col items-center justify-center p-3 rounded-xl border cursor-pointer transition-all ${formData.uses_toothbrush ? "bg-blue-500/20 border-blue-500 text-blue-100 shadow-inner" : "bg-slate-950/40 border-slate-800 text-slate-500"}`}
+                  className={`flex flex-col items-center justify-center p-3 rounded-xl border cursor-pointer transition-all ${formData.uses_toothbrush ? "bg-primary/20 border-primary text-foreground shadow-inner" : "bg-muted/40 border-border text-muted-foreground"}`}
                 >
                   <span className="text-[10px] font-bold uppercase mb-1 text-center">
                     ¿Usa Cepillo?
@@ -229,7 +229,7 @@ export const Step1PatientHygiene: React.FC<Step1Props> = ({
                       uses_dentifrice: !formData.uses_dentifrice,
                     })
                   }
-                  className={`flex flex-col items-center justify-center p-3 rounded-xl border cursor-pointer transition-all ${formData.uses_dentifrice ? "bg-blue-500/20 border-blue-500 text-blue-100 shadow-inner" : "bg-slate-950/40 border-slate-800 text-slate-500"}`}
+                  className={`flex flex-col items-center justify-center p-3 rounded-xl border cursor-pointer transition-all ${formData.uses_dentifrice ? "bg-primary/20 border-primary text-foreground shadow-inner" : "bg-muted/40 border-border text-muted-foreground"}`}
                 >
                   <span className="text-[10px] font-bold uppercase mb-1 text-center">
                     ¿Dentífrico?
@@ -244,14 +244,14 @@ export const Step1PatientHygiene: React.FC<Step1Props> = ({
                 onClick={() =>
                   setFormData({ ...formData, uses_floss: !formData.uses_floss })
                 }
-                className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all ${formData.uses_floss ? "bg-indigo-500/20 border-indigo-500 text-indigo-100" : "bg-slate-950/20 border-slate-800 text-slate-500"}`}
+                className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all ${formData.uses_floss ? "bg-indigo-500/20 border-indigo-500" : "bg-muted/20 border-border text-muted-foreground"}`}
               >
                 <span className="text-sm font-bold">¿Usa hilo dental?</span>
                 <div
-                  className={`w-10 h-6 rounded-full relative transition-colors ${formData.uses_floss ? "bg-indigo-600" : "bg-slate-700"}`}
+                  className={`w-10 h-6 rounded-full relative transition-colors ${formData.uses_floss ? "bg-indigo-600" : "bg-muted-foreground/30"}`}
                 >
                   <div
-                    className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${formData.uses_floss ? "left-5" : "left-1"}`}
+                    className={`absolute top-1 w-4 h-4 bg-background rounded-full transition-all ${formData.uses_floss ? "left-5" : "left-1"}`}
                   ></div>
                 </div>
               </div>
@@ -259,11 +259,11 @@ export const Step1PatientHygiene: React.FC<Step1Props> = ({
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Frecuencia de cepillado
                 </label>
                 <Input
-                  className="bg-slate-950/50 border-slate-800 text-white h-11"
+                  className="bg-muted/50 border-border h-11"
                   placeholder="Ej: 3 "
                   value={formData.brushing_frequency}
                   onChange={(e) =>
@@ -275,11 +275,11 @@ export const Step1PatientHygiene: React.FC<Step1Props> = ({
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Técnica de cepillado
                 </label>
                 <Input
-                  className="bg-slate-950/50 border-slate-800 text-white h-11"
+                  className="bg-muted/50 border-border h-11"
                   placeholder="Ej: Bass, Circular..."
                   value={formData.brushing_technique}
                   onChange={(e) =>

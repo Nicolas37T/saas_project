@@ -256,32 +256,32 @@ export default function PatientsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white mb-1">
+          <h1 className="text-3xl font-bold tracking-tight mb-1">
             Pacientes
           </h1>
-          <p className="text-slate-400">
+          <p className="text-muted-foreground">
             Gestiona la información y el historial clínico de tus pacientes.
           </p>
         </div>
         <Button
           onClick={() => setIsAddModalOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all"
         >
           <Plus className="mr-2" size={18} /> Nuevo Paciente
         </Button>
       </div>
 
-      <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
+      <Card className="bg-card border-border backdrop-blur-sm">
         <CardContent className="p-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="relative flex-1 max-w-md">
               <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                 size={18}
               />
               <Input
                 placeholder="Buscar paciente por nombre..."
-                className="pl-10 bg-slate-950/50 border-slate-800 text-slate-200 placeholder:text-slate-500 focus-visible:ring-blue-500/50"
+                className="pl-10 bg-muted/50 border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary/50"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -290,17 +290,17 @@ export default function PatientsPage() {
 
           {loading ? (
             <div className="flex justify-center p-12">
-              <div className="animate-spin w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent"></div>
+              <div className="animate-spin w-8 h-8 rounded-full border-2 border-primary border-t-transparent"></div>
             </div>
           ) : filteredPatients.length === 0 ? (
             <div className="text-center py-16 px-4">
-              <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                <User className="text-slate-400" size={32} />
+              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                <User className="text-muted-foreground" size={32} />
               </div>
-              <h3 className="text-lg font-medium text-white mb-2">
+              <h3 className="text-lg font-medium mb-2">
                 No se encontraron pacientes
               </h3>
-              <p className="text-slate-400">
+              <p className="text-muted-foreground">
                 Comienza agregando tu primer paciente al sistema.
               </p>
             </div>
@@ -309,22 +309,22 @@ export default function PatientsPage() {
               {filteredPatients.map((patient) => (
                 <div
                   key={patient.id}
-                  className="group bg-slate-950/50 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-all flex flex-col relative"
+                  className="group bg-card border border-border rounded-xl p-5 hover:border-muted-foreground/50 transition-all flex flex-col relative"
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-semibold text-lg">
+                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold text-lg">
                         {patient.first_name[0]}
                         {patient.last_name[0]}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h4 className="text-white font-medium leading-tight">
+                        <h4 className="font-medium leading-tight">
                           <div className="break-all">{patient.first_name}</div>
-                          <div className="break-all text-slate-400 text-sm mt-0.5">
+                          <div className="break-all text-muted-foreground text-sm mt-0.5">
                             {patient.last_name}
                           </div>
                         </h4>
-                        <span className="text-xs text-black font-bold capitalize bg-green-500 px-2 py-1 rounded-full">
+                        <span className="text-xs font-bold capitalize bg-green-500 px-2 py-1 rounded-full text-white">
                           Activo
                         </span>
                       </div>
@@ -341,31 +341,31 @@ export default function PatientsPage() {
                             openMenuId === patient.id ? null : patient.id,
                           )
                         }
-                        className="text-slate-500 hover:text-white transition-colors p-1 rounded hover:bg-slate-700"
+                        className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded hover:bg-accent"
                       >
                         <MoreVertical size={18} />
                       </button>
 
                       {openMenuId === patient.id && (
-                        <div className="absolute right-0 top-8 z-50 w-44 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl shadow-black/50 overflow-hidden">
+                        <div className="absolute right-0 top-8 z-50 w-44 bg-popover border border-border rounded-xl shadow-2xl overflow-hidden">
                           <button
                             onClick={() => handleOpenEdit(patient)}
-                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors"
                           >
-                            <Pencil size={14} className="text-blue-400" />
+                            <Pencil size={14} className="text-primary" />
                             Editar paciente
                           </button>
                           <button
                             onClick={() => handleOpenShare(patient)}
-                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground hover:bg-accent transition-colors"
                           >
-                            <Share2 size={14} className="text-green-400" />
+                            <Share2 size={14} className="text-green-500" />
                             Compartir paciente
                           </button>
-                          <div className="border-t border-slate-700" />
+                          <div className="border-t border-border" />
                           <button
                             onClick={() => handleOpenDelete(patient)}
-                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
+                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 hover:text-destructive transition-colors"
                           >
                             <Trash2 size={14} />
                             Eliminar paciente
@@ -377,26 +377,26 @@ export default function PatientsPage() {
 
                   <div className="space-y-2 mt-auto">
                     {patient.phone && (
-                      <div className="flex items-center gap-2 text-sm text-slate-400">
-                        <Phone size={14} className="text-slate-500" />
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Phone size={14} className="text-muted-foreground" />
                         <span>{patient.phone}</span>
                       </div>
                     )}
                     {patient.birth_day && mounted && (
-                      <div className="flex items-center gap-2 text-sm text-slate-400">
-                        <Calendar size={14} className="text-slate-500" />
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Calendar size={14} className="text-muted-foreground" />
                         <span>
                           {new Date(patient.birth_day).toLocaleDateString()}
                         </span>
                       </div>
                     )}
-                    <div className="flex items-center gap-2 text-sm text-slate-400">
-                      <FileText size={14} className="text-slate-500" />
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <FileText size={14} className="text-muted-foreground" />
                       <span>Historia {patient.id.substring(0, 6)}</span>
                     </div>
                     {patient.created_by && (
-                      <div className="flex items-center gap-2 text-xs text-slate-500 mt-2">
-                        <User size={12} className="text-slate-600" />
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
+                        <User size={12} className="text-muted-foreground" />
                         <span
                           className="truncate"
                           title={`Registrado por: ${patient.creator_name || employeesMap[patient.created_by] || patient.created_by}`}
@@ -409,7 +409,7 @@ export default function PatientsPage() {
                       </div>
                     )}
                     {patient.assigned_doctor_id && (
-                      <div className="flex items-center gap-2 text-xs text-blue-400 font-medium mt-1">
+                      <div className="flex items-center gap-2 text-xs text-primary font-medium mt-1">
                         <span>
                           👨‍⚕️ Doctor:{" "}
                           {employeesMap[patient.assigned_doctor_id] ||
@@ -419,17 +419,17 @@ export default function PatientsPage() {
                     )}
                   </div>
 
-                  <div className="mt-6 pt-4 border-t border-slate-800/50 flex justify-between items-center">
-                    <div className="text-xs text-slate-500">
+                  <div className="mt-6 pt-4 border-t border-border/50 flex justify-between items-center">
+                    <div className="text-xs text-muted-foreground">
                       Unido el{" "}
                       {mounted
                         ? new Date(patient.created_at).toLocaleDateString()
                         : ""}
                     </div>
                     <Button
-                      variant="ghost"
+                      variant="default"
                       size="sm"
-                      className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 h-8 px-3"
+                      className="bg-blue-600 hover:bg-blue-700 text-white h-8 px-3"
                       onClick={() =>
                         router.push(`/dashboard/patients/${patient.id}`)
                       }
@@ -453,7 +453,7 @@ export default function PatientsPage() {
         <form onSubmit={handleCreatePatient} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">
+              <label className="text-sm font-medium">
                 Nombre *
               </label>
               <Input
@@ -463,11 +463,11 @@ export default function PatientsPage() {
                 onChange={(e) =>
                   setNewPatient({ ...newPatient, first_name: e.target.value })
                 }
-                className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500"
+                className="bg-muted/50 border-border text-foreground focus-visible:ring-primary"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">
+              <label className="text-sm font-medium">
                 Apellidos *
               </label>
               <Input
@@ -477,13 +477,13 @@ export default function PatientsPage() {
                 onChange={(e) =>
                   setNewPatient({ ...newPatient, last_name: e.target.value })
                 }
-                className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500"
+                className="bg-muted/50 border-border text-foreground focus-visible:ring-primary"
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">
+              <label className="text-sm font-medium">
                 Teléfono
               </label>
               <Input
@@ -493,11 +493,11 @@ export default function PatientsPage() {
                 onChange={(e) =>
                   setNewPatient({ ...newPatient, phone: e.target.value })
                 }
-                className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500"
+                className="bg-muted/50 border-border text-foreground focus-visible:ring-primary"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">
+              <label className="text-sm font-medium">
                 Fecha de Nacimiento
               </label>
               <Input
@@ -506,12 +506,12 @@ export default function PatientsPage() {
                 onChange={(e) =>
                   setNewPatient({ ...newPatient, birth_day: e.target.value })
                 }
-                className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500 [color-scheme:dark]"
+                className="bg-muted/50 border-border text-foreground focus-visible:ring-primary"
               />
             </div>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">
+            <label className="text-sm font-medium">
               Dirección
             </label>
             <Input
@@ -520,12 +520,12 @@ export default function PatientsPage() {
               onChange={(e) =>
                 setNewPatient({ ...newPatient, address: e.target.value })
               }
-              className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500"
+              className="bg-muted/50 border-border text-foreground focus-visible:ring-primary"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">
+              <label className="text-sm font-medium">
                 Descripción / Notas
               </label>
               <Input
@@ -534,11 +534,11 @@ export default function PatientsPage() {
                 onChange={(e) =>
                   setNewPatient({ ...newPatient, description: e.target.value })
                 }
-                className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-blue-500"
+                className="bg-muted/50 border-border text-foreground focus-visible:ring-primary"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">
+              <label className="text-sm font-medium">
                 Doctor Asignado
               </label>
               <select
@@ -550,7 +550,7 @@ export default function PatientsPage() {
                     assigned_doctor_id: e.target.value,
                   })
                 }
-                className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                className="flex h-10 w-full rounded-md border border-border bg-muted/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 {employeesList.map((emp) => (
                   <option key={emp.id} value={emp.id}>
@@ -565,13 +565,13 @@ export default function PatientsPage() {
               type="button"
               variant="ghost"
               onClick={() => setIsAddModalOpen(false)}
-              className="text-slate-400 hover:text-white hover:bg-slate-800"
+              className="hover:bg-accent"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               Crear Paciente
             </Button>
@@ -589,7 +589,7 @@ export default function PatientsPage() {
           <form onSubmit={handleSaveEdit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">
+                <label className="text-sm font-medium">
                   Nombre *
                 </label>
                 <Input
@@ -598,11 +598,11 @@ export default function PatientsPage() {
                   onChange={(e) =>
                     setEditForm({ ...editForm, first_name: e.target.value })
                   }
-                  className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+                  className="bg-muted/50 border-border text-foreground focus-visible:ring-primary"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">
+                <label className="text-sm font-medium">
                   Apellidos *
                 </label>
                 <Input
@@ -611,13 +611,13 @@ export default function PatientsPage() {
                   onChange={(e) =>
                     setEditForm({ ...editForm, last_name: e.target.value })
                   }
-                  className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+                  className="bg-muted/50 border-border text-foreground focus-visible:ring-primary"
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">
+                <label className="text-sm font-medium">
                   Teléfono
                 </label>
                 <Input
@@ -626,11 +626,11 @@ export default function PatientsPage() {
                   onChange={(e) =>
                     setEditForm({ ...editForm, phone: e.target.value })
                   }
-                  className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+                  className="bg-muted/50 border-border text-foreground focus-visible:ring-primary"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">
+                <label className="text-sm font-medium">
                   Fecha de Nacimiento
                 </label>
                 <Input
@@ -639,12 +639,12 @@ export default function PatientsPage() {
                   onChange={(e) =>
                     setEditForm({ ...editForm, birth_day: e.target.value })
                   }
-                  className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+                  className="bg-muted/50 border-border text-foreground focus-visible:ring-primary"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">
+              <label className="text-sm font-medium">
                 Dirección
               </label>
               <Input
@@ -652,13 +652,13 @@ export default function PatientsPage() {
                 onChange={(e) =>
                   setEditForm({ ...editForm, address: e.target.value })
                 }
-                className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+                className="bg-muted/50 border-border text-foreground focus-visible:ring-primary"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">
+                <label className="text-sm font-medium">
                   Descripción / Notas
                 </label>
                 <Input
@@ -666,11 +666,11 @@ export default function PatientsPage() {
                   onChange={(e) =>
                     setEditForm({ ...editForm, description: e.target.value })
                   }
-                  className="bg-slate-950/50 border-slate-800 text-white focus-visible:ring-indigo-500"
+                  className="bg-muted/50 border-border text-foreground focus-visible:ring-primary"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">
+                <label className="text-sm font-medium">
                   Doctor Asignado
                 </label>
                 <select
@@ -682,7 +682,7 @@ export default function PatientsPage() {
                       assigned_doctor_id: e.target.value,
                     })
                   }
-                  className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                  className="flex h-10 w-full rounded-md border border-border bg-muted/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   {employeesList.map((emp) => (
                     <option key={emp.id} value={emp.id}>
@@ -697,13 +697,13 @@ export default function PatientsPage() {
                 type="button"
                 variant="ghost"
                 onClick={() => setIsEditModalOpen(false)}
-                className="text-slate-400 hover:text-white hover:bg-slate-800"
+                className="hover:bg-accent"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
-                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 Guardar Cambios
               </Button>
@@ -720,7 +720,7 @@ export default function PatientsPage() {
         title="¿Eliminar paciente?"
         message={
           <>
-            <span className="text-white font-medium">
+            <span className="font-medium">
               {deletingPatient?.first_name} {deletingPatient?.last_name}
             </span>{" "}
             será desactivado del sistema. Sus datos se conservarán en la base de
@@ -730,7 +730,7 @@ export default function PatientsPage() {
         variant="danger"
         confirmText="Sí, eliminar"
         isLoading={isDeleting}
-        icon={<Trash2 size={26} className="text-red-400" />}
+        icon={<Trash2 size={26} className="text-destructive" />}
       />
 
       {/* ─── MODAL: COMPARTIR PACIENTE ────────────────────────────────────────── */}
@@ -740,22 +740,22 @@ export default function PatientsPage() {
         title="Compartir Paciente"
       >
         <div className="space-y-4 py-2">
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-muted-foreground">
             Selecciona un doctor para compartir el historial y datos de{" "}
-            <span className="text-white font-medium">
+            <span className="font-medium">
               {sharingPatient?.first_name} {sharingPatient?.last_name}
             </span>
             .
           </p>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">
+            <label className="text-sm font-medium">
               Doctor Colega
             </label>
             <select
               value={selectedShareDoctorId}
               onChange={(e) => setSelectedShareDoctorId(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              className="flex h-10 w-full rounded-md border border-border bg-muted/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
               <option value="">Seleccionar doctor...</option>
               {employeesList
@@ -778,7 +778,7 @@ export default function PatientsPage() {
               type="button"
               variant="ghost"
               onClick={() => setIsShareModalOpen(false)}
-              className="text-slate-400 hover:text-white hover:bg-slate-800"
+              className="hover:bg-accent"
             >
               Cancelar
             </Button>

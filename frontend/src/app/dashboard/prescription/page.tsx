@@ -105,7 +105,7 @@ export default function PrescriptionPage() {
     }
   };
 
-  if (loading) return <div className="text-white text-center py-20">Cargando...</div>;
+  if (loading) return <div className="text-center py-20">Cargando...</div>;
 
   const currentPatient = patients.find(p => p.id === selectedPatient);
 
@@ -113,12 +113,12 @@ export default function PrescriptionPage() {
     <div className="space-y-6 max-w-5xl mx-auto pb-20">
       <div className="flex justify-between items-center print:hidden">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white mb-1">Receta Médica</h1>
-          <p className="text-slate-400">Genera e imprime recetas para tus pacientes.</p>
+          <h1 className="text-3xl font-bold tracking-tight mb-1">Receta Médica</h1>
+          <p className="text-muted-foreground">Genera e imprime recetas para tus pacientes.</p>
         </div>
-        <Button 
+        <Button
           onClick={handlePrint}
-          className="bg-blue-600 hover:bg-blue-700 text-white flex items-center shadow-lg"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center shadow-lg"
         >
           <Printer size={18} className="mr-2" /> Imprimir Receta
         </Button>
@@ -127,19 +127,19 @@ export default function PrescriptionPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Form Column */}
         <div className="lg:col-span-2 space-y-6 print:hidden">
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <User size={20} className="text-blue-400" /> Información del Paciente
+              <CardTitle className="flex items-center gap-2">
+                <User size={20} className="text-primary" /> Información del Paciente
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">Seleccionar Paciente</label>
+                <label className="text-sm font-medium">Seleccionar Paciente</label>
                 <select
                   value={selectedPatient}
                   onChange={(e) => setSelectedPatient(e.target.value)}
-                  className="w-full p-2.5 rounded-md bg-slate-950/50 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  className="w-full p-2.5 rounded-md bg-muted/50 border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                 >
                   <option value="">-- Seleccionar Paciente --</option>
                   {patients.map(p => (
@@ -150,10 +150,10 @@ export default function PrescriptionPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-white flex items-center gap-2">
-                <Pill size={20} className="text-emerald-400" /> Medicamentos
+              <CardTitle className="flex items-center gap-2">
+                <Pill size={20} className="text-green-500" /> Medicamentos
               </CardTitle>
               <div className="relative w-64">
                 <Input
@@ -164,31 +164,31 @@ export default function PrescriptionPage() {
                     setShowMedicineList(true);
                   }}
                   onFocus={() => setShowMedicineList(true)}
-                  className="bg-slate-950/50 border-slate-800 text-white pl-9"
+                  className="bg-muted/50 border-border text-foreground pl-9"
                 />
-                <Search className="absolute left-3 top-2.5 text-slate-500" size={16} />
+                <Search className="absolute left-3 top-2.5 text-muted-foreground" size={16} />
                 {showMedicineList && searchTerm && (
-                  <div className="absolute z-10 w-full mt-1 bg-slate-900 border border-slate-800 rounded-md shadow-xl max-h-48 overflow-y-auto">
+                  <div className="absolute z-10 w-full mt-1 bg-popover border border-border rounded-md shadow-xl max-h-48 overflow-y-auto">
                     {filteredMedicines.map(m => (
                       <button
                         key={m.id}
-                        className="w-full text-left px-4 py-2 text-white hover:bg-slate-800 transition-colors flex items-center justify-between"
+                        className="w-full text-left px-4 py-2 text-foreground hover:bg-accent transition-colors flex items-center justify-between"
                         onClick={() => addMedicine(m)}
                       >
                         {m.name}
-                        <Plus size={14} className="text-blue-400" />
+                        <Plus size={14} className="text-primary" />
                       </button>
                     ))}
                     {filteredMedicines.length === 0 && (
-                      <div className="px-4 py-3 border-t border-slate-800">
-                        <p className="text-slate-500 text-sm mb-2">No se encontró "{searchTerm}"</p>
-                        <Button 
+                      <div className="px-4 py-3 border-t border-border">
+                        <p className="text-muted-foreground text-sm mb-2">No se encontró "{searchTerm}"</p>
+                        <Button
                           onClick={handleCreateMedicine}
                           variant="outline"
                           size="sm"
-                          className="w-full bg-blue-600/10 border-blue-500/50 text-blue-400 hover:bg-blue-600 hover:text-white"
+                          className="w-full bg-primary/10 border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
                         >
-                          <Plus size={14} className="mr-2" /> Agregar 
+                          <Plus size={14} className="mr-2" /> Agregar
                         </Button>
                       </div>
                     )}
@@ -198,40 +198,40 @@ export default function PrescriptionPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {prescriptionItems.length === 0 ? (
-                <div className="text-center py-10 border-2 border-dashed border-slate-800 rounded-xl text-slate-500">
+                <div className="text-center py-10 border-2 border-dashed border-border rounded-xl text-muted-foreground">
                   No hay medicamentos agregados. Usa el buscador para añadir.
                 </div>
               ) : (
                 <div className="space-y-4">
                   {prescriptionItems.map((item, index) => (
-                    <div key={index} className="p-4 bg-slate-950/30 border border-slate-800 rounded-lg relative group">
-                      <button 
+                    <div key={index} className="p-4 bg-muted/30 border border-border rounded-lg relative group">
+                      <button
                         onClick={() => removeMedicine(index)}
-                        className="absolute top-2 right-2 text-slate-500 hover:text-red-400 transition-colors"
+                        className="absolute top-2 right-2 text-muted-foreground hover:text-destructive transition-colors"
                       >
                         <Trash2 size={16} />
                       </button>
-                      <h4 className="text-white font-medium mb-3 flex items-center gap-2">
-                         <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                      <h4 className="font-medium mb-3 flex items-center gap-2">
+                         <span className="w-2 h-2 rounded-full bg-green-500"></span>
                          {item.medicineName}
                       </h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <label className="text-xs text-slate-500">Dosis / Frecuencia</label>
-                          <Input 
+                          <label className="text-xs text-muted-foreground">Dosis / Frecuencia</label>
+                          <Input
                             value={item.dosage}
                             onChange={(e) => updateItem(index, 'dosage', e.target.value)}
                             placeholder="Ej: 1 tableta cada 8 horas"
-                            className="bg-slate-900/50 border-slate-800 h-8 text-sm text-white"
+                            className="bg-muted/50 border-border h-8 text-sm"
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-xs text-slate-500">Instrucciones / Duración</label>
-                          <Input 
+                          <label className="text-xs text-muted-foreground">Instrucciones / Duración</label>
+                          <Input
                             value={item.instructions}
                             onChange={(e) => updateItem(index, 'instructions', e.target.value)}
                             placeholder="Ej: Tomar después de comer por 5 días"
-                            className="bg-slate-900/50 border-slate-800 h-8 text-sm text-white"
+                            className="bg-muted/50 border-border h-8 text-sm"
                           />
                         </div>
                       </div>
@@ -239,14 +239,14 @@ export default function PrescriptionPage() {
                   ))}
                 </div>
               )}
-              
+
               <div className="pt-4 space-y-2">
-                <label className="text-sm font-medium text-slate-300">Observaciones Adicionales</label>
+                <label className="text-sm font-medium">Observaciones Adicionales</label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Indicaciones generales del tratamiento..."
-                  className="w-full p-3 h-24 rounded-md bg-slate-950/50 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none text-sm"
+                  className="w-full p-3 h-24 rounded-md bg-muted/50 border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none text-sm"
                 />
               </div>
             </CardContent>

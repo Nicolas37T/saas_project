@@ -64,11 +64,11 @@ export default function TreatmentsPage() {
   const getStatusTheme = (s: string) => {
     switch (s) {
       case "completado":
-        return "text-green-400 bg-green-500/10 border-green-500/20";
+        return "text-green-500 bg-green-500/10 border-green-500/20";
       case "en_progreso":
-        return "text-blue-400 bg-blue-500/10 border-blue-500/20";
+        return "text-primary bg-primary/10 border-primary/20";
       default:
-        return "text-orange-400 bg-orange-500/10 border-orange-500/20";
+        return "text-orange-500 bg-orange-500/10 border-orange-500/20";
     }
   };
 
@@ -153,18 +153,18 @@ export default function TreatmentsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white mb-1 flex items-center gap-2">
-            <Stethoscope className="text-indigo-500" />
+          <h1 className="text-3xl font-bold tracking-tight mb-1 flex items-center gap-2">
+            <Stethoscope className="text-primary" />
             Control de Tratamientos
           </h1>
-          <p className="text-slate-400">
+          <p className="text-muted-foreground">
             Detalle pormenorizado de procedimientos clínicos por pieza dental.
           </p>
         </div>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={loadData}
-          className="bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800"
+          className="bg-muted border-border hover:bg-accent"
         >
           <RefreshCw size={16} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
           Refrescar
@@ -172,28 +172,28 @@ export default function TreatmentsPage() {
       </div>
 
       {/* Filter Bar */}
-      <div className="flex flex-col lg:flex-row gap-4 items-center justify-between bg-slate-900/50 p-4 border border-slate-800 rounded-xl backdrop-blur-sm shadow-xl">
+      <div className="flex flex-col lg:flex-row gap-4 items-center justify-between bg-card p-4 border border-border rounded-xl backdrop-blur-sm shadow-xl">
         <div className="flex items-center gap-2 w-full lg:w-auto">
           <div className="relative flex-1 lg:w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
-            <Input 
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+            <Input
               placeholder="Buscar paciente o procedimiento..."
-              className="pl-10 bg-slate-950/50 border-slate-800 text-white placeholder:text-slate-600 focus-visible:ring-indigo-500/50 transition-all focus:border-indigo-500/50"
+              className="pl-10 bg-muted/50 border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary/50 transition-all focus:border-primary/50"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
         </div>
 
-        <div className="flex items-center gap-2 bg-slate-950/50 p-1 rounded-lg border border-slate-800 w-full lg:w-auto overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-lg border border-border w-full lg:w-auto overflow-x-auto no-scrollbar">
           {(["all", "today", "week", "month"] as FilterType[]).map((f) => (
             <button
               key={f}
               onClick={() => setActiveFilter(f)}
               className={`px-5 py-2 text-xs font-bold rounded-md transition-all whitespace-nowrap uppercase tracking-wider ${
-                activeFilter === f 
-                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30" 
-                : "text-slate-500 hover:text-white hover:bg-slate-800"
+                activeFilter === f
+                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent"
               }`}
             >
               {f === "all" ? "Todos" : f === "today" ? "Hoy" : f === "week" ? "Esta Semana" : "Este Mes"}
@@ -204,30 +204,30 @@ export default function TreatmentsPage() {
 
       {loading && treatments.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-24 gap-4">
-          <div className="animate-spin w-10 h-10 rounded-full border-2 border-indigo-500 border-t-transparent shadow-[0_0_15px_rgba(99,102,241,0.3)]"></div>
-          <p className="text-slate-500 animate-pulse text-sm font-medium tracking-widest">CARGANDO PROCEDIMIENTOS...</p>
+          <div className="animate-spin w-10 h-10 rounded-full border-2 border-primary border-t-transparent shadow-[0_0_15px_rgba(99,102,241,0.3)]"></div>
+          <p className="text-muted-foreground animate-pulse text-sm font-medium tracking-widest">CARGANDO PROCEDIMIENTOS...</p>
         </div>
       ) : filteredProcedures.length === 0 ? (
-        <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm border-dashed">
+        <Card className="bg-card border-border border-dashed backdrop-blur-sm">
           <CardContent className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mb-6 border border-slate-700/50">
-              <Activity className="text-slate-600" size={40} />
+            <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mb-6 border border-border/50">
+              <Activity className="text-muted-foreground" size={40} />
             </div>
-            <h3 className="text-2xl font-bold text-white mb-3">
+            <h3 className="text-2xl font-bold mb-3">
               No se encontraron procedimientos registrados
             </h3>
-            <p className="text-slate-500 max-w-sm mx-auto leading-relaxed">
-              {activeFilter !== "all" 
+            <p className="text-muted-foreground max-w-sm mx-auto leading-relaxed">
+              {activeFilter !== "all"
                 ? `No hay registros para el filtro "${activeFilter === "today" ? "Hoy" : activeFilter === "week" ? "Esta Semana" : "Este Mes"}".`
                 : "Los tratamientos deben tener piezas dentales vinculadas en el odontograma para aparecer en este listado detallado."}
             </p>
           </CardContent>
         </Card>
       ) : (
-        <div className="bg-slate-900/40 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden backdrop-blur-md">
+        <div className="bg-card rounded-2xl border border-border shadow-2xl overflow-hidden backdrop-blur-md">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs whitespace-nowrap">
-              <thead className="bg-slate-950/80 text-slate-500 uppercase tracking-[0.1em] font-black border-b border-slate-800/80">
+              <thead className="bg-muted/80 text-muted-foreground uppercase tracking-[0.1em] font-black border-b border-border/80">
                 <tr>
                   <th className="px-6 py-5">Paciente</th>
                   <th className="px-6 py-5">Pieza</th>
@@ -237,34 +237,34 @@ export default function TreatmentsPage() {
                   <th className="px-6 py-5 text-right">Monto Acordado</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/30">
+              <tbody className="divide-y divide-border/30">
                 {filteredProcedures.map((item, idx) => (
-                  <tr key={item.id || idx} className="hover:bg-indigo-500/5 transition-colors group">
+                  <tr key={item.id || idx} className="hover:bg-primary/5 transition-colors group">
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-blue-600 rounded-lg flex items-center justify-center text-white font-black text-[11px] shadow-lg shadow-indigo-600/20 group-hover:scale-110 transition-transform">
+                        <div className="w-8 h-8 bg-gradient-to-br from-primary to-blue-600 rounded-lg flex items-center justify-center text-primary-foreground font-black text-[11px] shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
                           {item.patient_name.charAt(0)}
                         </div>
-                        <span className="text-slate-200 font-bold group-hover:text-white transition-colors">{item.patient_name}</span>
+                        <span className="font-bold group-hover:text-foreground transition-colors">{item.patient_name}</span>
                       </div>
                     </td>
                     <td className="px-6 py-5">
-                      <Badge className="bg-slate-950/60 text-indigo-400 border border-indigo-500/30 px-3 py-1.5 font-black text-[11px] rounded-md">
+                      <Badge className="bg-muted/60 text-primary border border-primary/30 px-3 py-1.5 font-black text-[11px] rounded-md">
                         #{item.tooth_number}
                       </Badge>
                     </td>
                     <td className="px-6 py-5">
-                      <p className="font-black text-slate-100 mb-0.5 tracking-tight group-hover:text-indigo-300 transition-colors uppercase">
+                      <p className="font-black mb-0.5 tracking-tight group-hover:text-primary transition-colors uppercase">
                         {item.description}
                       </p>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">
+                        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">
                           Pieza {item.tooth_type === 'adult' ? 'Permanente' : 'Temporal'}
                         </span>
                         {item.notes && (
                             <>
-                                <span className="text-slate-700">•</span>
-                                <span className="text-[10px] text-slate-600 italic truncate max-w-[200px]">{item.notes}</span>
+                                <span className="text-border">•</span>
+                                <span className="text-[10px] text-muted-foreground italic truncate max-w-[200px]">{item.notes}</span>
                             </>
                         )}
                       </div>
@@ -278,7 +278,7 @@ export default function TreatmentsPage() {
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="h-7 w-7 text-slate-500 hover:text-green-500 hover:bg-green-500/10 transition-all rounded-full"
+                            className="h-7 w-7 hover:text-green-500 hover:bg-green-500/10 transition-all rounded-full"
                             onClick={() => handleStatusUpdate(item.id, 'completado')}
                             disabled={updatingId === item.id}
                           >
@@ -291,15 +291,15 @@ export default function TreatmentsPage() {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-5 text-slate-400">
+                    <td className="px-6 py-5 text-muted-foreground">
                       <div className="flex items-center gap-2 font-mono font-medium text-[11px]">
-                        <Calendar size={13} className="text-slate-600 group-hover:text-indigo-400 transition-colors" />
+                        <Calendar size={13} className="text-muted-foreground group-hover:text-primary transition-colors" />
                         {item.treatment_date ? new Date(item.treatment_date).toLocaleDateString() : "--"}
                       </div>
                     </td>
                     <td className="px-6 py-5 text-right">
                       <div className="flex flex-col items-end">
-                        <span className={`font-black tracking-tight group-hover:scale-105 transition-transform origin-right text-sm ${item.price === 0 ? "text-slate-500 italic" : "text-amber-500"}`}>
+                        <span className={`font-black tracking-tight group-hover:scale-105 transition-transform origin-right text-sm ${item.price === 0 ? "text-muted-foreground italic" : "text-amber-500"}`}>
                             {item.price === 0 ? "Privado" : `Bs. ${item.price.toLocaleString()}`}
                         </span>
                       </div>
@@ -310,19 +310,19 @@ export default function TreatmentsPage() {
             </table>
           </div>
           {/* Summary Footer */}
-          <div className="bg-slate-950/40 px-6 py-4 flex justify-between items-center border-t border-slate-800">
-            <p className="text-slate-500 text-[10px] uppercase font-black tracking-widest">
+          <div className="bg-muted/40 px-6 py-4 flex justify-between items-center border-t border-border">
+            <p className="text-muted-foreground text-[10px] uppercase font-black tracking-widest">
               Total procedimientos listados: {filteredProcedures.length}
             </p>
             <div className="flex items-center gap-2">
-                 <p className="text-slate-500 text-[10px] uppercase font-bold tracking-widest leading-tight text-right w-40">
+                 <p className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest leading-tight text-right w-40">
                     Calculado excluyendo
                     <br />
                     tratamientos privados
                  </p>
-                 <div className="flex flex-col border-l border-slate-800 ml-2 pl-4">
-                    <p className="text-slate-500 text-[10px] uppercase font-black tracking-widest text-right">Suma Mostrada:</p>
-                     <span className="text-indigo-400 font-black text-sm text-right">
+                 <div className="flex flex-col border-l border-border ml-2 pl-4">
+                    <p className="text-muted-foreground text-[10px] uppercase font-black tracking-widest text-right">Suma Mostrada:</p>
+                     <span className="text-primary font-black text-sm text-right">
                         Bs. {filteredProcedures.reduce((acc, curr) => acc + (curr.price || 0), 0).toLocaleString()}
                      </span>
                  </div>

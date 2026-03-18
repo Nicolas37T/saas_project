@@ -20,6 +20,7 @@ import {
   Contact,
   Pill
 } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { tenantApi } from "@/lib/api";
 
 // Helper function to decode JWT and get user info
@@ -101,8 +102,8 @@ export default function DashboardLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="animate-pulse w-12 h-12 rounded-full border-4 border-t-blue-500 border-r-blue-500 border-b-transparent border-l-transparent animate-spin"></div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse w-12 h-12 rounded-full border-4 border-t-primary border-r-primary border-b-transparent border-l-transparent animate-spin"></div>
       </div>
     );
   }
@@ -158,23 +159,23 @@ export default function DashboardLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-300 flex">
+    <div className="min-h-screen bg-background text-foreground flex">
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 border-r border-slate-800 bg-slate-900/50 backdrop-blur-md fixed h-full z-20">
+      <aside className="hidden md:flex flex-col w-64 border-r border-border bg-sidebar backdrop-blur-md fixed h-full z-20">
         <div className="p-6 flex items-start gap-3">
           {tenantLogo ? (
             <img src={tenantLogo} alt="Logo" className="h-8 w-8 object-contain rounded-full shadow-lg flex-shrink-0" />
           ) : (
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 flex-shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground shadow-lg flex-shrink-0">
               <Building2 size={18} />
             </div>
           )}
           <div className="flex flex-col min-w-0">
-            <span className="text-white font-bold text-lg tracking-tight truncate" title={tenantName || subdomain}>
+            <span className="font-bold text-lg tracking-tight truncate" title={tenantName || subdomain}>
               {tenantName || subdomain}
             </span>
             {userName && (
-              <span className="text-xs text-slate-400 truncate flex items-center gap-1 mt-0.5">
+              <span className="text-xs text-muted-foreground truncate flex items-center gap-1 mt-0.5">
                 <UserIcon size={16} />
                 {userName}
               </span>
@@ -193,8 +194,8 @@ export default function DashboardLayout({
                 href={item.href}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                   isActive
-                    ? "bg-blue-600/10 text-blue-400 font-medium"
-                    : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                 }`}
               >
                 {item.icon}
@@ -204,13 +205,13 @@ export default function DashboardLayout({
           })}
         </nav>
 
-        <div className="p-4 border-t border-slate-800">
+        <div className="p-4 border-t border-border">
           <button
             onClick={() => {
               localStorage.clear();
               router.push("/login");
             }}
-            className="flex items-center gap-3 w-full px-4 py-3 text-red-400 hover:bg-red-400/10 rounded-xl transition-colors"
+            className="flex items-center gap-3 w-full px-4 py-3 text-destructive hover:bg-destructive/10 rounded-xl transition-colors"
           >
             <LogOut size={20} />
             Cerrar Sesión
@@ -219,38 +220,41 @@ export default function DashboardLayout({
       </aside>
 
       {/* Mobile Header & Overlay */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-16 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md z-30 flex items-center justify-between px-4">
+      <div className="md:hidden fixed top-0 left-0 right-0 h-16 border-b border-border bg-sidebar/80 backdrop-blur-md z-30 flex items-center justify-between px-4">
         <div className="flex items-center gap-3">
           {tenantLogo ? (
             <img src={tenantLogo} alt="Logo" className="h-8 w-8 object-contain rounded-full shadow-lg flex-shrink-0" />
           ) : (
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white flex-shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground flex-shrink-0">
               <Building2 size={18} />
             </div>
           )}
           <div className="flex flex-col min-w-0">
-            <span className="text-white font-bold tracking-tight capitalize truncate max-w-[120px]" title={tenantName || subdomain}>
+            <span className="font-bold tracking-tight capitalize truncate max-w-[120px]" title={tenantName || subdomain}>
               {tenantName || subdomain}
             </span>
             {userName && (
-              <span className="text-xs text-slate-400 truncate flex items-center gap-1">
+              <span className="text-xs text-muted-foreground truncate flex items-center gap-1">
                 <UserIcon size={10} />
                 {userName}
               </span>
             )}
           </div>
         </div>
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="text-slate-400 flex-shrink-0"
-        >
-          {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="text-muted-foreground flex-shrink-0"
+          >
+            {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Sidebar */}
       {sidebarOpen && (
-        <div className="md:hidden fixed inset-0 top-16 bg-slate-950/95 backdrop-blur-md z-20 flex flex-col">
+        <div className="md:hidden fixed inset-0 top-16 bg-background/95 backdrop-blur-md z-20 flex flex-col">
           <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
             {navItems.map((item) => {
               const isActive =
@@ -263,8 +267,8 @@ export default function DashboardLayout({
                   onClick={() => setSidebarOpen(false)}
                   className={`flex items-center gap-3 px-4 py-4 rounded-xl transition-all ${
                     isActive
-                      ? "bg-blue-600/20 text-blue-400 font-medium"
-                      : "text-slate-300 hover:text-white hover:bg-slate-800"
+                      ? "bg-primary/20 text-primary font-medium"
+                      : "text-foreground hover:text-foreground hover:bg-accent"
                   }`}
                 >
                   {item.icon}
@@ -279,8 +283,8 @@ export default function DashboardLayout({
       {/* Main Content Area */}
       <main className="flex-1 md:ml-64 pt-16 md:pt-0 min-h-screen flex flex-col">
         {/* Desktop Topbar */}
-        <header className="hidden md:flex h-20 border-b border-slate-800/50 bg-slate-950/50 backdrop-blur-sm sticky top-0 z-10 items-center justify-between px-8">
-          <h2 className="text-xl font-semibold text-white">
+        <header className="hidden md:flex h-20 border-b border-border/50 bg-background/50 backdrop-blur-sm sticky top-0 z-10 items-center justify-between px-8">
+          <h2 className="text-xl font-semibold">
             {navItems.find(
               (i) =>
                 pathname === i.href ||
@@ -288,11 +292,12 @@ export default function DashboardLayout({
             )?.name || "Dashboard"}
           </h2>
           <div className="flex items-center gap-4">
-            <button className="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-800 hover:text-white transition-colors relative">
+            <ThemeToggle />
+            <button className="w-10 h-10 rounded-full flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-foreground transition-colors relative">
               <Bell size={20} />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full border border-slate-900"></span>
+              <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border border-background"></span>
             </button>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 border-2 border-slate-800"></div>
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-purple-600 border-2 border-border"></div>
           </div>
         </header>
 

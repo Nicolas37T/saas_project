@@ -15,16 +15,16 @@ export const Step3Evolution: React.FC<Step3Props> = ({
 }) => {
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto space-y-6">
-      <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm shadow-xl">
-        <CardHeader className="pb-3 text-white">
+      <Card className="bg-card border-border backdrop-blur-sm shadow-xl">
+        <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Activity size={18} className="text-purple-400" />
+            <Activity size={18} className="text-primary" />
             Evolución Clínica del Caso
           </CardTitle>
         </CardHeader>
         <CardContent>
           <textarea
-            className="w-full rounded-2xl bg-slate-950/50 border border-slate-800 text-white min-h-[180px] p-5 text-sm focus:ring-2 focus:ring-purple-500/50 outline-none transition-all placeholder:text-slate-600"
+            className="w-full rounded-2xl bg-muted/50 border border-border min-h-[180px] p-5 text-sm focus:ring-2 focus:ring-primary/50 outline-none transition-all placeholder:text-muted-foreground"
             placeholder="Escribe aquí los detalles clínicos, evolución observada y notas internas..."
             value={formData.medical_description}
             onChange={(e) =>
@@ -34,8 +34,8 @@ export const Step3Evolution: React.FC<Step3Props> = ({
         </CardContent>
       </Card>
 
-      <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm shadow-xl">
-        <CardHeader className="pb-3 text-white">
+      <Card className="bg-card border-border backdrop-blur-sm shadow-xl">
+        <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Stethoscope size={18} className="text-amber-500" />
             Antecedentes Relevantes
@@ -43,11 +43,11 @@ export const Step3Evolution: React.FC<Step3Props> = ({
         </CardHeader>
         <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <div className="space-y-1.5">
-            <label className="text-[10px] text-slate-500 uppercase font-black tracking-widest">
+            <label className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">
               Condiciones
             </label>
             <Input
-              className="bg-slate-900/50 border-slate-800 text-white h-11"
+              className="bg-muted/50 border-border h-11"
               placeholder="Diabetes..."
               value={formData.conditions}
               onChange={(e) =>
@@ -56,11 +56,11 @@ export const Step3Evolution: React.FC<Step3Props> = ({
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[10px] text-slate-500 uppercase font-black tracking-widest">
+            <label className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">
               Alergias
             </label>
             <Input
-              className="bg-slate-900/50 border-slate-800 text-white h-11"
+              className="bg-muted/50 border-border h-11"
               placeholder="Latex..."
               value={formData.allergies}
               onChange={(e) =>
@@ -69,11 +69,11 @@ export const Step3Evolution: React.FC<Step3Props> = ({
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-[10px] text-slate-500 uppercase font-black tracking-widest">
+            <label className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">
               Medicación
             </label>
             <Input
-              className="bg-slate-900/50 border-slate-800 text-white h-11"
+              className="bg-muted/50 border-border h-11"
               placeholder="Aspirina..."
               value={formData.medications}
               onChange={(e) =>
