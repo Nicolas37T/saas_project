@@ -398,13 +398,18 @@ export default function PatientsPage() {
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <FileText size={14} className="text-muted-foreground" />
                       {patient.history_id ? (
-                        <Button 
-                           variant="link" 
-                           className="p-0 h-auto text-primary text-sm font-semibold"
-                           onClick={() => router.push(`/dashboard/historyPatients?historyId=${patient.history_id}`)}
-                        >
-                          Ver historia clínica
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button 
+                             variant="link" 
+                             className="p-0 h-auto text-primary text-sm font-semibold"
+                             onClick={() => router.push(`/dashboard/historyPatients?historyId=${patient.history_id}`)}
+                          >
+                            Ver historia clínica
+                          </Button>
+                          <span className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">
+                            #{patient.history_number}
+                          </span>
+                        </div>
                       ) : (
                         <span className="italic">Sin historia clínica</span>
                       )}

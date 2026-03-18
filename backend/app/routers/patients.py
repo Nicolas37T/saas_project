@@ -45,6 +45,7 @@ def get_all_medical_histories(
         histories_list = [
             {
                 "id": str(h.id),
+                "history_number": h.history_number,
                 "created_at": h.created_at,
                 "patient_name": f"{p.first_name} {p.last_name}",
                 "patient_id": str(p.id),
@@ -336,10 +337,10 @@ def get_patients(
             
         history_map = {}
         if patient_ids:
-            history_query = select(MedicalHistory.patient_id, MedicalHistory.id).where(
+            history_query = select(MedicalHistory.patient_id, MedicalHistory.id, MedicalHistory.history_number).where(
                 MedicalHistory.patient_id.in_(patient_ids), MedicalHistory.status == True
             )
-            history_map = {row.patient_id: row.id for row in session.exec(history_query).all()}
+            history_map = {row.patient_id: (row.id, row.history_number) for row in session.exec(history_query).all()}
         
         patients = []
         for row in results:
@@ -353,7 +354,10 @@ def get_patients(
             p_read = PatientRead.model_validate(p)
             p_read.creator_name = creator_name
             p_read.is_shared = p.id in shared_ids
-            p_read.history_id = history_map.get(p.id)
+            h_data = history_map.get(p.id)
+            if h_data:
+                p_read.history_id = h_data[0]
+                p_read.history_number = h_data[1]
             patients.append(p_read)
             
         return patients
@@ -453,6 +457,7 @@ def get_patient(
     history = session.exec(select(MedicalHistory).where(MedicalHistory.patient_id == patient_id, MedicalHistory.status == True)).first()
     if history:
         res.history_id = history.id
+        res.history_number = history.history_number
     return res
 
 @router.get("/{patient_id}/has-history")
@@ -558,7 +563,13 @@ def create_full_medical_history(
             raise HTTPException(status_code=400, detail="Este paciente ya tiene un historial médico activo. Solo se permite un historial por paciente.")
 
         # 1. Create Medical History entry
+        # Auto-assign the next sequential history_number
+        from sqlalchemy import func
+        max_number = session.exec(select(func.max(MedicalHistory.history_number))).one()
+        next_number = (max_number or 0) + 1
+        
         db_history = MedicalHistory(
+            history_number=next_number,
             conditions=full_data.conditions,
             allergies=full_data.allergies,
             medications=full_data.medications,
