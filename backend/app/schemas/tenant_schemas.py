@@ -104,6 +104,7 @@ class PatientRead(PatientBase):
     created_by: Optional[uuid.UUID] = None
     creator_name: Optional[str] = None
     is_shared: bool = False
+    history_id: Optional[uuid.UUID] = None
     # No incluimos shared_with aquí para evitar recursión pesada,
     # pero podemos agregar una lista simple de IDs si fuera necesario.
 

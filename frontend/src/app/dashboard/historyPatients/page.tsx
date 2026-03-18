@@ -92,6 +92,19 @@ export default function HistoryPatientsPage() {
     }
   }, [view]);
 
+  // Deep linking for History Details
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const historyId = urlParams.get("historyId");
+      if (historyId) {
+        handleShowDetail(historyId);
+        // Opcional: limpiar la URL para que no quede el query string
+        window.history.replaceState(null, "", window.location.pathname);
+      }
+    }
+  }, []); // Run only once on mount
+
   useEffect(() => {
     if (selectedPatientId && view === "form") {
       tenantApi

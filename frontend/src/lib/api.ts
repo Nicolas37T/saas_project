@@ -200,6 +200,7 @@ export interface Patient {
   creator_name?: string;
   assigned_doctor_id?: string;
   is_shared?: boolean;
+  history_id?: string;
 }
 
 export interface Appointment {

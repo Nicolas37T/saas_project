@@ -397,7 +397,17 @@ export default function PatientsPage() {
                     )}
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <FileText size={14} className="text-muted-foreground" />
-                      <span>Historia {patient.id.substring(0, 6)}</span>
+                      {patient.history_id ? (
+                        <Button 
+                           variant="link" 
+                           className="p-0 h-auto text-primary text-sm font-semibold"
+                           onClick={() => router.push(`/dashboard/historyPatients?historyId=${patient.history_id}`)}
+                        >
+                          Ver historia clínica
+                        </Button>
+                      ) : (
+                        <span className="italic">Sin historia clínica</span>
+                      )}
                     </div>
                     {patient.created_by && (
                       <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">

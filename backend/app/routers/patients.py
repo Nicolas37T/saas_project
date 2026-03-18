@@ -333,6 +333,13 @@ def get_patients(
         if patient_ids:
             shared_query = select(PatientShare.patient_id).where(PatientShare.patient_id.in_(patient_ids))
             shared_ids = {row for row in session.exec(shared_query).all()}
+            
+        history_map = {}
+        if patient_ids:
+            history_query = select(MedicalHistory.patient_id, MedicalHistory.id).where(
+                MedicalHistory.patient_id.in_(patient_ids), MedicalHistory.status == True
+            )
+            history_map = {row.patient_id: row.id for row in session.exec(history_query).all()}
         
         patients = []
         for row in results:
@@ -346,6 +353,7 @@ def get_patients(
             p_read = PatientRead.model_validate(p)
             p_read.creator_name = creator_name
             p_read.is_shared = p.id in shared_ids
+            p_read.history_id = history_map.get(p.id)
             patients.append(p_read)
             
         return patients
@@ -442,6 +450,9 @@ def get_patient(
     res = PatientRead.model_validate(patient)
     shared = session.exec(select(PatientShare).where(PatientShare.patient_id == patient_id)).first()
     res.is_shared = shared is not None
+    history = session.exec(select(MedicalHistory).where(MedicalHistory.patient_id == patient_id, MedicalHistory.status == True)).first()
+    if history:
+        res.history_id = history.id
     return res
 
 @router.get("/{patient_id}/has-history")
