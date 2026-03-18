@@ -24,16 +24,16 @@ export const CustomModal: React.FC<ModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <Card className={`w-full ${maxWidth} bg-slate-900 border-slate-800 shadow-2xl relative overflow-hidden animate-in fade-in zoom-in duration-200`}>
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+      <Card className={`w-full ${maxWidth} bg-popover border-border shadow-2xl relative overflow-hidden animate-in fade-in zoom-in duration-200`}>
         <div className="p-6">
           {(title || showCloseButton) && (
             <div className="flex justify-between items-center mb-6">
-              {title && <h2 className="text-xl font-bold text-white">{title}</h2>}
+              {title && <h2 className="text-xl font-bold">{title}</h2>}
               {showCloseButton && (
                 <button
                   onClick={onClose}
-                  className="text-slate-500 hover:text-white transition-colors p-1"
+                  className="text-muted-foreground hover:text-foreground transition-colors p-1"
                 >
                   <X size={20} />
                 </button>
@@ -73,32 +73,32 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   icon,
 }) => {
   const variantStyles = {
-    primary: "bg-blue-600 hover:bg-blue-700",
-    danger: "bg-red-600 hover:bg-red-700",
-    warning: "bg-yellow-600 hover:bg-yellow-700 text-black",
+    primary: "bg-primary hover:bg-primary/90 text-primary-foreground",
+    danger: "bg-destructive hover:bg-destructive/90 text-white",
+    warning: "bg-yellow-600 hover:bg-yellow-700 text-white",
   };
 
   return (
     <CustomModal isOpen={isOpen} onClose={onClose} showCloseButton={false} maxWidth="max-w-sm">
       <div className="text-center">
         {icon && (
-          <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ${variant === 'danger' ? 'bg-red-500/10' : 'bg-blue-500/10'}`}>
+          <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ${variant === 'danger' ? 'bg-destructive/10' : 'bg-primary/10'}`}>
             {icon}
           </div>
         )}
-        <h2 className="text-lg font-bold text-white mb-2">{title}</h2>
-        <div className="text-slate-400 text-sm mb-6">{message}</div>
+        <h2 className="text-lg font-bold mb-2">{title}</h2>
+        <div className="text-muted-foreground text-sm mb-6">{message}</div>
         <div className="flex gap-3">
           <Button
             variant="ghost"
-            className="flex-1 text-slate-400 hover:text-white hover:bg-slate-800"
+            className="flex-1"
             onClick={onClose}
             disabled={isLoading}
           >
             {cancelText}
           </Button>
           <Button
-            className={`flex-1 text-white ${variantStyles[variant]}`}
+            className={`flex-1 ${variantStyles[variant]}`}
             onClick={onConfirm}
             disabled={isLoading}
           >
@@ -131,10 +131,10 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
     <CustomModal isOpen={isOpen} onClose={onClose} showCloseButton={false} maxWidth="max-w-sm">
       <div className="text-center">
         <div className="w-14 h-14 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
-          <CheckCircle2 size={26} className="text-green-400" />
+          <CheckCircle2 size={26} className="text-green-500" />
         </div>
-        <h2 className="text-lg font-bold text-white mb-2">{title}</h2>
-        <p className="text-slate-400 text-sm mb-6">{message}</p>
+        <h2 className="text-lg font-bold mb-2">{title}</h2>
+        <p className="text-muted-foreground text-sm mb-6">{message}</p>
         <Button
           className="w-full bg-green-600 hover:bg-green-700 text-white"
           onClick={onClose}

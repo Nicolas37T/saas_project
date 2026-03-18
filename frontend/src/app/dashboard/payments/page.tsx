@@ -163,10 +163,10 @@ export default function PaymentsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white mb-1">
+          <h1 className="text-3xl font-bold tracking-tight mb-1">
             Pagos & Facturación
           </h1>
-          <p className="text-slate-400">
+          <p className="text-muted-foreground">
             Controla los ingresos del consultorio y los pagos de tratamientos.
           </p>
         </div>
@@ -180,7 +180,7 @@ export default function PaymentsPage() {
             });
             setIsAddModalOpen(true);
           }}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all"
+          className="bg-green-600 hover:bg-green-700 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all"
         >
           <Plus className="mr-2" size={18} /> Registrar Pago
         </Button>
@@ -188,32 +188,32 @@ export default function PaymentsPage() {
 
       {/* Financial Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card className="bg-gradient-to-br from-emerald-900/40 to-slate-900 border-emerald-500/20 backdrop-blur-sm shadow-xl">
+        <Card className="bg-gradient-to-br from-green-900/40 to-card border-green-500/20 backdrop-blur-sm shadow-xl">
           <CardContent className="p-6">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-emerald-400 font-medium text-sm mb-1">
+                <p className="text-green-400 font-medium text-sm mb-1">
                   Ingresos Totales (Cobrado)
                 </p>
-                <h3 className="text-3xl font-bold text-white tracking-tight">
+                <h3 className="text-3xl font-bold tracking-tight">
                   {formatCurrency(totalIngresos)}
                 </h3>
               </div>
-              <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center text-green-400">
                 <DollarSign size={20} />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-orange-900/40 to-slate-900 border-orange-500/20 backdrop-blur-sm shadow-xl">
+        <Card className="bg-gradient-to-br from-orange-900/40 to-card border-orange-500/20 backdrop-blur-sm shadow-xl">
           <CardContent className="p-6">
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-orange-400 font-medium text-sm mb-1">
                   Cuentas por Cobrar (Deuda)
                 </p>
-                <h3 className="text-3xl font-bold text-white tracking-tight">
+                <h3 className="text-3xl font-bold tracking-tight">
                   {formatCurrency(totalDeudaAcumulada)}
                 </h3>
               </div>
@@ -230,11 +230,11 @@ export default function PaymentsPage() {
       </div>
 
       <Tabs defaultValue="history" className="w-full">
-        <TabsList className="bg-slate-900 border border-slate-800 p-1 mb-6">
-          <TabsTrigger value="history" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-slate-400">
+        <TabsList className="bg-muted border border-border p-1 mb-6">
+          <TabsTrigger value="history" className="data-[state=active]:bg-green-600 data-[state=active]:text-white">
             Historial de Pagos
           </TabsTrigger>
-          <TabsTrigger value="debtors" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400">
+          <TabsTrigger value="debtors" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white">
             Saldos y Deudores
           </TabsTrigger>
         </TabsList>
@@ -242,27 +242,27 @@ export default function PaymentsPage() {
         <TabsContent value="history" className="mt-0">
           {loading ? (
             <div className="flex justify-center p-12">
-              <div className="animate-spin w-8 h-8 rounded-full border-2 border-emerald-500 border-t-transparent"></div>
+              <div className="animate-spin w-8 h-8 rounded-full border-2 border-green-500 border-t-transparent"></div>
             </div>
           ) : payments.length === 0 ? (
-            <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
+            <Card className="bg-card border-border backdrop-blur-sm">
               <CardContent className="flex flex-col items-center justify-center py-20">
-                <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mb-4 text-emerald-500">
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4 text-green-500">
                   <Wallet size={32} />
                 </div>
-                <h3 className="text-xl font-medium text-white mb-2">
+                <h3 className="text-xl font-medium mb-2">
                   No hay pagos registrados
                 </h3>
-                <p className="text-slate-400">
+                <p className="text-muted-foreground">
                   Aún no se han recibido pagos de los pacientes en sus tratamientos.
                 </p>
               </CardContent>
             </Card>
           ) : (
-            <div className="bg-slate-900/50 border border-slate-800 rounded-xl overflow-hidden backdrop-blur-sm shadow-xl">
+            <div className="bg-card border border-border rounded-xl overflow-hidden backdrop-blur-sm shadow-xl">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
-                  <thead className="bg-slate-950/80 border-b border-slate-800 text-slate-400 font-medium text-sm">
+                  <thead className="bg-muted/80 border-b border-border font-medium text-sm">
                     <tr>
                       <th className="p-4 pl-6 font-semibold">
                         Paciente / Tratamiento
@@ -275,28 +275,28 @@ export default function PaymentsPage() {
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/50">
+                  <tbody className="divide-y divide-border/50">
                     {payments.map((p) => (
                       <tr
                         key={p.id}
-                        className="hover:bg-slate-800/30 transition-colors"
+                        className="hover:bg-muted/30 transition-colors"
                       >
-                        <td className="p-4 pl-6 text-slate-300 font-medium">
+                        <td className="p-4 pl-6 font-medium">
                           <div className="flex flex-col">
-                            <span className="text-white font-medium">{getTreatmentDetails(p.treatment_id).patientName}</span>
-                            <span className="text-sm text-slate-400 truncate max-w-[200px]">
+                            <span className="font-medium">{getTreatmentDetails(p.treatment_id).patientName}</span>
+                            <span className="text-sm text-muted-foreground truncate max-w-[200px]">
                               {getTreatmentDetails(p.treatment_id).desc}
                             </span>
                           </div>
                         </td>
                         <td className="p-4">
-                          <span className="text-white font-bold">
+                          <span className="font-bold">
                             {formatCurrency(p.amount)}
                           </span>
                         </td>
                         <td className="p-4">
-                          <div className="flex items-center gap-2 text-slate-300">
-                            <span className="text-slate-500">
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <span className="text-muted-foreground">
                               {getMethodIcon(p.payment_method)}
                             </span>
                             {getMethodLabel(p.payment_method)}
@@ -304,14 +304,14 @@ export default function PaymentsPage() {
                         </td>
                         <td className="p-4">
                           <span
-                            className={`px-3 py-1 text-xs font-semibold rounded-full border ${p.payment_status === "completed" ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" : "text-orange-400 bg-orange-500/10 border-orange-500/20"}`}
+                            className={`px-3 py-1 text-xs font-semibold rounded-full border ${p.payment_status === "completed" ? "text-green-400 bg-green-500/10 border-green-500/20" : "text-orange-400 bg-orange-500/10 border-orange-500/20"}`}
                           >
                             {p.payment_status === "completed"
                               ? "Pagado"
                               : "Pendiente"}
                           </span>
                         </td>
-                        <td className="p-4 text-slate-400 text-sm hidden md:table-cell">
+                        <td className="p-4 text-muted-foreground text-sm hidden md:table-cell">
                           {new Date(p.created_at).toLocaleDateString()}
                         </td>
                       </tr>
@@ -329,24 +329,24 @@ export default function PaymentsPage() {
               <div className="animate-spin w-8 h-8 rounded-full border-2 border-orange-500 border-t-transparent"></div>
             </div>
           ) : debtors.length === 0 ? (
-            <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-sm">
+            <Card className="bg-card border-border backdrop-blur-sm">
               <CardContent className="flex flex-col items-center justify-center py-20">
-                <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mb-4 text-emerald-500 border-2 border-emerald-500/20">
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4 text-green-500 border-2 border-green-500/20">
                   <Banknote size={32} />
                 </div>
-                <h3 className="text-xl font-medium text-white mb-2">
+                <h3 className="text-xl font-medium mb-2">
                   ¡Cuentas al día!
                 </h3>
-                <p className="text-slate-400">
+                <p className="text-muted-foreground">
                   Ningún paciente tiene saldos pendientes o deudas activas en este momento.
                 </p>
               </CardContent>
             </Card>
           ) : (
-            <div className="bg-slate-900/50 border border-slate-800 rounded-xl overflow-hidden backdrop-blur-sm shadow-xl">
+            <div className="bg-card border border-border rounded-xl overflow-hidden backdrop-blur-sm shadow-xl">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
-                  <thead className="bg-slate-950/80 border-b border-slate-800 text-slate-400 font-medium text-sm">
+                  <thead className="bg-muted/80 border-b border-border font-medium text-sm">
                     <tr>
                       <th className="p-4 pl-6 font-semibold">
                         Paciente
@@ -357,19 +357,19 @@ export default function PaymentsPage() {
                       <th className="p-4 text-center font-semibold">Acción</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/50">
+                  <tbody className="divide-y divide-border/50">
                     {debtors.map((d) => (
                       <tr
                         key={d.patient.id}
-                        className="hover:bg-slate-800/30 transition-colors"
+                        className="hover:bg-muted/30 transition-colors"
                       >
-                        <td className="p-4 pl-6 text-white font-medium">
+                        <td className="p-4 pl-6 font-medium">
                           {d.patient.first_name} {d.patient.last_name}
                         </td>
-                        <td className="p-4 text-slate-400">
+                        <td className="p-4 text-muted-foreground">
                           {formatCurrency(d.totalCosto)}
                         </td>
-                        <td className="p-4 text-emerald-400/80">
+                        <td className="p-4 text-green-400/80">
                           {formatCurrency(d.totalPagado)}
                         </td>
                         <td className="p-4 text-orange-400 font-bold">
@@ -378,7 +378,7 @@ export default function PaymentsPage() {
                         <td className="p-4 text-center">
                           <Button
                             size="sm"
-                            className="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white"
+                            className="bg-green-600/20 text-green-400 hover:bg-green-600 hover:text-white"
                             onClick={() => {
                               setSelectedPatientId(d.patient.id);
                               setSelectedTreatments({});
@@ -408,160 +408,160 @@ export default function PaymentsPage() {
         onClose={() => setIsAddModalOpen(false)}
         title="Registrar Pago"
       >
-              <form onSubmit={handleCreatePayment} className="space-y-4">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">
-                      Filtrar por Paciente
-                    </label>
-                    <select
-                      className="w-full p-2.5 rounded-md bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                      value={selectedPatientId}
-                      onChange={(e) => {
-                        setSelectedPatientId(e.target.value);
-                        setSelectedTreatments({});
-                      }}
-                    >
-                      <option value="">Todos los pacientes</option>
-                      {patients.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.first_name} {p.last_name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+        <form onSubmit={handleCreatePayment} className="space-y-4">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                Filtrar por Paciente
+              </label>
+              <select
+                className="w-full p-2.5 rounded-md bg-muted/50 border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-green-500/50"
+                value={selectedPatientId}
+                onChange={(e) => {
+                  setSelectedPatientId(e.target.value);
+                  setSelectedTreatments({});
+                }}
+              >
+                <option value="">Todos los pacientes</option>
+                {patients.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.first_name} {p.last_name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">
-                      Tratamientos Pendientes
-                    </label>
-                    <div className="max-h-60 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-                      {(() => {
-                        if (!selectedPatientId) {
-                          return <div className="text-sm text-slate-500 p-4 border border-slate-800 rounded-lg text-center bg-slate-900/50">Por favor, seleccione un paciente primero para ver sus tratamientos pendientes.</div>;
-                        }
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                Tratamientos Pendientes
+              </label>
+              <div className="max-h-60 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                {(() => {
+                  if (!selectedPatientId) {
+                    return <div className="text-sm text-muted-foreground p-4 border border-border rounded-lg text-center bg-muted/50">Por favor, seleccione un paciente primero para ver sus tratamientos pendientes.</div>;
+                  }
 
-                        const availableTreatments = treatments.filter((t) => {
-                          if (t.odontogram?.patient_id !== selectedPatientId) return false;
-                          if (t.price <= 0) return false;
-                          const paid = t.payments?.reduce((acc, p) => acc + p.amount, 0) || 0;
-                          return t.price - paid > 0;
-                        });
+                  const availableTreatments = treatments.filter((t) => {
+                    if (t.odontogram?.patient_id !== selectedPatientId) return false;
+                    if (t.price <= 0) return false;
+                    const paid = t.payments?.reduce((acc, p) => acc + p.amount, 0) || 0;
+                    return t.price - paid > 0;
+                  });
 
-                        if (availableTreatments.length === 0) {
-                          return <div className="text-sm text-slate-500 p-4 border border-slate-800 rounded-lg text-center bg-slate-900/50">No hay tratamientos validos pendientes de pago para mostrar.</div>;
-                        }
+                  if (availableTreatments.length === 0) {
+                    return <div className="text-sm text-muted-foreground p-4 border border-border rounded-lg text-center bg-muted/50">No hay tratamientos validos pendientes de pago para mostrar.</div>;
+                  }
 
-                        return availableTreatments.map((t) => {
-                          const paid = t.payments?.reduce((acc, p) => acc + p.amount, 0) || 0;
-                          const balance = t.price - paid;
-                          const isSelected = selectedTreatments[t.id] !== undefined;
+                  return availableTreatments.map((t) => {
+                    const paid = t.payments?.reduce((acc, p) => acc + p.amount, 0) || 0;
+                    const balance = t.price - paid;
+                    const isSelected = selectedTreatments[t.id] !== undefined;
 
-                          return (
-                            <div key={t.id} className={`p-3 rounded-lg border flex flex-col gap-3 transition-colors ${isSelected ? "bg-emerald-950/20 border-emerald-500/30" : "bg-slate-900 border-slate-800"}`}>
-                              <div className="flex items-start justify-between gap-2">
-                                <label className="flex items-start gap-3 cursor-pointer flex-1">
-                                  <input 
-                                    type="checkbox" 
-                                    className="mt-1 flex-shrink-0 w-4 h-4 rounded border-slate-700 text-emerald-600 focus:ring-emerald-500/50 bg-slate-950 cursor-pointer"
-                                    checked={isSelected}
-                                    onChange={(e) => {
-                                      if (e.target.checked) {
-                                        setSelectedTreatments(prev => ({ ...prev, [t.id]: balance }));
-                                      } else {
-                                        setSelectedTreatments(prev => {
-                                          const next = { ...prev };
-                                          delete next[t.id];
-                                          return next;
-                                        });
-                                      }
-                                    }}
-                                  />
-                                  <div>
-                                    <p className={`text-sm font-medium ${isSelected ? "text-emerald-400" : "text-slate-300"}`}>{t.description}</p>
-                                    <p className="text-xs text-slate-500 mt-0.5">
-                                      Total: {formatCurrency(t.price)} • Saldo: {formatCurrency(balance)}
-                                    </p>
-                                  </div>
-                                </label>
-                              </div>
-                              {isSelected && (
-                                <div className="pl-7 flex items-center gap-2">
-                                  <span className="text-xs text-slate-400">Abonar:</span>
-                                  <div className="relative flex-1 max-w-[150px]">
-                                    <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none text-slate-500 font-medium text-xs">
-                                      Bs
-                                    </div>
-                                    <Input
-                                      type="number"
-                                      min="0"
-                                      step="0.01"
-                                      max={balance}
-                                      value={selectedTreatments[t.id] ?? ""}
-                                      onChange={(e) => {
-                                        const val = parseFloat(e.target.value);
-                                        setSelectedTreatments(prev => ({ ...prev, [t.id]: isNaN(val) ? 0 : val }));
-                                      }}
-                                      className="h-8 pl-7 text-sm bg-slate-950/50 border-slate-800 text-white focus-visible:ring-emerald-500/50"
-                                    />
-                                  </div>
-                                </div>
-                              )}
+                    return (
+                      <div key={t.id} className={`p-3 rounded-lg border flex flex-col gap-3 transition-colors ${isSelected ? "bg-green-950/20 border-green-500/30" : "bg-card border-border"}`}>
+                        <div className="flex items-start justify-between gap-2">
+                          <label className="flex items-start gap-3 cursor-pointer flex-1">
+                            <input
+                              type="checkbox"
+                              className="mt-1 flex-shrink-0 w-4 h-4 rounded border-border text-green-600 focus:ring-green-500/50 bg-muted cursor-pointer"
+                              checked={isSelected}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedTreatments(prev => ({ ...prev, [t.id]: balance }));
+                                } else {
+                                  setSelectedTreatments(prev => {
+                                    const next = { ...prev };
+                                    delete next[t.id];
+                                    return next;
+                                  });
+                                }
+                              }}
+                            />
+                            <div>
+                              <p className={`text-sm font-medium ${isSelected ? "text-green-400" : "text-foreground"}`}>{t.description}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                Total: {formatCurrency(t.price)} • Saldo: {formatCurrency(balance)}
+                              </p>
                             </div>
-                          );
-                        });
-                      })()}
-                    </div>
-                  </div>
-                </div>
+                          </label>
+                        </div>
+                        {isSelected && (
+                          <div className="pl-7 flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">Abonar:</span>
+                            <div className="relative flex-1 max-w-[150px]">
+                              <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none text-muted-foreground font-medium text-xs">
+                                Bs
+                              </div>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                max={balance}
+                                value={selectedTreatments[t.id] ?? ""}
+                                onChange={(e) => {
+                                  const val = parseFloat(e.target.value);
+                                  setSelectedTreatments(prev => ({ ...prev, [t.id]: isNaN(val) ? 0 : val }));
+                                }}
+                                className="h-8 pl-7 text-sm bg-muted/50 border-border text-foreground focus-visible:ring-green-500/50"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            </div>
+          </div>
 
-                <div className="space-y-2 pt-2 border-t border-slate-800/50">
-                  <div className="flex justify-between items-center bg-slate-900/50 p-3 rounded-lg border border-slate-800">
-                    <span className="text-sm font-medium text-slate-300">
-                      Total a Cobrar
-                    </span>
-                    <span className="text-lg font-bold text-emerald-400">
-                      {formatCurrency(Object.values(selectedTreatments).reduce((acc, val) => acc + (val || 0), 0))}
-                    </span>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">
-                      Método Operativo
-                    </label>
-                    <select
-                      className="w-full p-2.5 rounded-md bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                      value={paymentOptions.payment_method}
-                      onChange={(e) =>
-                        setPaymentOptions({
-                          ...paymentOptions,
-                          payment_method: e.target.value,
-                        })
-                      }
-                    >
-                      <option value="cash">Efectivo</option>
-                      <option value="card">Tarjeta</option>
-                      <option value="transfer">Transferencia</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="flex justify-end gap-3 mt-8">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => setIsAddModalOpen(false)}
-                    className="text-slate-400 hover:text-white"
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                    disabled={Object.keys(selectedTreatments).length === 0}
-                  >
-                    Procesar
-                  </Button>
-                </div>
-              </form>
+          <div className="space-y-2 pt-2 border-t border-border/50">
+            <div className="flex justify-between items-center bg-muted/50 p-3 rounded-lg border border-border">
+              <span className="text-sm font-medium">
+                Total a Cobrar
+              </span>
+              <span className="text-lg font-bold text-green-400">
+                {formatCurrency(Object.values(selectedTreatments).reduce((acc, val) => acc + (val || 0), 0))}
+              </span>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                Método Operativo
+              </label>
+              <select
+                className="w-full p-2.5 rounded-md bg-muted/50 border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-green-500/50"
+                value={paymentOptions.payment_method}
+                onChange={(e) =>
+                  setPaymentOptions({
+                    ...paymentOptions,
+                    payment_method: e.target.value,
+                  })
+                }
+              >
+                <option value="cash">Efectivo</option>
+                <option value="card">Tarjeta</option>
+                <option value="transfer">Transferencia</option>
+              </select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 mt-8">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setIsAddModalOpen(false)}
+              className="hover:bg-accent"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              className="bg-green-600 hover:bg-green-700 text-white"
+              disabled={Object.keys(selectedTreatments).length === 0}
+            >
+              Procesar
+            </Button>
+          </div>
+        </form>
       </CustomModal>
 
       <SuccessModal

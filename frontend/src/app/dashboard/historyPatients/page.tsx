@@ -264,19 +264,19 @@ export default function HistoryPatientsPage() {
     <div className="space-y-6 pb-12">
       {view === "list" && (
         <div className="space-y-6">
-          <div className="flex justify-between items-center bg-slate-900/40 p-6 rounded-2xl border border-slate-800 backdrop-blur-md">
+          <div className="flex justify-between items-center bg-card p-6 rounded-2xl border border-border backdrop-blur-md">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight text-white mb-2 flex items-center gap-3">
-                <ClipboardClock className="text-blue-500" size={32} />
+              <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
+                <ClipboardClock className="text-primary" size={32} />
                 Historiales Médicos
               </h1>
-              <p className="text-slate-400">
+              <p className="text-muted-foreground">
                 Gestión centralizada de registros clínicos y tratamientos.
               </p>
             </div>
             <Button
               onClick={() => setView("form")}
-              className="bg-blue-600 hover:bg-blue-700 text-white gap-2 h-11 px-6 shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all transform hover:-translate-y-0.5"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 h-11 px-6 shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all transform hover:-translate-y-0.5"
             >
               <Plus size={20} />
               Nuevo Registro
@@ -284,22 +284,22 @@ export default function HistoryPatientsPage() {
           </div>
 
           <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-            <Card className="relative bg-slate-900/60 border-slate-800 backdrop-blur-xl">
-              <CardHeader className="border-b border-slate-800/50 pb-4">
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+            <Card className="relative bg-card border-border backdrop-blur-xl">
+              <CardHeader className="border-b border-border/50 pb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-white text-lg font-semibold flex items-center gap-2">
-                    <Activity size={18} className="text-blue-400" />
+                  <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                    <Activity size={18} className="text-primary" />
                     Todos los registros
                   </CardTitle>
                   <div className="relative w-72">
                     <Search
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                       size={16}
                     />
                     <Input
                       placeholder="Buscar por paciente o descripción..."
-                      className="pl-9 bg-slate-950/50 border-slate-800 text-white"
+                      className="pl-9 bg-muted/50 border-border text-foreground"
                       value={searchHistory}
                       onChange={(e) => setSearchHistory(e.target.value)}
                     />
@@ -309,39 +309,39 @@ export default function HistoryPatientsPage() {
               <CardContent className="p-0">
                 {loading ? (
                   <div className="flex flex-col items-center justify-center py-20 gap-4">
-                    <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
-                    <p className="text-slate-500 animate-pulse">
+                    <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+                    <p className="text-muted-foreground animate-pulse">
                       Cargando historiales...
                     </p>
                   </div>
                 ) : filteredHistories.length === 0 ? (
-                  <div className="text-center py-20 text-slate-500 space-y-4">
+                  <div className="text-center py-20 text-muted-foreground space-y-4">
                     <ClipboardClock size={48} className="mx-auto opacity-20" />
                     <p>No se encontraron registros médicos.</p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-slate-800/50">
+                  <div className="divide-y divide-border/50">
                     {filteredHistories.map((h) => (
                       <div
                         key={h.id}
                         onClick={() => handleShowDetail(h.id)}
-                        className="group flex items-center justify-between p-4 hover:bg-slate-800/40 transition-all cursor-pointer"
+                        className="group flex items-center justify-between p-4 hover:bg-muted/40 transition-all cursor-pointer"
                       >
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20 group-hover:scale-110 transition-transform">
+                          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 group-hover:scale-110 transition-transform">
                             <Users size={22} />
                           </div>
                           <div>
-                            <p className="text-white font-semibold flex items-center gap-2">
+                            <p className="font-semibold flex items-center gap-2">
                               {h.patient_name}
                               <Badge
                                 variant="outline"
-                                className="text-[10px] uppercase tracking-tighter border-slate-700 text-slate-400"
+                                className="text-[10px] uppercase tracking-tighter border-border text-muted-foreground"
                               >
                                 {new Date(h.created_at).toLocaleDateString()}
                               </Badge>
                             </p>
-                            <p className="text-sm text-slate-500 truncate max-w-md mt-0.5">
+                            <p className="text-sm text-muted-foreground truncate max-w-md mt-0.5">
                               {h.description ||
                                 "Sin descripción clínica adicional"}
                             </p>
@@ -349,17 +349,17 @@ export default function HistoryPatientsPage() {
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="text-right hidden sm:block">
-                            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
                               Último Ingreso
                             </p>
-                            <p className="text-xs text-slate-300">
+                            <p className="text-xs text-foreground">
                               {new Date(h.created_at).toLocaleTimeString([], {
                                 hour: "2-digit",
                                 minute: "2-digit",
                               })}
                             </p>
                           </div>
-                          <div className="w-10 h-10 rounded-full flex items-center justify-center text-slate-600 group-hover:text-blue-400 group-hover:bg-blue-400/10 transition-all">
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-all">
                             <ChevronRight size={20} />
                           </div>
                         </div>
@@ -380,13 +380,13 @@ export default function HistoryPatientsPage() {
               <Button
                 variant="outline"
                 onClick={() => setView("list")}
-                className="border-slate-800 bg-slate-900/50 text-slate-400 hover:text-white"
+                className="border-border bg-muted/50 text-muted-foreground hover:text-foreground"
               >
                 <ArrowLeft size={18} className="mr-2" />
                 Volver a la lista
               </Button>
-              <div className="h-6 w-px bg-slate-800"></div>
-              <span className="text-slate-500 text-sm">
+              <div className="h-6 w-px bg-border"></div>
+              <span className="text-muted-foreground text-sm">
                 Detalle de Sesión Clínica
               </span>
             </div>
@@ -398,7 +398,7 @@ export default function HistoryPatientsPage() {
                     `/dashboard/historyPatients/${selectedHistory.history.id}`,
                   )
                 }
-                className="border-blue-500/30 bg-blue-600/10 text-blue-400 hover:bg-blue-600/20 hover:text-blue-300 gap-2"
+                className="border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 gap-2"
               >
                 <Edit3 size={16} />
                 Editar
@@ -406,7 +406,7 @@ export default function HistoryPatientsPage() {
               <Button
                 variant="outline"
                 onClick={handleDelete}
-                className="border-rose-500/30 bg-rose-600/10 text-rose-400 hover:bg-rose-600/20 hover:text-rose-300 gap-2"
+                className="border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20 gap-2"
               >
                 <Trash2 size={16} />
                 Eliminar
@@ -420,48 +420,48 @@ export default function HistoryPatientsPage() {
             return (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-1 space-y-6">
-                  <Card className="bg-slate-900/50 border-slate-800 shadow-xl overflow-hidden">
-                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 h-2"></div>
+                  <Card className="bg-card border-border shadow-xl overflow-hidden">
+                    <div className="bg-gradient-to-r from-primary to-indigo-600 h-2"></div>
                     <CardHeader className="pt-6">
                       <div className="flex items-center gap-4 mb-4">
-                        <div className="w-16 h-16 rounded-full bg-slate-800 border-2 border-blue-500/30 flex items-center justify-center text-blue-400 text-2xl font-bold">
+                        <div className="w-16 h-16 rounded-full bg-muted border-2 border-primary/30 flex items-center justify-center text-primary text-2xl font-bold">
                           {patient.first_name[0]}
                           {patient.last_name[0]}
                         </div>
                         <div>
-                          <h2 className="text-xl font-bold text-white leading-tight">
+                          <h2 className="text-xl font-bold leading-tight">
                             {patient.first_name} {patient.last_name}
                           </h2>
-                          <p className="text-slate-500 text-sm italic">
+                          <p className="text-muted-foreground text-sm italic">
                             {patient.phone}
                           </p>
                         </div>
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-4 pt-0">
-                      <div className="p-3 rounded-lg bg-slate-950/40 border border-slate-800">
-                        <p className="text-[12px] text-slate-500 uppercase tracking-widest font-bold mb-2">
+                      <div className="p-3 rounded-lg bg-muted/40 border border-border">
+                        <p className="text-[12px] text-muted-foreground uppercase tracking-widest font-bold mb-2">
                           Resumen de Salud
                         </p>
                         <div className="space-y-3">
                           <div>
-                            <span className="text-md text-slate-500">
+                            <span className="text-md text-muted-foreground">
                               Condiciones:
                             </span>
-                            <p className="text-sm text-slate-300 font-medium">
+                            <p className="text-sm font-medium">
                               {history.conditions || "Ninguna registrada"}
                             </p>
                           </div>
                           <div>
-                            <span className="text-md text-slate-500">
+                            <span className="text-md text-muted-foreground">
                               Alergias:
                             </span>
-                            <p className="text-sm text-slate-300 font-medium">
+                            <p className="text-sm font-medium">
                               {history.allergies || "Ninguna"}
                             </p>
                           </div>
                           <div>
-                            <span className="text-md text-slate-500">
+                            <span className="text-md text-muted-foreground">
                               Medicaciones:
                             </span>
                             <p className="text-sm text-slate-300 font-medium">
@@ -473,48 +473,48 @@ export default function HistoryPatientsPage() {
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-slate-900/50 border-slate-800 shadow-xl">
+                  <Card className="bg-card border-border shadow-xl">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                        <ShieldCheck size={16} className="text-emerald-500" />
+                      <CardTitle className="text-sm font-bold uppercase tracking-wider flex items-center gap-2">
+                        <ShieldCheck size={16} className="text-green-500" />
                         Higiene Bucal
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <div className="grid grid-cols-2 gap-2">
                         <div
-                          className={`p-2 rounded border ${history.uses_toothbrush ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-100" : "bg-rose-500/5 border-rose-500/20 text-rose-300"} text-xs font-semibold text-center`}
+                          className={`p-2 rounded border ${history.uses_toothbrush ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-destructive/5 border-destructive/20 text-destructive"} text-xs font-semibold text-center`}
                         >
                           Usa Cepillo: {history.uses_toothbrush ? "SÍ" : "NO"}
                         </div>
                         <div
-                          className={`p-2 rounded border ${history.uses_dentifrice ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-100" : "bg-rose-500/5 border-rose-500/20 text-rose-300"} text-xs font-semibold text-center`}
+                          className={`p-2 rounded border ${history.uses_dentifrice ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-destructive/5 border-destructive/20 text-destructive"} text-xs font-semibold text-center`}
                         >
                           Usa Dentífrico:{" "}
                           {history.uses_dentifrice ? "SÍ" : "NO"}
                         </div>
                       </div>
-                      <div className="p-3 rounded bg-slate-950/40 border border-slate-800">
-                        <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">
+                      <div className="p-3 rounded bg-muted/40 border border-border">
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">
                           Frecuencia de cepillado
                         </p>
-                        <p className="text-sm text-slate-300">
+                        <p className="text-sm">
                           {history.brushing_frequency || "No especificado"}
                           {history.brushing_frequency === 1
                             ? " vez al dia"
                             : " veces al dia"}
                         </p>
                       </div>
-                      <div className="p-3 rounded bg-slate-950/40 border border-slate-800">
-                        <p className="text-[10px] text-slate-500 uppercase font-bold mb-1">
+                      <div className="p-3 rounded bg-muted/40 border border-border">
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">
                           Técnica
                         </p>
-                        <p className="text-sm text-slate-300">
+                        <p className="text-sm">
                           {history.brushing_technique || "No especificado"}
                         </p>
                       </div>
                       <div
-                        className={`p-3 rounded border text-center font-bold text-sm ${history.uses_floss ? "bg-blue-500/10 border-blue-500/30 text-blue-200" : "bg-slate-800/50 border-slate-700 text-slate-500"}`}
+                        className={`p-3 rounded border text-center font-bold text-sm ${history.uses_floss ? "bg-primary/10 border-primary/30 text-primary" : "bg-muted/50 border-border text-muted-foreground"}`}
                       >
                         {history.uses_floss
                           ? "✓ USA HILO DENTAL"
@@ -525,23 +525,23 @@ export default function HistoryPatientsPage() {
                 </div>
 
                 <div className="lg:col-span-2 space-y-6">
-                  <Card className="bg-slate-900/50 border-slate-800 shadow-2xl relative overflow-hidden">
+                  <Card className="bg-card border-border shadow-2xl relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-4">
-                      <Badge className="bg-blue-500 text-white border-none py-1 px-3">
+                      <Badge className="bg-primary text-primary-foreground border-none py-1 px-3">
                         FINALIZADO
                       </Badge>
                     </div>
-                    <CardHeader className="border-b border-slate-800/60 pb-6 pt-8">
+                    <CardHeader className="border-b border-border/60 pb-6 pt-8">
                       <div className="flex flex-col gap-1">
-                        <p className="text-blue-500 font-bold text-xs uppercase tracking-[0.2em] mb-1">
+                        <p className="text-primary font-bold text-xs uppercase tracking-[0.2em] mb-1">
                           Evolución Clínica
                         </p>
-                        <h3 className="text-2xl font-bold text-white">
+                        <h3 className="text-2xl font-bold">
                           Registro de Seguimiento
                         </h3>
                         <div className="flex items-center gap-6 mt-2">
-                          <div className="flex items-center gap-2 text-slate-400 text-sm">
-                            <Calendar size={14} className="text-blue-500" />
+                          <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                            <Calendar size={14} className="text-primary" />
                             {history.created_at
                               ? new Date(history.created_at).toLocaleDateString()
                               : "--"}
@@ -551,22 +551,22 @@ export default function HistoryPatientsPage() {
                     </CardHeader>
                     <CardContent className="pt-6 space-y-8">
                       <div>
-                        <h4 className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-3">
+                        <h4 className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest mb-3">
                           Resumen de Evolución
                         </h4>
-                        <p className="text-slate-200 leading-relaxed bg-slate-950/30 p-4 rounded-xl border border-slate-800/50 text-sm">
+                        <p className="leading-relaxed bg-muted/30 p-4 rounded-xl border border-border/50 text-sm">
                           {history.description ||
                             "Múltiples tratamientos realizados."}
                         </p>
                       </div>
 
                       <div className="pt-2">
-                        <h4 className="text-blue-500/80 text-[10px] font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <h4 className="text-primary/80 text-[10px] font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
                           <Activity size={12} /> Detalles del Tratamiento
                         </h4>
-                        <div className="bg-slate-900/40 rounded-xl border border-slate-800/50 overflow-x-auto">
+                        <div className="bg-muted/40 rounded-xl border border-border/50 overflow-x-auto">
                           <table className="w-full text-left text-xs whitespace-nowrap">
-                            <thead className="bg-slate-950/50 text-slate-500 uppercase tracking-tighter font-bold">
+                            <thead className="bg-muted/50 text-muted-foreground uppercase tracking-tighter font-bold">
                               <tr>
                                 <th className="px-4 py-3">Pieza</th>
                                 <th className="px-4 py-3">Tratamiento</th>
@@ -574,50 +574,50 @@ export default function HistoryPatientsPage() {
                                 <th className="px-4 py-3 text-right">Precio</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-800/40">
-                              {odontograms?.flatMap((item: any) => 
+                            <tbody className="divide-y divide-border/40">
+                              {odontograms?.flatMap((item: any) =>
                                 item.treatments?.map((t: any, idx: number) => (
                                   <tr
                                     key={`${item.id}-${idx}`}
-                                    className="hover:bg-slate-800/30 transition-colors"
+                                    className="hover:bg-muted/30 transition-colors"
                                   >
                                     <td className="px-4 py-3">
-                                      <Badge className="bg-slate-800 text-slate-300 border-none">
+                                      <Badge className="bg-muted text-foreground border-none">
                                         #{item.tooth_number}
                                       </Badge>
                                     </td>
                                     <td className="px-4 py-3">
-                                      <p className="font-semibold text-slate-200">
+                                      <p className="font-semibold">
                                         {t.description}
                                       </p>
-                                      <p className="text-[10px] text-slate-500 uppercase tracking-tighter">
+                                      <p className="text-[10px] text-muted-foreground uppercase tracking-tighter">
                                         {item.tooth_type === "adult" ? "Permanente" : "Temporal"}{" "}
                                         • {t.procedure_status}
                                       </p>
                                     </td>
-                                    <td className="px-4 py-3 text-slate-400">
+                                    <td className="px-4 py-3 text-muted-foreground">
                                       {t.treatment_date
                                         ? new Date(
                                             t.treatment_date,
                                           ).toLocaleDateString()
                                         : "--"}
                                     </td>
-                                    <td className="px-4 py-3 text-right font-bold text-amber-400">
+                                    <td className="px-4 py-3 text-right font-bold text-amber-500">
                                       {t.price === 0 ? (
-                                        <span className="text-slate-500 italic text-xs font-normal relative pr-4">
+                                        <span className="text-muted-foreground italic text-xs font-normal relative pr-4">
                                           Privado
-                                          <span className="absolute top-1/2 right-1 w-1.5 h-1.5 bg-slate-600 rounded-full -translate-y-1/2"></span>
+                                          <span className="absolute top-1/2 right-1 w-1.5 h-1.5 bg-muted-foreground rounded-full -translate-y-1/2"></span>
                                         </span>
                                       ) : (
                                         `Bs. ${t.price}`
-                                      )} 
+                                      )}
                                     </td>
                                   </tr>
                                 )) || []
                               )}
                               {!odontograms?.length && (
                                 <tr>
-                                  <td colSpan={4} className="py-8 text-center text-slate-500 text-sm">
+                                  <td colSpan={4} className="py-8 text-center text-muted-foreground text-sm">
                                     No hay procedimientos registrados en este historial.
                                   </td>
                                 </tr>
@@ -627,14 +627,14 @@ export default function HistoryPatientsPage() {
                         </div>
                       </div>
 
-                      <div className="pt-6 border-t border-slate-800/50">
+                      <div className="pt-6 border-t border-border/50">
                         <div className="flex flex-wrap items-center justify-between gap-6">
                           <div className="space-y-1">
-                            <p className="text-slate-500 text-[10px] font-bold uppercase">
+                            <p className="text-muted-foreground text-[10px] font-bold uppercase">
                               Costo Total
                             </p>
                             <div className="flex items-center gap-3">
-                              <span className="text-white font-bold text-lg">
+                              <span className="font-bold text-lg">
                                 Bs {totalPrice}
                               </span>
                             </div>
@@ -651,27 +651,26 @@ export default function HistoryPatientsPage() {
       )}
 
       {view === "form" && (
-        <div className="space-y-6 pb-12 text-slate-200">
+        <div className="space-y-6 pb-12">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
                 onClick={() => setView("list")}
-                className="text-slate-500 hover:text-white"
               >
                 <ArrowLeft size={20} />
               </Button>
               <div>
-                <h1 className="text-3xl font-bold tracking-tight text-white mb-1">
+                <h1 className="text-3xl font-bold tracking-tight mb-1">
                   Nuevo Registro Clínico
                 </h1>
-                <p className="text-slate-400 text-sm">
+                <p className="text-muted-foreground text-sm">
                   Completa el registro clínico, tratamiento y cobro en un solo
                   paso.
                 </p>
               </div>
             </div>
-            <ClipboardClock className="text-blue-500/20" size={64} />
+            <ClipboardClock className="text-primary/20" size={64} />
           </div>
 
           <Stepper currentStep={currentStep} />

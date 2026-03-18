@@ -34,8 +34,8 @@ export const Stepper: React.FC<StepperProps> = ({ currentStep }) => {
               <div
                 className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-lg ${
                   currentStep >= item.step
-                    ? "bg-blue-600 text-white shadow-blue-500/30 ring-4 ring-blue-600/10"
-                    : "bg-slate-800 text-slate-500 shadow-none ring-0"
+                    ? "bg-primary text-primary-foreground shadow-primary/30 ring-4 ring-primary/10"
+                    : "bg-muted text-muted-foreground shadow-none ring-0"
                 }`}
               >
                 {currentStep > item.step ? (
@@ -46,16 +46,16 @@ export const Stepper: React.FC<StepperProps> = ({ currentStep }) => {
               </div>
               <span
                 className={`text-[10px] uppercase font-bold tracking-wider transition-colors duration-300 ${
-                  currentStep >= item.step ? "text-blue-400" : "text-slate-500"
+                  currentStep >= item.step ? "text-primary" : "text-muted-foreground"
                 }`}
               >
                 {item.label}
               </span>
             </div>
             {index < steps.length - 1 && (
-              <div className="flex-1 h-[2px] mx-4 bg-slate-800 relative overflow-hidden mb-6">
+              <div className="flex-1 h-[2px] mx-4 bg-border relative overflow-hidden mb-6">
                 <div
-                  className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 transition-transform duration-700 ease-in-out"
+                  className="absolute inset-0 bg-gradient-to-r from-primary to-indigo-600 transition-transform duration-700 ease-in-out"
                   style={{
                     transform: `translateX(${currentStep > item.step ? "0%" : "-100%"})`,
                   }}
