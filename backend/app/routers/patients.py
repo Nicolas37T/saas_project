@@ -319,6 +319,21 @@ def get_patients(
             
         results = session.exec(query.offset(skip).limit(limit)).all()
         
+        # Get all patient IDs in the results
+        patient_ids = []
+        for row in results:
+            try:
+                p, _ = row
+                patient_ids.append(p.id)
+            except (ValueError, TypeError):
+                patient_ids.append(row.id)
+                
+        # Which of these patients are shared?
+        shared_ids = set()
+        if patient_ids:
+            shared_query = select(PatientShare.patient_id).where(PatientShare.patient_id.in_(patient_ids))
+            shared_ids = {row for row in session.exec(shared_query).all()}
+        
         patients = []
         for row in results:
             # SQLAlchemy Row supports unpacking similar to a tuple
@@ -330,6 +345,7 @@ def get_patients(
 
             p_read = PatientRead.model_validate(p)
             p_read.creator_name = creator_name
+            p_read.is_shared = p.id in shared_ids
             patients.append(p_read)
             
         return patients
@@ -423,7 +439,10 @@ def get_patient(
     patient = session.get(Patient, patient_id)
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
-    return patient
+    res = PatientRead.model_validate(patient)
+    shared = session.exec(select(PatientShare).where(PatientShare.patient_id == patient_id)).first()
+    res.is_shared = shared is not None
+    return res
 
 @router.get("/{patient_id}/has-history")
 def check_patient_history(

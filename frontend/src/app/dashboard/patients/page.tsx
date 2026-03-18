@@ -327,6 +327,11 @@ export default function PatientsPage() {
                         <span className="text-xs font-bold capitalize bg-green-500 px-2 py-1 rounded-full text-white">
                           Activo
                         </span>
+                        {patient.is_shared && (
+                          <span className="text-xs font-bold capitalize bg-blue-500 px-2 py-1 rounded-full text-white ml-2">
+                            Compartido
+                          </span>
+                        )}
                       </div>
                     </div>
 
