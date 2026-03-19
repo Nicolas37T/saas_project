@@ -7,10 +7,13 @@ import { Button } from "@/components/ui/button";
 
 // --- Types ---
 export interface TreatmentItem {
+  id?: string;
   description: string;
   price: number;
   treatment_date: string;
   procedure_status: string;
+  is_readonly?: boolean;
+  created_by?: string;
 }
 
 export interface OdontogramItem {
@@ -319,9 +322,9 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
             )}
           </div>
 
-          {/* ══════════════════════════════════════════════════════════ */}
+         
           {/* REGISTERED TEETH — expanded by default                    */}
-          {/* ══════════════════════════════════════════════════════════ */}
+         
           {odontogramItems.length > 0 && (
             <div className="space-y-3">
               <h3 className="text-sm font-semibold uppercase tracking-wider flex items-center gap-2">
@@ -392,38 +395,61 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                             No hay tratamientos para esta pieza aún.
                           </p>
                         )}
-                        {tooth.treatments.map((treatment, treatIdx) => (
-                          <div
-                            key={treatIdx}
-                            className="grid grid-cols-1 sm:grid-cols-4 gap-2 p-3 bg-muted/50 rounded-lg border border-border/50 items-end"
-                          >
+                        {tooth.treatments.map((treatment, treatIdx) => {
+                          const isReadonly = treatment.is_readonly ?? false;
+                          return (
+                            <div
+                              key={treatIdx}
+                              className={`grid grid-cols-1 sm:grid-cols-4 gap-2 p-3 rounded-lg border items-end relative ${
+                                isReadonly
+                                  ? "bg-slate-800/30 border-purple-500/30"
+                                  : "bg-muted/50 border-border/50"
+                              }`}
+                            >
+                              {isReadonly && (
+                                <div className="col-span-full flex justify-end mb-[-8px]">
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 text-[9px] font-semibold uppercase tracking-wider border border-purple-500/30">
+                                    Compartido
+                                  </span>
+                                </div>
+                              )}
+                              <div className="space-y-1">
+                                <label className={`text-[10px] uppercase tracking-widest ${
+                                  isReadonly ? "text-purple-400/70" : "text-muted-foreground"
+                                }`}>
+                                  Procedimiento
+                                </label>
+                                <Input
+                                  placeholder="Ej: Endodoncia"
+                                  className={`bg-muted/50 border-border h-8 text-xs ${
+                                    isReadonly ? "opacity-60 cursor-not-allowed text-slate-400" : ""
+                                  }`}
+                                  value={treatment.description}
+                                  disabled={isReadonly}
+                                  onChange={(e) =>
+                                    updateTreatmentField(
+                                      toothIdx,
+                                      treatIdx,
+                                      "description",
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                              </div>
                             <div className="space-y-1">
-                              <label className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                                Procedimiento
-                              </label>
-                              <Input
-                                placeholder="Ej: Endodoncia"
-                                className="bg-muted/50 border-border h-8 text-xs"
-                                value={treatment.description}
-                                onChange={(e) =>
-                                  updateTreatmentField(
-                                    toothIdx,
-                                    treatIdx,
-                                    "description",
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <label className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                              <label className={`text-[10px] uppercase tracking-widest ${
+                                isReadonly ? "text-purple-400/70" : "text-muted-foreground"
+                              }`}>
                                 Precio (Bs)
                               </label>
                               <Input
                                 type="number"
                                 placeholder="0"
-                                className="bg-muted/50 border-border text-amber-500 font-bold h-8 text-xs"
+                                className={`bg-muted/50 border-border h-8 text-xs ${
+                                  isReadonly ? "opacity-60 cursor-not-allowed text-slate-400" : "text-amber-500 font-bold"
+                                }`}
                                 value={treatment.price || ""}
+                                disabled={isReadonly}
                                 onChange={(e) =>
                                   updateTreatmentField(
                                     toothIdx,
@@ -435,13 +461,18 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                               />
                             </div>
                             <div className="space-y-1">
-                              <label className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                              <label className={`text-[10px] uppercase tracking-widest ${
+                                isReadonly ? "text-purple-400/70" : "text-muted-foreground"
+                              }`}>
                                 Fecha
                               </label>
                               <Input
                                 type="date"
-                                className="bg-muted/50 border-border h-8 text-xs"
+                                className={`bg-muted/50 border-border h-8 text-xs ${
+                                  isReadonly ? "opacity-60 cursor-not-allowed text-slate-400" : ""
+                                }`}
                                 value={treatment.treatment_date}
+                                disabled={isReadonly}
                                 onChange={(e) =>
                                   updateTreatmentField(
                                     toothIdx,
@@ -454,12 +485,17 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                             </div>
                             <div className="flex items-end gap-2">
                               <div className="flex-1 space-y-1">
-                                <label className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                                <label className={`text-[10px] uppercase tracking-widest ${
+                                  isReadonly ? "text-purple-400/70" : "text-muted-foreground"
+                                }`}>
                                   Estado
                                 </label>
                                 <select
-                                  className="w-full h-8 rounded-md bg-muted/50 border border-border text-foreground text-xs px-2 outline-none"
+                                  className={`w-full h-8 rounded-md bg-muted/50 border border-border text-foreground text-xs px-2 outline-none ${
+                                    isReadonly ? "opacity-60 cursor-not-allowed text-slate-400" : ""
+                                  }`}
                                   value={treatment.procedure_status}
+                                  disabled={isReadonly}
                                   onChange={(e) =>
                                     updateTreatmentField(
                                       toothIdx,
@@ -476,14 +512,20 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                               </div>
                               <button
                                 type="button"
-                                onClick={() => removeTreatment(toothIdx, treatIdx)}
-                                className="text-muted-foreground hover:text-destructive transition-colors p-1.5 mb-0.5"
+                                onClick={() => !isReadonly && removeTreatment(toothIdx, treatIdx)}
+                                className={`transition-colors p-1.5 mb-0.5 ${
+                                  isReadonly 
+                                    ? "text-slate-600 cursor-not-allowed" 
+                                    : "text-muted-foreground hover:text-destructive"
+                                }`}
+                                disabled={isReadonly}
                               >
                                 <Trash2 size={14} />
                               </button>
                             </div>
                           </div>
-                        ))}
+                          );
+                        })}
                         <Button
                           type="button"
                           onClick={() => addTreatmentToTooth(toothIdx)}

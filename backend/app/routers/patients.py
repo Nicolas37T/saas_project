@@ -96,12 +96,18 @@ def get_medical_history_detail(
             mapped_treatments = []
             for t in treatments:
                 price = t.price
+                is_creator = t.created_by == current_user.id
+                is_readonly = False
+                
                 if role not in ['admin', 'recepcionista']:
-                    is_creator = t.created_by == current_user.id
                     owns_patient = patient.created_by == current_user.id or patient.assigned_doctor_id == current_user.id
                     if not is_creator and not (t.created_by is None and owns_patient):
                         price = 0
-                        
+                        is_readonly = True
+                    elif not is_creator:
+                        # Es creador pero no es el dueño original del paciente
+                        is_readonly = True
+
                 mapped_treatments.append({
                     "id": str(t.id),
                     "description": t.description,
@@ -109,6 +115,8 @@ def get_medical_history_detail(
                     "procedure_status": t.procedure_status,
                     "treatment_date": t.treatment_date,
                     "status": t.status,
+                    "is_readonly": is_readonly,
+                    "created_by": str(t.created_by) if t.created_by else None,
                 })
             
             odontogram_data.append({

@@ -111,6 +111,8 @@ export default function EditHistoryPatientPage() {
             ? new Date(t.treatment_date).toISOString().split("T")[0]
             : new Date().toISOString().split("T")[0],
           procedure_status: t.procedure_status || "pendiente",
+          is_readonly: t.is_readonly ?? false,
+          created_by: t.created_by,
         })),
       }))
     );
