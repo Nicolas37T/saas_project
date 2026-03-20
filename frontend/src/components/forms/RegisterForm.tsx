@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2 } from "lucide-react"
+import { Loader2, Eye, EyeOff } from "lucide-react"
 
 export default function RegisterForm() {
     const router = useRouter()
@@ -17,7 +17,7 @@ export default function RegisterForm() {
     const [loadingPlans, setLoadingPlans] = useState(true)
     const [subdomainError, setSubdomainError] = useState("")
     const [isSuccess, setIsSuccess] = useState(false)
-
+    const [showPassword, setShowPassword] = useState(false)
     const forbiddenSubdomains = ["api", "admin", "dashboard", "login", "register", "auth", "tenant", "public", "localhost", "www", "", null]
 
     useEffect(() => {
@@ -152,13 +152,8 @@ export default function RegisterForm() {
                             required
                         >
                             <option value="">Selecciona una opción</option>
-                            <option value="Tienda">Tienda / Retail</option>
-                            <option value="Clinica">Clínica / Salud</option>
                             <option value="Dentista">Odontología y Dentistas</option>
-                            <option value="Restaurante">Restaurante / Comidas</option>
-                            <option value="Farmacia">Farmacia</option>
-                            <option value="Servicios">Servicios Profesionales</option>
-                            <option value="Otro">Otro</option>
+                            
                         </select>
                     </div>
 
@@ -219,7 +214,24 @@ export default function RegisterForm() {
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="password">Contraseña</Label>
-                            <Input id="password" name="password" type="password" placeholder="••••••••" required />
+                            <div className="relative">
+                                <Input
+                                    id="password"
+                                    name="password"
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="••••••••"
+                                    required
+                                    className="pr-10"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                    tabIndex={-1}
+                                >
+                                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                </button>
+                            </div>
                         </div>
                     </div>
                     {error && <p className="text-sm text-red-500 font-medium bg-red-50 p-2 rounded">{error}</p>}

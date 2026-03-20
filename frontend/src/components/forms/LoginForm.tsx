@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, ShieldAlert, Users } from "lucide-react"
+import { Loader2, Building2, ShieldAlert, Users, Eye, EyeOff } from "lucide-react"
 import { API_BASE } from "@/lib/api"
 
 export default function LoginForm() {
@@ -16,6 +16,7 @@ export default function LoginForm() {
     const [loginType, setLoginType] = useState<"employee" | "admin">("employee")
     const [tenants, setTenants] = useState<{subdomain: string, name: string}[]>([])
     const [loadingTenants, setLoadingTenants] = useState(false)
+    const [showPassword, setShowPassword] = useState(false)
 
     useEffect(() => {
         async function fetchTenants() {
@@ -150,7 +151,24 @@ export default function LoginForm() {
                             <Label htmlFor="password">Contraseña</Label>
                             <a href="#" className="text-xs text-blue-600 dark:text-primary hover:underline">¿Olvidaste tu contraseña?</a>
                         </div>
-                        <Input id="password" name="password" type="password" placeholder="••••••••" required />
+                        <div className="relative">
+                            <Input
+                                id="password"
+                                name="password"
+                                type={showPassword ? "text" : "password"}
+                                placeholder="••••••••"
+                                required
+                                className="pr-10"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                tabIndex={-1}
+                            >
+                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                        </div>
                     </div>
                     {error && <p className="text-sm text-red-500 text-center font-medium bg-red-500/10 p-2 rounded">{error}</p>}
                 </CardContent>
