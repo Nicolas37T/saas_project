@@ -212,7 +212,7 @@ async def register_tenant(data: TenantCreate):
             new_sub = Subscription(
                 tenant_id=new_tenant.id,
                 plan_id=plan.id,
-                status="active",
+                status="suspended",
                 start_date=start_date,
                 end_date=end_date,
                 external_id=None

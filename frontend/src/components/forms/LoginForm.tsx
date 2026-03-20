@@ -6,14 +6,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, Building2, ShieldAlert, Users } from "lucide-react"
+import { Loader2, ShieldAlert, Users } from "lucide-react"
 import { API_BASE } from "@/lib/api"
 
 export default function LoginForm() {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
-    const [loginType, setLoginType] = useState<"tenant" | "employee" | "admin">("tenant")
+    const [loginType, setLoginType] = useState<"employee" | "admin">("employee")
     const [tenants, setTenants] = useState<{subdomain: string, name: string}[]>([])
     const [loadingTenants, setLoadingTenants] = useState(false)
 
@@ -74,12 +74,8 @@ export default function LoginForm() {
             } else if (result.role === "superadmin") {
                 if (loginType !== "admin") throw new Error("Debes usar la pestaña Plataforma")
                 router.push("/admin/dashboard")
-            } else if (result.role === "owner" || result.role === "admin") {
-                if (loginType !== "tenant") throw new Error("Debes usar la pestaña Mi Negocio")
-                localStorage.setItem("tenant_subdomain", result.subdomain)
-                router.push("/dashboard") 
             } else {
-                throw new Error("Rol no reconocido")
+                throw new Error("Rol no reconocido o acceso denegado.")
             }
         } catch (err: any) {
             setError(err.message || "Error al iniciar sesión.")
@@ -93,22 +89,12 @@ export default function LoginForm() {
             <CardHeader>
                 <CardTitle className="text-2xl text-center">Iniciar Sesión</CardTitle>
                 <CardDescription className="text-center text-muted-foreground">
-                    {loginType === "tenant" && "Ingresa a la consola de administración de tu negocio."}
                     {loginType === "employee" && "Accede como colaborador de una clínica."}
                     {loginType === "admin" && "Acceso exclusivo para administradores de la plataforma."}
                 </CardDescription>
             </CardHeader>
 
-            {/* Selector de tipo de login */}
             <div className="flex px-6 mb-4 gap-2">
-                <Button
-                    type="button"
-                    variant={loginType === "tenant" ? "default" : "outline"}
-                    className="flex-1 gap-1.5 text-xs h-8 px-2"
-                    onClick={() => { setLoginType("tenant"); setError(""); }}
-                >
-                    <Building2 size={13} /> Negocio
-                </Button>
                 <Button
                     type="button"
                     variant={loginType === "employee" ? "default" : "outline"}
