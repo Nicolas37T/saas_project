@@ -102,6 +102,7 @@ class Treatment(SQLModel, table=True):
 class MedicalHistory(SQLModel, table=True):
     __tablename__ = "medical_history"
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    history_number: Optional[int] = Field(default=None, index=True)
     conditions: Optional[str] = None
     allergies: Optional[str] = None
     medications: Optional[str] = None

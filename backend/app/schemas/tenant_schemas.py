@@ -103,8 +103,9 @@ class PatientRead(PatientBase):
     updated_at: datetime
     created_by: Optional[uuid.UUID] = None
     creator_name: Optional[str] = None
-    # No incluimos shared_with aquí para evitar recursión pesada,
-    # pero podemos agregar una lista simple de IDs si fuera necesario.
+    is_shared: bool = False
+    history_id: Optional[uuid.UUID] = None
+    history_number: Optional[int] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -181,6 +182,7 @@ class MedicalHistoryUpdate(BaseModel):
 
 class MedicalHistoryRead(MedicalHistoryBase):
     id: uuid.UUID
+    history_number: Optional[int] = None
     created_at: datetime
     updated_at: datetime
     created_by: Optional[uuid.UUID] = None

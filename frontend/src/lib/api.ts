@@ -199,6 +199,9 @@ export interface Patient {
   created_by?: string;
   creator_name?: string;
   assigned_doctor_id?: string;
+  is_shared?: boolean;
+  history_id?: string;
+  history_number?: number;
 }
 
 export interface Appointment {

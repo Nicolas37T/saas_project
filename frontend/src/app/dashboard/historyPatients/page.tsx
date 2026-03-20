@@ -92,6 +92,19 @@ export default function HistoryPatientsPage() {
     }
   }, [view]);
 
+  // Deep linking for History Details
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const historyId = urlParams.get("historyId");
+      if (historyId) {
+        handleShowDetail(historyId);
+        // Opcional: limpiar la URL para que no quede el query string
+        window.history.replaceState(null, "", window.location.pathname);
+      }
+    }
+  }, []); // Run only once on mount
+
   useEffect(() => {
     if (selectedPatientId && view === "form") {
       tenantApi
@@ -256,7 +269,8 @@ export default function HistoryPatientsPage() {
       (h.patient_name || "")
         .toLowerCase()
         .includes(searchHistory.toLowerCase()) ||
-      (h.description || "").toLowerCase().includes(searchHistory.toLowerCase()),
+      (h.description || "").toLowerCase().includes(searchHistory.toLowerCase()) ||
+      (h.history_number && String(h.history_number).includes(searchHistory.replace("#", ""))),
   );
 
   // --- RENDERING ---
@@ -333,6 +347,11 @@ export default function HistoryPatientsPage() {
                           </div>
                           <div>
                             <p className="font-semibold flex items-center gap-2">
+                              {h.history_number && (
+                                <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded font-mono">
+                                  #{h.history_number}
+                                </span>
+                              )}
                               {h.patient_name}
                               <Badge
                                 variant="outline"
@@ -536,8 +555,13 @@ export default function HistoryPatientsPage() {
                         <p className="text-primary font-bold text-xs uppercase tracking-[0.2em] mb-1">
                           Evolución Clínica
                         </p>
-                        <h3 className="text-2xl font-bold">
+                        <h3 className="text-2xl font-bold flex items-center gap-3">
                           Registro de Seguimiento
+                          {history.history_number && (
+                            <span className="text-base bg-primary/10 text-primary px-2 py-1 rounded font-mono">
+                              #{history.history_number}
+                            </span>
+                          )}
                         </h3>
                         <div className="flex items-center gap-6 mt-2">
                           <div className="flex items-center gap-2 text-muted-foreground text-sm">

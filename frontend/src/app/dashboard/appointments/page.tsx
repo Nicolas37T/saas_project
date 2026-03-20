@@ -9,12 +9,15 @@ import {
   FileText,
   Edit2,
   Trash2,
+  List,
 } from "lucide-react";
 import { tenantApi, Appointment, Patient, Employee } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { CustomModal, ConfirmModal, SuccessModal } from "@/components/ui/custom-modal";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import CalendarView from "@/components/CalendarView";
 
 export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -237,111 +240,146 @@ export default function AppointmentsPage() {
         <div className="flex justify-center p-12">
           <div className="animate-spin w-8 h-8 rounded-full border-2 border-primary border-t-transparent"></div>
         </div>
-      ) : appointments.length === 0 ? (
-        <Card className="bg-card border-border backdrop-blur-sm">
-          <CardContent className="flex flex-col items-center justify-center py-20">
-            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
-              <CalendarIcon className="text-muted-foreground" size={32} />
-            </div>
-            <h3 className="text-xl font-medium mb-2">
-              No tienes citas programadas
-            </h3>
-            <p className="text-muted-foreground">
-              Tu agenda está libre. Haz clic en &quot;Nueva Cita&quot; para empezar.
-            </p>
-          </CardContent>
-        </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Agrupar por días - Simplificado para el dashboard visual */}
-          {appointments.map((apt) => {
-            const d = new Date(apt.appointment_date);
-            return (
-              <Card
-                key={apt.id}
-                className="bg-card border-border backdrop-blur-sm hover:border-muted-foreground/50 hover:shadow-lg transition-all"
-              >
-                <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between border-b border-border/50">
-                  <div className="flex flex-col">
-                    <span className="font-bold text-lg">
-                      {d.toLocaleDateString([], {
-                        weekday: "short",
-                        day: "2-digit",
-                        month: "short",
-                      })}
-                    </span>
-                    <span className="text-primary font-semibold flex items-center gap-1">
-                      <Clock size={14} />{" "}
-                      {d.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <span
-                      className={`px-3 py-1 text-xs font-semibold rounded-full border uppercase tracking-wider ${getStatusStyle(apt.appointment_status)}`}
-                    >
-                      {statusLabels[apt.appointment_status.toLowerCase()] || apt.appointment_status}
-                    </span>
-                    <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 hover:bg-accent"
-                          onClick={(e) => { e.stopPropagation(); openEditModal(apt); }}
-                          title="Editar"
-                        >
-                            <Edit2 size={14} />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-destructive hover:bg-destructive/10"
-                          onClick={(e) => { e.stopPropagation(); confirmDeleteAction(apt.id); }}
-                          title="Eliminar"
-                        >
-                            <Trash2 size={14} />
-                        </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-4 pt-4">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
-                      <User size={18} />
-                    </div>
-                    <div className="truncate">
-                      <p className="text-sm font-medium text-muted-foreground mb-1">
-                        Paciente
-                      </p>
-                      <p className="font-semibold truncate leading-none">
-                        {getPatientName(apt.patient_id)}
-                      </p>
-                    </div>
-                  </div>
+        <Tabs defaultValue="list">
+          <TabsList className="mb-4">
+            <TabsTrigger value="list" className="gap-1.5">
+              <List size={15} /> Lista
+            </TabsTrigger>
+            <TabsTrigger value="calendar" className="gap-1.5">
+              <CalendarIcon size={15} /> Calendario
+            </TabsTrigger>
+          </TabsList>
 
-                  {apt.assigned_doctor_id && (
-                    <div className="flex items-center gap-2 mb-4 text-sm text-primary">
-                      <span>👨‍⚕️</span>
-                      <span className="font-medium">Dr. {getDoctorName(apt.assigned_doctor_id)}</span>
-                    </div>
-                  )}
-
-                  {apt.notes && (
-                    <div className="mt-4 p-3 rounded-lg bg-muted border border-border/50 text-sm flex items-start gap-2">
-                      <FileText
-                        size={16}
-                        className="text-muted-foreground mt-0.5 shrink-0"
-                      />
-                      <p className="line-clamp-2">{apt.notes}</p>
-                    </div>
-                  )}
+          <TabsContent value="list">
+            {appointments.length === 0 ? (
+              <Card className="bg-card border-border backdrop-blur-sm">
+                <CardContent className="flex flex-col items-center justify-center py-20">
+                  <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                    <CalendarIcon className="text-muted-foreground" size={32} />
+                  </div>
+                  <h3 className="text-xl font-medium mb-2">
+                    No tienes citas programadas
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Tu agenda está libre. Haz clic en &quot;Nueva Cita&quot; para empezar.
+                  </p>
                 </CardContent>
               </Card>
-            );
-          })}
-        </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {appointments.map((apt) => {
+                  const d = new Date(apt.appointment_date);
+                  return (
+                    <Card
+                      key={apt.id}
+                      className="bg-card border-border backdrop-blur-sm hover:border-muted-foreground/50 hover:shadow-lg transition-all"
+                    >
+                      <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between border-b border-border/50">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-lg">
+                            {d.toLocaleDateString([], {
+                              weekday: "short",
+                              day: "2-digit",
+                              month: "short",
+                            })}
+                          </span>
+                          <span className="text-primary font-semibold flex items-center gap-1">
+                            <Clock size={14} />{" "}
+                            {d.toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <span
+                            className={`px-3 py-1 text-xs font-semibold rounded-full border uppercase tracking-wider ${getStatusStyle(apt.appointment_status)}`}
+                          >
+                            {statusLabels[apt.appointment_status.toLowerCase()] || apt.appointment_status}
+                          </span>
+                          <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 hover:bg-accent"
+                                onClick={(e) => { e.stopPropagation(); openEditModal(apt); }}
+                                title="Editar"
+                              >
+                                  <Edit2 size={14} />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                                onClick={(e) => { e.stopPropagation(); confirmDeleteAction(apt.id); }}
+                                title="Eliminar"
+                              >
+                                  <Trash2 size={14} />
+                              </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-4 pt-4">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+                            <User size={18} />
+                          </div>
+                          <div className="truncate">
+                            <p className="text-sm font-medium text-muted-foreground mb-1">
+                              Paciente
+                            </p>
+                            <p className="font-semibold truncate leading-none">
+                              {getPatientName(apt.patient_id)}
+                            </p>
+                          </div>
+                        </div>
+
+                        {apt.assigned_doctor_id && (
+                          <div className="flex items-center gap-2 mb-4 text-sm text-primary">
+                            <span>👨‍⚕️</span>
+                            <span className="font-medium">Dr. {getDoctorName(apt.assigned_doctor_id)}</span>
+                          </div>
+                        )}
+
+                        {apt.notes && (
+                          <div className="mt-4 p-3 rounded-lg bg-muted border border-border/50 text-sm flex items-start gap-2">
+                            <FileText
+                              size={16}
+                              className="text-muted-foreground mt-0.5 shrink-0"
+                            />
+                            <p className="line-clamp-2">{apt.notes}</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="calendar">
+            <CalendarView
+              appointments={appointments}
+              patients={patients}
+              employees={employees}
+              onEdit={openEditModal}
+              onDelete={confirmDeleteAction}
+              onCreateFromDate={(dateStr) => {
+                setNewAppointment((prev) => ({
+                  ...prev,
+                  appointment_date: dateStr,
+                }));
+                setIsAddModalOpen(true);
+              }}
+              getPatientName={getPatientName}
+              getDoctorName={getDoctorName}
+              getStatusStyle={getStatusStyle}
+              statusLabels={statusLabels}
+            />
+          </TabsContent>
+        </Tabs>
       )}
       {/* Add Appointment Modal */}
       <CustomModal
