@@ -402,27 +402,27 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                               key={treatIdx}
                               className={`grid grid-cols-1 sm:grid-cols-4 gap-2 p-3 rounded-lg border items-end relative ${
                                 isReadonly
-                                  ? "bg-slate-800/30 border-purple-500/30"
+                                  ? "bg-purple-500/10 border-purple-500/30"
                                   : "bg-muted/50 border-border/50"
                               }`}
                             >
                               {isReadonly && (
                                 <div className="col-span-full flex justify-end mb-[-8px]">
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 text-[9px] font-semibold uppercase tracking-wider border border-purple-500/30">
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-600 dark:text-purple-400 text-[9px] font-semibold uppercase tracking-wider border border-purple-500/30">
                                     Compartido
                                   </span>
                                 </div>
                               )}
                               <div className="space-y-1">
                                 <label className={`text-[10px] uppercase tracking-widest ${
-                                  isReadonly ? "text-purple-400/70" : "text-muted-foreground"
+                                  isReadonly ? "text-purple-600/80 dark:text-purple-400/70" : "text-muted-foreground"
                                 }`}>
                                   Procedimiento
                                 </label>
                                 <Input
                                   placeholder="Ej: Endodoncia"
                                   className={`bg-muted/50 border-border h-8 text-xs ${
-                                    isReadonly ? "opacity-60 cursor-not-allowed text-slate-400" : ""
+                                    isReadonly ? "opacity-60 cursor-not-allowed text-muted-foreground" : ""
                                   }`}
                                   value={treatment.description}
                                   disabled={isReadonly}
@@ -438,7 +438,7 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                               </div>
                             <div className="space-y-1">
                               <label className={`text-[10px] uppercase tracking-widest ${
-                                isReadonly ? "text-purple-400/70" : "text-muted-foreground"
+                                isReadonly ? "text-purple-600/80 dark:text-purple-400/70" : "text-muted-foreground"
                               }`}>
                                 Precio (Bs)
                               </label>
@@ -446,7 +446,7 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                                 type="number"
                                 placeholder="0"
                                 className={`bg-muted/50 border-border h-8 text-xs ${
-                                  isReadonly ? "opacity-60 cursor-not-allowed text-slate-400" : "text-amber-500 font-bold"
+                                  isReadonly ? "opacity-60 cursor-not-allowed text-muted-foreground" : "text-amber-500 font-bold"
                                 }`}
                                 value={treatment.price || ""}
                                 disabled={isReadonly}
@@ -462,14 +462,14 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                             </div>
                             <div className="space-y-1">
                               <label className={`text-[10px] uppercase tracking-widest ${
-                                isReadonly ? "text-purple-400/70" : "text-muted-foreground"
+                                isReadonly ? "text-purple-600/80 dark:text-purple-400/70" : "text-muted-foreground"
                               }`}>
                                 Fecha
                               </label>
                               <Input
                                 type="date"
                                 className={`bg-muted/50 border-border h-8 text-xs ${
-                                  isReadonly ? "opacity-60 cursor-not-allowed text-slate-400" : ""
+                                  isReadonly ? "opacity-60 cursor-not-allowed text-muted-foreground" : ""
                                 }`}
                                 value={treatment.treatment_date}
                                 disabled={isReadonly}
@@ -486,13 +486,13 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                             <div className="flex items-end gap-2">
                               <div className="flex-1 space-y-1">
                                 <label className={`text-[10px] uppercase tracking-widest ${
-                                  isReadonly ? "text-purple-400/70" : "text-muted-foreground"
+                                  isReadonly ? "text-purple-600/80 dark:text-purple-400/70" : "text-muted-foreground"
                                 }`}>
                                   Estado
                                 </label>
                                 <select
                                   className={`w-full h-8 rounded-md bg-muted/50 border border-border text-foreground text-xs px-2 outline-none ${
-                                    isReadonly ? "opacity-60 cursor-not-allowed text-slate-400" : ""
+                                    isReadonly ? "opacity-60 cursor-not-allowed text-muted-foreground" : ""
                                   }`}
                                   value={treatment.procedure_status}
                                   disabled={isReadonly}
@@ -514,8 +514,8 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                                 type="button"
                                 onClick={() => !isReadonly && removeTreatment(toothIdx, treatIdx)}
                                 className={`transition-colors p-1.5 mb-0.5 ${
-                                  isReadonly 
-                                    ? "text-slate-600 cursor-not-allowed" 
+                                  isReadonly
+                                    ? "text-muted cursor-not-allowed"
                                     : "text-muted-foreground hover:text-destructive"
                                 }`}
                                 disabled={isReadonly}
