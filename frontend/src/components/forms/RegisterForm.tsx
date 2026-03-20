@@ -16,8 +16,8 @@ export default function RegisterForm() {
     const [plans, setPlans] = useState<Plan[]>([])
     const [loadingPlans, setLoadingPlans] = useState(true)
     const [subdomainError, setSubdomainError] = useState("")
+    const [isSuccess, setIsSuccess] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
-
     const forbiddenSubdomains = ["api", "admin", "dashboard", "login", "register", "auth", "tenant", "public", "localhost", "www", "", null]
 
     useEffect(() => {
@@ -95,12 +95,38 @@ export default function RegisterForm() {
             }
 
             console.log("Registro exitoso:", result)
-            router.push("/login")
+            setIsSuccess(true)
+            // Ya no redirigimos inmediatamente para que vea el mensaje
         } catch (err: any) {
             setError(err.message || "Ocurrió un error al registrar el negocio.")
         } finally {
             setLoading(false)
         }
+    }
+
+    if (isSuccess) {
+        return (
+            <Card className="w-full max-w-lg mx-auto shadow-lg border-t-4 border-t-green-600">
+                <CardHeader>
+                    <CardTitle className="text-2xl text-center text-green-700">¡Registro Exitoso!</CardTitle>
+                    <CardDescription className="text-center font-medium">
+                        Tu solicitud ha sido recibida correctamente.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 text-center">
+                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm">
+                        <p className="font-bold mb-2">Cuenta en Proceso de Activación</p>
+                        <p>Para garantizar la seguridad de nuestra plataforma, todas las nuevas cuentas deben ser revisadas y activadas manualmente por nuestro equipo administrativo.</p>
+                        <p className="mt-2 text-xs">Recibirás un correo cuando tu acceso esté habilitado.</p>
+                    </div>
+                </CardContent>
+                <CardFooter>
+                    <Button onClick={() => router.push("/login")} className="w-full bg-blue-600 hover:bg-blue-700">
+                        Ir al Inicio
+                    </Button>
+                </CardFooter>
+            </Card>
+        )
     }
 
     return (

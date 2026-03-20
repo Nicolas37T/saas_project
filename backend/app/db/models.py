@@ -47,7 +47,7 @@ class Tenant(SQLModel, table=True):
     subdomain: str = Field(unique=True, index=True)
     custom_domain: Optional[str] = Field(default=None, unique=True)
     domain: Optional[str] = Field(default=None)
-    status: str = Field(default="active")   # "active", "suspended", "past_due"
+    status: str = Field(default="suspended")   # "active", "suspended", "past_due"
     strategy: str = Field(default="schema") # "schema" | "database"
     db_name: str
     db_host: str = Field(default="localhost")
