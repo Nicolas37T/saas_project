@@ -24,12 +24,97 @@ def list_tenants(current_user: UserGlobal = Depends(get_current_superadmin)):
                 "db_name": t.db_name,
                 "plan": {
                     "id": str(t.plan.id),
-                    "name": t.plan.name
+                    "name": t.plan.name,
+                    "price": t.plan.price,
+                    "billing_cycle": t.plan.billing_cycle
                 } if t.plan else None,
                 "created_at": t.created_at.isoformat() if t.created_at else None,
             }
             for t in tenants
         ]
+
+
+@router.get("/tenants/{tenant_id}")
+def get_tenant(tenant_id: str, current_user: UserGlobal = Depends(get_current_superadmin)):
+    """Obtener los detalles de un único tenant."""
+    with Session(engine) as session:
+        try:
+            tenant_uuid = uuid.UUID(tenant_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="ID de tenant inválido")
+            
+        t = session.exec(select(Tenant).where(Tenant.id == tenant_uuid)).first()
+        if not t:
+            raise HTTPException(status_code=404, detail="Tenant no encontrado")
+            
+        return {
+            "id": str(t.id),
+            "business_name": t.business_name,
+            "subdomain": t.subdomain,
+            "status": t.status,
+            "db_name": t.db_name,
+            "plan": {
+                "id": str(t.plan.id),
+                "name": t.plan.name,
+                "price": t.plan.price,
+                "billing_cycle": t.plan.billing_cycle
+            } if t.plan else None,
+            "created_at": t.created_at.isoformat() if t.created_at else None,
+        }
+
+
+@router.patch("/tenants/{tenant_id}/status")
+def update_tenant_status(tenant_id: str, data: dict, current_user: UserGlobal = Depends(get_current_superadmin)):
+    """Permite suspender o activar un tenant manualmente."""
+    with Session(engine) as session:
+        try:
+            tenant_uuid = uuid.UUID(tenant_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="ID de tenant inválido")
+            
+        t = session.exec(select(Tenant).where(Tenant.id == tenant_uuid)).first()
+        if not t:
+            raise HTTPException(status_code=404, detail="Tenant no encontrado")
+            
+        new_status = data.get("status")
+        if new_status not in ["active", "suspended"]:
+            raise HTTPException(status_code=400, detail="Especifique un estado válido (active/suspended)")
+            
+        t.status = new_status
+        session.add(t)
+        session.commit()
+        session.refresh(t)
+        
+        return {
+            "id": str(t.id),
+            "business_name": t.business_name,
+            "subdomain": t.subdomain,
+            "status": t.status,
+            "plan": {
+                "id": str(t.plan.id),
+                "name": t.plan.name,
+                "price": t.plan.price,
+                "billing_cycle": t.plan.billing_cycle
+            } if t.plan else None,
+        }
+
+
+@router.delete("/tenants/{tenant_id}")
+def delete_tenant(tenant_id: str, current_user: UserGlobal = Depends(get_current_superadmin)):
+    """Elimina permanentemente un tenant (CUIDADO: no elimina su BD de momento)."""
+    with Session(engine) as session:
+        try:
+            tenant_uuid = uuid.UUID(tenant_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="ID de tenant inválido")
+            
+        t = session.exec(select(Tenant).where(Tenant.id == tenant_uuid)).first()
+        if not t:
+            raise HTTPException(status_code=404, detail="Tenant no encontrado")
+            
+        session.delete(t)
+        session.commit()
+        return {"message": f"Tenant {tenant_id} eliminado exitosamente"}
 
 
 @router.get("/users")

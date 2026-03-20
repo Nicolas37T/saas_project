@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function LandingPage() {
   const plans = [
@@ -24,15 +25,15 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50">
+    <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-background">
       {/* Header */}
-      <header className="px-4 lg:px-6 h-16 flex items-center bg-white border-b sticky top-0 z-50">
+      <header className="px-4 lg:px-6 h-16 flex items-center bg-white border-b sticky top-0 z-50 dark:bg-slate-950 dark:border-slate-800">
         <Link href="/" className="flex items-center justify-center">
           <span className="font-bold text-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent bg-clip-text">
             SaaSManager
           </span>
         </Link>
-        <nav className="ml-auto flex gap-4 sm:gap-6">
+        <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
           <Link href="#features" className="text-sm font-medium hover:underline underline-offset-4">
             Características
           </Link>
@@ -42,17 +43,18 @@ export default function LandingPage() {
           <Link href="/login" className="text-sm font-medium hover:underline underline-offset-4">
             Iniciar sesión
           </Link>
+          <ThemeToggle />
         </nav>
       </header>
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-white">
+        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-white dark:bg-background">
           <div className="container px-4 md:px-6 mx-auto">
             <div className="flex flex-col items-center space-y-4 text-center">
               <div className="space-y-2">
                 <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
-                  Gestiona tu negocio como un <span className="text-blue-600">profesional</span>
+                  Gestiona tu negocio como un <span className="text-blue-600 dark:text-blue-400">profesional</span>
                 </h1>
                 <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
                   La plataforma más sencilla y potente para pequeños negocios. Facturación, inventario y más bajo tu propio subdominio.
@@ -60,7 +62,7 @@ export default function LandingPage() {
               </div>
               <div className="space-x-4">
                 <Link href="/register">
-                  <Button size="lg" className="bg-blue-600 hover:bg-blue-700">Comenzar Gratis</Button>
+                  <Button size="lg" className="bg-blue-600 hover:bg-blue-700 dark:bg-primary dark:hover:bg-primary/90">Comenzar Gratis</Button>
                 </Link>
                 <Link href="#features">
                   <Button variant="outline" size="lg">Saber más</Button>
@@ -71,12 +73,12 @@ export default function LandingPage() {
         </section>
 
         {/* Pricing Section */}
-        <section id="pricing" className="w-full py-12 md:py-24 lg:py-32">
+        <section id="pricing" className="w-full py-12 md:py-24 lg:py-32 dark:bg-background">
           <div className="container px-4 md:px-6 mx-auto text-center">
             <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl mb-12">Planes que crecen contigo</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
               {plans.map((plan) => (
-                <Card key={plan.name} className={`relative flex flex-col ${plan.popular ? 'border-blue-500 shadow-xl scale-105' : ''}`}>
+                <Card key={plan.name} className={`relative flex flex-col ${plan.popular ? 'border-blue-500 shadow-xl scale-105' : ''} dark:bg-card dark:border-border`}>
                   {plan.popular && (
                     <Badge className="absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2 bg-blue-600">
                       Más Popular
@@ -86,7 +88,7 @@ export default function LandingPage() {
                     <CardTitle className="text-2xl">{plan.name}</CardTitle>
                     <div className="mt-4 flex items-baseline justify-center">
                       <span className="text-4xl font-bold">{plan.price}</span>
-                      <span className="ml-1 text-gray-500">{plan.cycle}</span>
+                      <span className="ml-1 text-gray-500 dark:text-gray-400">{plan.cycle}</span>
                     </div>
                   </CardHeader>
                   <CardContent className="flex-1">
@@ -109,7 +111,7 @@ export default function LandingPage() {
                   </CardContent>
                   <CardFooter>
                     <Link href="/register" className="w-full">
-                      <Button className={`w-full ${plan.popular ? 'bg-blue-600 hover:bg-blue-700' : ''}`} variant={plan.popular ? 'default' : 'outline'}>
+                      <Button className={`w-full ${plan.popular ? 'bg-blue-600 hover:bg-blue-700 dark:bg-primary dark:hover:bg-primary/90' : ''}`} variant={plan.popular ? 'default' : 'outline'}>
                         {plan.cta}
                       </Button>
                     </Link>
@@ -122,14 +124,14 @@ export default function LandingPage() {
       </main>
 
       {/* Footer */}
-      <footer className="w-full py-6 bg-white border-t">
+      <footer className="w-full py-6 bg-white border-t dark:bg-background dark:border-border">
         <div className="container px-4 md:px-6 mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-gray-500">© 2024 SaaSManager Inc. Todos los derechos reservados.</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">© 2024 SaaSManager Inc. Todos los derechos reservados.</p>
           <nav className="flex gap-4 sm:gap-6">
-            <Link href="#" className="text-xs text-gray-500 hover:underline underline-offset-4">
+            <Link href="#" className="text-xs text-gray-500 dark:text-gray-400 hover:underline underline-offset-4">
               Términos de servicio
             </Link>
-            <Link href="#" className="text-xs text-gray-500 hover:underline underline-offset-4">
+            <Link href="#" className="text-xs text-gray-500 dark:text-gray-400 hover:underline underline-offset-4">
               Privacidad
             </Link>
           </nav>

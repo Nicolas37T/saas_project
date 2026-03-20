@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+sqlmodel
+psycopg2-binary
+pydantic-settings
+python-multipart
+python-dateutil
+python-jose[cryptography]
+passlib[pbkdf2]
+email-validator

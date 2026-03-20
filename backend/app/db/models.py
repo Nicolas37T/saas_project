@@ -30,6 +30,7 @@ class Plan(SQLModel, table=True):
     price: float
     billing_cycle: str          # "monthly" | "yearly"
     max_users: int
+    strategy: str = Field(default="schema") # "schema" | "database"
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     tenants: List["Tenant"] = Relationship(back_populates="plan")
@@ -47,6 +48,7 @@ class Tenant(SQLModel, table=True):
     custom_domain: Optional[str] = Field(default=None, unique=True)
     domain: Optional[str] = Field(default=None)
     status: str = Field(default="active")   # "active", "suspended", "past_due"
+    strategy: str = Field(default="schema") # "schema" | "database"
     db_name: str
     db_host: str = Field(default="localhost")
     created_at: datetime = Field(default_factory=datetime.utcnow)

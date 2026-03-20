@@ -1,0 +1,11 @@
+{
+    "version": 2,
+    "framework": "nextjs",
+    "regions": [
+        "gru1"
+    ],
+    "cleanUrls": true,
+    "github": {
+        "silent": true
+    }
+}
