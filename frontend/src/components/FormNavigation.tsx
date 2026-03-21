@@ -22,12 +22,17 @@ export const FormNavigation: React.FC<FormNavigationProps> = ({
   nextLabel = "Siguiente Paso",
   finishLabel = "GUARDAR CAMBIOS",
 }) => {
+  const buttonBaseClass = "h-12 px-8 font-bold transition-all shadow-xl min-w-[160px]";
+  const previousButtonClass = "bg-red-600 hover:bg-red-700 text-white hover:shadow-red-500/25";
+  const nextButtonClass = "bg-blue-600 hover:bg-blue-700 text-white hover:shadow-blue-500/25";
+  const finishButtonClass = "bg-emerald-600 hover:bg-emerald-700 text-white hover:shadow-emerald-500/25";
+
   return (
     <div className="flex justify-between items-center pt-10 border-t border-slate-800 max-w-5xl mx-auto w-full mt-10">
       <Button
         type="button"
         variant="ghost"
-        className="text-white hover:text-white hover:bg-red-800 px-6 bg-red-600"
+        className={`${buttonBaseClass} ${previousButtonClass}`}
         onClick={(e) => {
           e.preventDefault();
           if (currentStep > 1) setCurrentStep(currentStep - 1);
@@ -47,7 +52,7 @@ export const FormNavigation: React.FC<FormNavigationProps> = ({
               setCurrentStep(currentStep + 1);
             }}
             disabled={!canGoNext}
-            className="bg-blue-600 hover:bg-blue-700 text-white hover:shadow-blue-500/25 shadow-xl px-10 h-12 font-bold transition-all"
+            className={`${buttonBaseClass} ${nextButtonClass} disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {nextLabel}
             <ChevronRight size={18} className="ml-2" />
@@ -56,7 +61,7 @@ export const FormNavigation: React.FC<FormNavigationProps> = ({
           <Button
             type="submit"
             disabled={submitting || !canGoNext}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white hover:shadow-emerald-500/25 shadow-xl px-12 h-14 text-lg font-black transition-all group"
+            className={`${buttonBaseClass} ${finishButtonClass} disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {submitting ? (
               "Guardando..."
@@ -70,20 +75,8 @@ export const FormNavigation: React.FC<FormNavigationProps> = ({
               </div>
             )}
           </Button>
-          
+
         )}
-        <Button
-            type="button"
-            variant="ghost"
-            className="text-white hover:text-white hover:bg-red-800 px-6 bg-red-600"
-            onClick={(e) => {
-              e.preventDefault();
-              if (currentStep > 1) setCurrentStep(currentStep - 1);
-              else onCancel();
-            }}
-          >
-            {currentStep === 1 ? "Cancelar" : "Anterior"}
-          </Button>
       </div>
     </div>
   );

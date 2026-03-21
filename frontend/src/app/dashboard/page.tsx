@@ -24,7 +24,7 @@ export default function TenantDashboard() {
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mb-12 max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider mb-6 border border-primary/20 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-semibold uppercase tracking-wider mb-6 border border-primary/20 shadow-[0_0_15px_rgba(59,130,246,0.1)] ">
           <Activity size={14} className="animate-pulse" /> Sistema en Línea
         </div>
         <h1 className="text-4xl sm:text-5xl tracking-tight font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-foreground to-muted-foreground">

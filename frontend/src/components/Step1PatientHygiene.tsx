@@ -213,7 +213,7 @@ export const Step1PatientHygiene: React.FC<Step1Props> = ({
                       uses_toothbrush: !formData.uses_toothbrush,
                     })
                   }
-                  className={`flex flex-col items-center justify-center p-3 rounded-xl border cursor-pointer transition-all ${formData.uses_toothbrush ? "bg-primary/20 border-primary text-foreground shadow-inner" : "bg-muted/40 border-border text-muted-foreground"}`}
+                  className={`flex flex-col items-center justify-center p-3 rounded-xl border cursor-pointer transition-all ${formData.uses_toothbrush ? "bg-green-500/20 border-green-500 text-foreground shadow-inner" : "bg-muted/40 border-border text-muted-foreground"}`}
                 >
                   <span className="text-[10px] font-bold uppercase mb-1 text-center">
                     ¿Usa Cepillo?
@@ -229,7 +229,7 @@ export const Step1PatientHygiene: React.FC<Step1Props> = ({
                       uses_dentifrice: !formData.uses_dentifrice,
                     })
                   }
-                  className={`flex flex-col items-center justify-center p-3 rounded-xl border cursor-pointer transition-all ${formData.uses_dentifrice ? "bg-primary/20 border-primary text-foreground shadow-inner" : "bg-muted/40 border-border text-muted-foreground"}`}
+                  className={`flex flex-col items-center justify-center p-3 rounded-xl border cursor-pointer transition-all ${formData.uses_dentifrice ? "bg-green-500/20 border-green-500 text-foreground shadow-inner" : "bg-muted/40 border-border text-muted-foreground"}`}
                 >
                   <span className="text-[10px] font-bold uppercase mb-1 text-center">
                     ¿Dentífrico?

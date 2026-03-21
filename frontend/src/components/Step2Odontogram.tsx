@@ -173,13 +173,13 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
             {/* Row 1: Tooth fields */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">
+                <label className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold ">
                   N° Diente
                 </label>
                 <Input
                   type="number"
                   placeholder="1-32"
-                  className="bg-muted/50 border-border focus:border-primary"
+                  className="bg-muted/50 border-gray-500 dark:border-white/50 focus:border-primary"
                   value={newTooth.tooth_number || ""}
                   onChange={(e) =>
                     setNewTooth({
@@ -194,7 +194,7 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                   Tipo de Pieza
                 </label>
                 <select
-                  className="w-full h-10 rounded-md bg-muted/50 border border-border text-foreground text-sm px-3 appearance-none focus:ring-1 focus:ring-primary outline-none"
+                  className="w-full h-10 rounded-md bg-muted/50 border border-border text-foreground text-sm px-3 appearance-none focus:ring-1 focus:ring-primary outline-none border-gray-500 dark:border-white/50"
                   value={newTooth.tooth_type}
                   onChange={(e) =>
                     setNewTooth({ ...newTooth, tooth_type: e.target.value })
@@ -210,7 +210,7 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                 </label>
                 <Input
                   placeholder="Notas del diente..."
-                  className="bg-muted/50 border-border focus:border-primary"
+                  className="bg-muted/50 border-gray-500 dark:border-white/50 focus:border-primary"
                   value={newTooth.notes}
                   onChange={(e) =>
                     setNewTooth({ ...newTooth, notes: e.target.value })
@@ -237,7 +237,7 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                 </label>
                 <Input
                   placeholder="Ej: Endodoncia, Limpieza..."
-                  className="bg-muted/50 border-border focus:border-purple-500"
+                  className="bg-muted/50 border-gray-500 dark:border-white/50 focus:border-purple-500"
                   value={newTooth.first_treatment_description}
                   onChange={(e) =>
                     setNewTooth({
@@ -254,7 +254,7 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                 <Input
                   type="number"
                   placeholder="0"
-                  className="bg-muted/50 border-border text-amber-500 font-bold focus:border-amber-500"
+                  className="bg-muted/50 border-gray-500 dark:border-white/50 text-amber-500 font-bold focus:border-amber-500"
                   value={newTooth.first_treatment_price || ""}
                   onChange={(e) =>
                     setNewTooth({
@@ -270,7 +270,7 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                 </label>
                 <Input
                   type="date"
-                  className="bg-muted/50 border-border focus:border-primary"
+                  className="bg-muted/50 border-gray-500 dark:border-white/50 focus:border-primary"
                   value={newTooth.first_treatment_date}
                   onChange={(e) =>
                     setNewTooth({
@@ -285,7 +285,7 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                   Estado
                 </label>
                 <select
-                  className="w-full h-10 rounded-md bg-muted/50 border border-border text-foreground text-sm px-3 appearance-none focus:ring-1 focus:ring-purple-500 outline-none"
+                  className="w-full h-10 rounded-md bg-muted/50 border border-gray-500 dark:border-white/50 text-foreground text-sm px-3 appearance-none focus:ring-1 focus:ring-purple-500 outline-none"
                   value={newTooth.first_treatment_status}
                   onChange={(e) =>
                     setNewTooth({
@@ -352,9 +352,9 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                           </p>
                           <div className="flex items-center gap-3 mt-0.5">
                             {tooth.notes && (
-                              <p className="text-muted-foreground text-[11px]">{tooth.notes}</p>
+                              <p className="text-muted-foreground text-[12px]">{tooth.notes}</p>
                             )}
-                            <span className="text-purple-500/70 text-[10px] font-semibold">
+                            <span className="text-purple-500/70 text-[12px] font-semibold">
                               {tooth.treatments.length} tratamiento(s)
                             </span>
                           </div>
@@ -421,7 +421,7 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                                 </label>
                                 <Input
                                   placeholder="Ej: Endodoncia"
-                                  className={`bg-muted/50 border-border h-8 text-xs ${
+                                  className={`bg-muted/50 border-gray-500 dark:border-gray-500/50 h-8 text-xs ${
                                     isReadonly ? "opacity-60 cursor-not-allowed text-muted-foreground" : ""
                                   }`}
                                   value={treatment.description}
@@ -445,7 +445,7 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                               <Input
                                 type="number"
                                 placeholder="0"
-                                className={`bg-muted/50 border-border h-8 text-xs ${
+                                className={`bg-muted/50 border-gray-500 dark:border-gray-500/50 h-8 text-xs ${
                                   isReadonly ? "opacity-60 cursor-not-allowed text-muted-foreground" : "text-amber-500 font-bold"
                                 }`}
                                 value={treatment.price || ""}
@@ -468,7 +468,7 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                               </label>
                               <Input
                                 type="date"
-                                className={`bg-muted/50 border-border h-8 text-xs ${
+                                className={`bg-muted/50 border-gray-500 dark:border-gray-500/50 h-8 text-xs ${
                                   isReadonly ? "opacity-60 cursor-not-allowed text-muted-foreground" : ""
                                 }`}
                                 value={treatment.treatment_date}
@@ -491,7 +491,7 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                                   Estado
                                 </label>
                                 <select
-                                  className={`w-full h-8 rounded-md bg-muted/50 border border-border text-foreground text-xs px-2 outline-none ${
+                                  className={`w-full h-8 rounded-md bg-muted/50 border border-gray-500 dark:border-gray-500/50 text-foreground text-xs px-2 outline-none ${
                                     isReadonly ? "opacity-60 cursor-not-allowed text-muted-foreground" : ""
                                   }`}
                                   value={treatment.procedure_status}
