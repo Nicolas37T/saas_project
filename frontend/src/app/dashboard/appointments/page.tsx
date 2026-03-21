@@ -118,7 +118,11 @@ export default function AppointmentsPage() {
 
   const openEditModal = (apt: Appointment) => {
     const d = new Date(apt.appointment_date);
-    const dateStr = d.toISOString().split("T")[0]; // YYYY-MM-DD
+    // Use local date formatting to avoid timezone issues
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const dateStr = `${year}-${month}-${day}`; // YYYY-MM-DD in local timezone
     const timeStr = d.toTimeString().substring(0, 5); // HH:MM
     setEditingAppointment({
       ...apt,

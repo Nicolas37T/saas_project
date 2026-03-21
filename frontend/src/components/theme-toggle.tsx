@@ -22,6 +22,7 @@ export function ThemeToggle() {
   }
 
   return (
+    <>
     <Button
       variant="outline"
       size="icon"
@@ -31,5 +32,7 @@ export function ThemeToggle() {
       <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
       <span className="sr-only">Toggle theme</span>
     </Button>
+    <p className="text-xs font-bold text-muted-foreground">{theme}</p>
+    </>
   )
 }

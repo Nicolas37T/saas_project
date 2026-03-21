@@ -192,7 +192,7 @@ export default function PaymentsPage() {
           <CardContent className="p-6">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-green-400 font-medium text-sm mb-1">
+                <p className="text-green-900 dark:text-green-400 font-medium text-sm mb-1">
                   Ingresos Totales (Cobrado)
                 </p>
                 <h3 className="text-3xl font-bold tracking-tight">
@@ -210,7 +210,7 @@ export default function PaymentsPage() {
           <CardContent className="p-6">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-orange-400 font-medium text-sm mb-1">
+                <p className="text-orange-900 dark:text-orange-400 font-medium text-sm mb-1">
                   Cuentas por Cobrar (Deuda)
                 </p>
                 <h3 className="text-3xl font-bold tracking-tight">
@@ -221,7 +221,7 @@ export default function PaymentsPage() {
                 <Wallet size={20} />
               </div>
             </div>
-            <div className="mt-4 flex items-center text-sm text-orange-400/80">
+            <div className="mt-4 flex items-center text-sm text-orange-900 dark:text-orange-400/80">
               <ArrowUpRight size={14} className="mr-1" />
               <span>{debtors.length} pacientes con deudas</span>
             </div>

@@ -483,7 +483,7 @@ export default function HistoryPatientsPage() {
                             <span className="text-md text-muted-foreground">
                               Medicaciones:
                             </span>
-                            <p className="text-sm text-slate-300 font-medium">
+                            <p className="text-sm font-medium">
                               {history.medications || "Ninguna"}
                             </p>
                           </div>
@@ -502,12 +502,12 @@ export default function HistoryPatientsPage() {
                     <CardContent className="space-y-3">
                       <div className="grid grid-cols-2 gap-2">
                         <div
-                          className={`p-2 rounded border ${history.uses_toothbrush ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-destructive/5 border-destructive/20 text-destructive"} text-xs font-semibold text-center`}
+                          className={`p-2 rounded border ${history.uses_toothbrush ? "bg-green-500/10 border-green-500/20 text-green-800 dark:text-green-400" : "bg-destructive/5 border-destructive/20 text-destructive"} text-xs font-semibold text-center`}
                         >
                           Usa Cepillo: {history.uses_toothbrush ? "SÍ" : "NO"}
                         </div>
                         <div
-                          className={`p-2 rounded border ${history.uses_dentifrice ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-destructive/5 border-destructive/20 text-destructive"} text-xs font-semibold text-center`}
+                          className={`p-2 rounded border ${history.uses_dentifrice ? "bg-green-500/10 border-green-500/20 text-green-800 dark:text-green-400" : "bg-destructive/5 border-destructive/20 text-destructive"} text-xs font-semibold text-center`}
                         >
                           Usa Dentífrico:{" "}
                           {history.uses_dentifrice ? "SÍ" : "NO"}
@@ -533,7 +533,7 @@ export default function HistoryPatientsPage() {
                         </p>
                       </div>
                       <div
-                        className={`p-3 rounded border text-center font-bold text-sm ${history.uses_floss ? "bg-primary/10 border-primary/30 text-primary" : "bg-muted/50 border-border text-muted-foreground"}`}
+                        className={`p-3 rounded border text-center font-bold text-sm ${history.uses_floss ? "bg-green-500/10 border-green-500/20 text-green-800 dark:text-green-400" : "bg-muted/50 border-border text-muted-foreground"}`}
                       >
                         {history.uses_floss
                           ? "✓ USA HILO DENTAL"

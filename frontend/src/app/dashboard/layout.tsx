@@ -293,11 +293,11 @@ export default function DashboardLayout({
           </h2>
           <div className="flex items-center gap-4">
             <ThemeToggle />
-            <button className="w-10 h-10 rounded-full flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-foreground transition-colors relative">
+            {/* <button className="w-10 h-10 rounded-full flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-foreground transition-colors relative">
               <Bell size={20} />
               <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border border-background"></span>
-            </button>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-purple-600 border-2 border-border"></div>
+            </button> */}
+            {/* <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-purple-600 border-2 border-border"></div> */}
           </div>
         </header>
 
