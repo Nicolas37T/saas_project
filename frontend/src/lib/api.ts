@@ -335,7 +335,7 @@ export const tenantApi = {
     return apiFetch("/api/tenant/roles");
   },
   createEmployee: async (data: EmployeeCreate): Promise<Employee> => {
-    return apiFetch("/api/tenant/employees", {
+    return apiFetch("/api/tenant/employees/", {
       method: "POST",
       body: JSON.stringify(data),
     });
