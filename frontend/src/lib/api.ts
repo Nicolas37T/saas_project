@@ -329,10 +329,10 @@ export const tenantApi = {
     return apiFetch("/api/tenant/employees/");
   },
   getDoctors: async (): Promise<Employee[]> => {
-    return apiFetch("/api/tenant/employees/doctors/");
+    return apiFetch("/api/tenant/employees/doctors");
   },
   getRoles: async (): Promise<Role[]> => {
-    return apiFetch("/api/tenant/roles/");
+    return apiFetch("/api/tenant/roles");
   },
   createEmployee: async (data: EmployeeCreate): Promise<Employee> => {
     return apiFetch("/api/tenant/employees", {
