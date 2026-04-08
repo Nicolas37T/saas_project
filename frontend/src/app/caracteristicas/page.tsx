@@ -3,9 +3,9 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export const metadata = {
-  title: "Características | DentalSaaS",
+  title: "Características | SaaSManager",
   description:
-    "Descubrí todo lo que DentalSaaS puede hacer por tu consultorio: gestión de pacientes, citas, tratamientos, pagos y mucho más.",
+    "Descubrí todo lo que SaaSManager puede hacer por tu consultorio: gestión de pacientes, citas, tratamientos, pagos y mucho más.",
 };
 
 const features = [
@@ -298,7 +298,7 @@ export default function CaracteristicasPage() {
                 <Button
                   variant="outline"
                   size="lg"
-                  className="border-white text-white hover:bg-white/10 w-full sm:w-auto"
+                  className="bg-transparent border-white text-white hover:bg-white/10 hover:text-white w-full sm:w-auto"
                 >
                   Ver planes
                 </Button>
