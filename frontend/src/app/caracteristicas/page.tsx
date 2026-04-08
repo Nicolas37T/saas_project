@@ -3,59 +3,66 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export const metadata = {
-  title: "Características | SaaSManager",
+  title: "Características | DentalSaaS",
   description:
-    "Descubrí todas las características y beneficios de SaaSManager: facturación, inventario, multitenancy y mucho más para hacer crecer tu negocio.",
+    "Descubrí todo lo que DentalSaaS puede hacer por tu consultorio: gestión de pacientes, citas, tratamientos, pagos y mucho más.",
 };
 
 const features = [
   {
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
       </svg>
     ),
-    title: "Facturación inteligente",
+    title: "Equipo organizado",
     description:
-      "Generá facturas profesionales en segundos. Automatizá recordatorios de cobro, enviá por email y controlá el estado de cada factura desde un panel centralizado.",
-    badge: "Core",
+      "Agregá doctores, recepcionistas y administradores a tu consultorio. Cada uno ve solo lo que necesita, sin confusiones ni accesos de más.",
     color: "blue",
   },
   {
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
-        <path strokeLinecap="round" strokeLinejoin="round" d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
       </svg>
     ),
-    title: "Gestión de inventario",
+    title: "Ficha de pacientes",
     description:
-      "Controlá tu stock en tiempo real. Alertas automáticas de bajo inventario, historial de movimientos y reportes exportables para tomar decisiones con datos.",
-    badge: "Core",
+      "Toda la información de tus pacientes en un solo lugar: datos personales, historial clínico, alergias, radiografías y notas importantes.",
     color: "indigo",
   },
   {
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0 1 18 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3 1.5 1.5 3-3.75" />
       </svg>
     ),
-    title: "Gestión de clientes (CRM)",
+    title: "Planes de tratamiento",
     description:
-      "Centralizá la información de tus clientes: historial de compras, comunicaciones, notas y seguimiento. Nunca más perderás el hilo de una relación comercial.",
-    badge: "Pro",
+      "Armá planes de tratamiento paso a paso para cada paciente. Marcá lo que ya se hizo, lo pendiente y llevá un control claro de cada proceso.",
     color: "violet",
   },
   {
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
       </svg>
     ),
-    title: "Subdominio propio",
+    title: "Agenda de citas",
     description:
-      "Cada negocio tiene su propio espacio: `tunegocio.saasmanager.com`. Multitenancy real con aislamiento de datos total. Tu marca, tu identidad, tus clientes.",
-    badge: "Pro",
+      "Visualizá tu agenda del día, semana o mes de un vistazo. Agendá citas rápido, evitá solapamientos y que ningún paciente se te pase por alto.",
     color: "sky",
+  },
+  {
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
+      </svg>
+    ),
+    title: "Control de pagos",
+    description:
+      "Registrá pagos parciales o totales, llevá el saldo de cada paciente y sabé exactamente quién debe cuánto. Sin planillas ni cuadernos.",
+    color: "emerald",
   },
   {
     icon: (
@@ -63,61 +70,41 @@ const features = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
       </svg>
     ),
-    title: "Reportes y analytics",
+    title: "Reportes del consultorio",
     description:
-      "Dashboards visuales con métricas clave: ventas, ingresos, productos más vendidos y tendencias. Exportá en PDF o CSV para compartir con tu equipo o contador.",
-    badge: "Pro",
-    color: "emerald",
-  },
-  {
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-      </svg>
-    ),
-    title: "Seguridad y permisos",
-    description:
-      "Control de acceso por roles: admin, operador, solo lectura. Autenticación segura con JWT, logs de actividad y encriptación de datos sensibles en reposo.",
-    badge: "Core",
+      "Mirá de un vistazo cuántas citas tuviste, cuánto facturaste y qué tratamientos son los más frecuentes. Información clara para tomar mejores decisiones.",
     color: "amber",
   },
   {
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 8.25h3m-3 3h3m-3 3h3M7.5 12h.008v.008H7.5V12Zm0 3h.008v.008H7.5V15Zm0 3h.008v.008H7.5V18Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
       </svg>
     ),
-    title: "App 100% responsive",
+    title: "Datos protegidos",
     description:
-      "Diseñada mobile-first. Usá la plataforma desde tu celular, tablet o escritorio sin perder ninguna funcionalidad. Tu negocio no para, tu herramienta tampoco.",
-    badge: "Core",
+      "La información de tus pacientes es confidencial y así se trata. Cada consultorio tiene su espacio privado, separado del resto.",
     color: "rose",
   },
   {
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 0 1 .778-.332 48.294 48.294 0 0 0 5.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
       </svg>
     ),
-    title: "Soporte en tiempo real",
+    title: "Desde cualquier dispositivo",
     description:
-      "Chat en vivo con el equipo de soporte, base de conocimiento actualizada y tutoriales en video. En el plan Pro: soporte prioritario 24/7 con respuesta garantizada.",
-    badge: "Pro",
+      "Accedé al sistema desde tu computadora, tablet o celular. Consultá la agenda, revisá fichas o registrá pagos estés donde estés.",
     color: "cyan",
   },
 ];
 
 const stats = [
-  { value: "99.9%", label: "Uptime garantizado" },
-  { value: "+500", label: "Negocios activos" },
-  { value: "< 2s", label: "Tiempo de carga" },
-  { value: "24/7", label: "Soporte Pro" },
+  { value: "99.9%", label: "Disponibilidad" },
+  { value: "+500", label: "Consultorios activos" },
+  { value: "< 2s", label: "Velocidad de carga" },
+  { value: "24/7", label: "Soporte disponible" },
 ];
-
-const badgeColors: Record<string, string> = {
-  Core: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-  Pro: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
-};
 
 const iconColors: Record<string, string> = {
   blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
@@ -155,21 +142,21 @@ export default function CaracteristicasPage() {
       </header>
 
       <main className="flex-1">
-        {/* Hero de la página */}
+        {/* Hero */}
         <section className="w-full py-16 md:py-24 bg-white dark:bg-background border-b dark:border-slate-800">
           <div className="container px-4 md:px-6 mx-auto text-center">
             <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 mb-4 uppercase tracking-widest">
-              Todo lo que necesitás
+              Tu consultorio, simplificado
             </span>
             <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl mb-6">
-              Características que{" "}
+              Todo lo que tu consultorio{" "}
               <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent bg-clip-text">
-                impulsan tu negocio
+                necesita en un solo lugar
               </span>
             </h1>
             <p className="mx-auto max-w-[720px] text-gray-500 md:text-xl dark:text-gray-400 mb-8">
-              SaaSManager no es solo software — es la infraestructura completa que necesita tu negocio para operar de
-              forma profesional desde el día uno. Sin fricción, sin complicaciones.
+              Dejá de perder tiempo con cuadernos, planillas y sistemas complicados.
+              Gestioná pacientes, citas, tratamientos y pagos de forma simple y profesional.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/register">
@@ -186,7 +173,7 @@ export default function CaracteristicasPage() {
           </div>
         </section>
 
-        {/* Stats banner */}
+        {/* Stats */}
         <section className="w-full py-10 bg-gradient-to-r from-blue-600 to-indigo-700 dark:from-blue-800 dark:to-indigo-900">
           <div className="container px-4 md:px-6 mx-auto">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center text-white">
@@ -200,16 +187,16 @@ export default function CaracteristicasPage() {
           </div>
         </section>
 
-        {/* Grid de características */}
+        {/* Features grid */}
         <section className="w-full py-16 md:py-24 dark:bg-background">
           <div className="container px-4 md:px-6 mx-auto">
             <div className="text-center mb-14">
               <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl mb-4">
-                Todo incluido, sin sorpresas
+                Herramientas pensadas para dentistas
               </h2>
               <p className="text-gray-500 dark:text-gray-400 max-w-[600px] mx-auto">
-                Cada característica fue pensada para resolver un problema real de los pequeños negocios. Sin funciones
-                de relleno, sin curva de aprendizaje innecesaria.
+                Cada función fue diseñada para resolver los problemas del día a día
+                en un consultorio dental. Sin complicaciones, sin curva de aprendizaje.
               </p>
             </div>
 
@@ -219,11 +206,6 @@ export default function CaracteristicasPage() {
                   key={feature.title}
                   className="group relative bg-white dark:bg-card rounded-2xl p-6 border border-slate-100 dark:border-border shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
                 >
-                  {/* Badge */}
-                  <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded-full mb-4 ${badgeColors[feature.badge]}`}>
-                    {feature.badge}
-                  </span>
-
                   {/* Icon */}
                   <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 ${iconColors[feature.color]}`}>
                     {feature.icon}
@@ -239,50 +221,38 @@ export default function CaracteristicasPage() {
                 </div>
               ))}
             </div>
-
-            {/* Leyenda de badges */}
-            <div className="flex flex-wrap gap-4 justify-center mt-10 text-sm text-gray-500 dark:text-gray-400">
-              <div className="flex items-center gap-2">
-                <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${badgeColors["Core"]}`}>Core</span>
-                <span>Disponible en todos los planes</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${badgeColors["Pro"]}`}>Pro</span>
-                <span>Exclusivo del Plan Pro</span>
-              </div>
-            </div>
           </div>
         </section>
 
-        {/* Comparación rápida */}
+        {/* Why us */}
         <section className="w-full py-16 md:py-20 bg-white dark:bg-slate-950 border-t dark:border-slate-800">
           <div className="container px-4 md:px-6 mx-auto max-w-3xl">
             <div className="text-center mb-10">
               <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl mb-3">
-                ¿Por qué SaaSManager?
+                ¿Por qué elegirnos?
               </h2>
               <p className="text-gray-500 dark:text-gray-400">
-                La diferencia está en los detalles y en las cosas que otros no te cuentan.
+                Hay cosas que hacen la diferencia cuando elegís una herramienta para tu consultorio.
               </p>
             </div>
 
             <div className="space-y-4">
               {[
                 {
-                  title: "Setup en menos de 5 minutos",
-                  detail: "Sin instalaciones, sin configuraciones complejas. Registrarte y empezar a facturar toma menos tiempo que preparar un café.",
+                  title: "Listo en menos de 5 minutos",
+                  detail: "No necesitás instalar nada. Te registrás, configurás tu consultorio y ya estás trabajando. Más rápido que hacer un café.",
                 },
                 {
-                  title: "Datos 100% tuyos",
-                  detail: "Tu información nunca se mezcla con la de otros negocios. Podés exportar todo en cualquier momento, sin lock-in.",
+                  title: "Pensado por y para consultorios",
+                  detail: "No es un sistema genérico adaptado. Cada pantalla, cada botón y cada flujo está diseñado para cómo realmente funciona un consultorio dental.",
                 },
                 {
-                  title: "Actualizaciones automáticas",
-                  detail: "Siempre usás la última versión. Sin actualizaciones manuales, sin interrupciones. Nosotros nos encargamos de todo.",
+                  title: "Tus datos son tuyos",
+                  detail: "La información de tus pacientes nunca se mezcla con la de otros consultorios. Podés exportarla cuando quieras, sin vueltas.",
                 },
                 {
-                  title: "Sin costos ocultos",
-                  detail: "El precio que ves es el que pagás. Sin comisiones por transacción, sin límites arbitrarios de uso dentro de tu plan.",
+                  title: "Sin costos escondidos",
+                  detail: "El precio que ves es lo que pagás. Sin comisiones extra, sin límites sorpresa. Transparencia total.",
                 },
               ].map((item) => (
                 <div
@@ -306,14 +276,14 @@ export default function CaracteristicasPage() {
           </div>
         </section>
 
-        {/* CTA final */}
+        {/* CTA */}
         <section className="w-full py-16 md:py-24 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 dark:from-blue-900 dark:via-blue-800 dark:to-indigo-900">
           <div className="container px-4 md:px-6 mx-auto text-center">
             <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-white mb-4">
-              Listo para empezar?
+              ¿Listo para modernizar tu consultorio?
             </h2>
             <p className="text-blue-100 md:text-xl max-w-[600px] mx-auto mb-8">
-              Probá SaaSManager gratis por 14 días. Sin tarjeta de crédito. Sin compromisos. Solo resultados.
+              Probá la plataforma gratis por 5 días. Sin tarjeta de crédito, sin compromisos. Solo resultados.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/register">
