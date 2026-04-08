@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Pill, Printer, Plus, Trash2, Search, FileText, Building2, User } from "lucide-react";
+import { Pill, Printer, Plus, Trash2, Search, FileText, Share2, User, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -36,6 +36,10 @@ export default function PrescriptionPage() {
   // Search/Select helper
   const [searchTerm, setSearchTerm] = useState("");
   const [showMedicineList, setShowMedicineList] = useState(false);
+  
+  // Share functionality
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
 
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -90,7 +94,66 @@ export default function PrescriptionPage() {
     window.print();
   };
 
-  const filteredMedicines = medicines.filter(m => 
+  const generatePrescriptionText = () => {
+    const patientName = currentPatient 
+      ? `${currentPatient.first_name} ${currentPatient.last_name}` 
+      : "Paciente";
+    
+    let text = `📋 RECETA MÉDICA\n`;
+    text += `━━━━━━━━━━━━━━━━━━━━\n\n`;
+    text += `👤 Paciente: ${patientName}\n`;
+    text += `📅 Fecha: ${date}\n`;
+    text += `👨‍⚕️ Doctor: ${doctorName}\n\n`;
+    
+    if (settings?.business_name) {
+      text += `🏥 ${settings.business_name}\n`;
+    }
+    
+    text += `\n💊 MEDICAMENTOS:\n`;
+    text += `━━━━━━━━━━━━━━━━━━━━\n\n`;
+    
+    prescriptionItems.forEach((item, idx) => {
+      text += `${idx + 1}. ${item.medicineName}\n`;
+      if (item.dosage) text += `   📌 Dosis: ${item.dosage}\n`;
+      if (item.instructions) text += `   📝 Instrucciones: ${item.instructions}\n`;
+      text += `\n`;
+    });
+    
+    if (notes) {
+      text += `📋 OBSERVACIONES:\n`;
+      text += `━━━━━━━━━━━━━━━━━━━━\n`;
+      text += `${notes}\n\n`;
+    }
+    
+    text += `━━━━━━━━━━━━━━━━━━━━\n`;
+    text += `✅ Dr(a). ${doctorName}`;
+    
+    return text;
+  };
+
+  const handleShareWhatsApp = () => {
+    if (!currentPatient?.phone) {
+      alert("El paciente no tiene un número de teléfono registrado");
+      return;
+    }
+
+    const text = generatePrescriptionText();
+    const encodedText = encodeURIComponent(text);
+
+    // Remove any non-numeric characters from phone
+    const cleanPhone = currentPatient.phone.replace(/\D/g, "");
+
+    // Add country code if not present (default to Mexico +52 if needed)
+    const phoneWithCode = cleanPhone.length <= 10 ? `52${cleanPhone}` : cleanPhone;
+
+    const whatsappUrl = `https://wa.me/${phoneWithCode}?text=${encodedText}`;
+    window.open(whatsappUrl, "_blank");
+
+    setShowShareModal(false);
+  };
+
+
+  const filteredMedicines = medicines.filter(m =>
     m.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -116,12 +179,24 @@ export default function PrescriptionPage() {
           <h1 className="text-3xl font-bold tracking-tight mb-1">Receta Médica</h1>
           <p className="text-muted-foreground">Genera e imprime recetas para tus pacientes.</p>
         </div>
-        <Button
-          onClick={handlePrint}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center shadow-lg"
-        >
-          <Printer size={18} className="mr-2" /> Imprimir Receta
-        </Button>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Button
+              onClick={() => setShowShareModal(true)}
+              variant="outline"
+              className="flex items-center shadow-lg hover:bg-accent"
+              disabled={!selectedPatient}
+            >
+              <Share2 size={18} className="mr-2" /> Compartir
+            </Button>
+          </div>
+          <Button
+            onClick={handlePrint}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground flex items-center shadow-lg"
+          >
+            <Printer size={18} className="mr-2" /> Imprimir Receta
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -342,6 +417,77 @@ export default function PrescriptionPage() {
           </Card>
         </div>
       </div>
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 print:hidden">
+          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <MessageCircle size={20} />
+                  Compartir por WhatsApp
+                </h3>
+                <button
+                  onClick={() => setShowShareModal(false)}
+                  className="text-white/80 hover:text-white transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-4">
+              {/* Patient Info */}
+              <div className="bg-muted/30 p-4 rounded-lg space-y-2">
+                <p className="text-xs text-muted-foreground">Compartiendo receta de:</p>
+                <p className="font-semibold text-sm">
+                  {currentPatient?.first_name} {currentPatient?.last_name}
+                </p>
+                {currentPatient?.phone ? (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <MessageCircle size={12} />
+                    <p>Teléfono: {currentPatient.phone}</p>
+                  </div>
+                ) : (
+                  <p className="text-xs text-destructive">
+                    ⚠️ El paciente no tiene un número de teléfono registrado
+                  </p>
+                )}
+              </div>
+
+              {/* Preview */}
+              <div className="bg-muted/20 p-3 rounded-lg">
+                <p className="text-xs text-muted-foreground mb-2">Vista previa del mensaje:</p>
+                <div className="text-xs whitespace-pre-wrap max-h-32 overflow-y-auto font-mono bg-background/50 p-2 rounded">
+                  {generatePrescriptionText()}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 pt-2">
+                <Button
+                  onClick={() => setShowShareModal(false)}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleShareWhatsApp}
+                  className="flex-1 bg-green-500 hover:bg-green-600 text-white"
+                  disabled={isSharing || !currentPatient?.phone}
+                >
+                  <MessageCircle size={16} className="mr-2" />
+                  Enviar por WhatsApp
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx global>{`
         @media print {

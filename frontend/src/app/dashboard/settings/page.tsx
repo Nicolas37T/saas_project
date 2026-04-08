@@ -149,7 +149,7 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium flex items-center gap-2">
+                {/* <label className="text-sm font-medium flex items-center gap-2">
                   <ImageIcon size={14} /> Logo URL
                 </label>
                 <Input
@@ -158,7 +158,7 @@ export default function SettingsPage() {
                   value={formData.logo_url}
                   onChange={handleChange}
                   className="bg-muted/50 border-border text-foreground focus-visible:ring-primary/50"
-                />
+                /> */}
                 {formData.logo_url && (
                     <div className="mt-2 p-2 bg-muted rounded-lg border border-border inline-block">
                         <img src={formData.logo_url} alt="Logo preview" className="h-10 object-contain" />

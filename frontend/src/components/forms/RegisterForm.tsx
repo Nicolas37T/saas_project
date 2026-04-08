@@ -200,11 +200,11 @@ export default function RegisterForm() {
                                 </p>
                             </div>
                         </div>
-                        <div className="space-y-2">
+                        {/* <div className="space-y-2">
                             <Label htmlFor="domain">Dominio propio (Opcional)</Label>
                             <Input id="domain" name="domain" placeholder="Ej: www.minegocio.com" />
                             <p className="text-xs text-gray-400">Si ya tienes tu propia web url.</p>
-                        </div>
+                        </div> */}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">

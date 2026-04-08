@@ -217,7 +217,7 @@ export default function EmployeesPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex justify-end gap-2">
                             <button
                                 onClick={() => handleOpenEdit(emp)}
                                 className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
@@ -230,7 +230,7 @@ export default function EmployeesPage() {
                                     setEditingEmployee(emp);
                                     setShowDeleteConfirm(emp.id);
                                 }}
-                                className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
+                                className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all text-red-500"
                                 title="Eliminar"
                             >
                                 <Trash2 size={18} />
