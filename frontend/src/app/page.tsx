@@ -7,20 +7,65 @@ import { ThemeToggle } from "@/components/theme-toggle";
 export default function LandingPage() {
   const plans = [
     {
+      name: "Plan Gratuito",
+      price: "$0",
+      cycle: "/mes",
+      description: "Para empezar sin riesgo",
+      features: [
+        "Hasta 3 usuarios",
+        "Gestión básica de productos",
+        "Soporte por email",
+      ],
+      cta: "Comenzar gratis",
+      popular: false,
+      highlight: false,
+    },
+    {
       name: "Plan Básico",
       price: "$10",
       cycle: "/mes",
-      features: ["Hasta 5 usuarios", "Gestión de productos", "Soporte por email"],
+      description: "Para negocios en crecimiento",
+      features: [
+        "Hasta 5 usuarios",
+        "Gestión de productos",
+        "Reportes básicos",
+        "Soporte por email",
+      ],
       cta: "Empezar ahora",
       popular: false,
+      highlight: false,
     },
     {
       name: "Plan Pro",
-      price: "$29",
+      price: "$20",
       cycle: "/mes",
-      features: ["Usuarios ilimitados", "Gestión de inventario", "Soporte prioritario 24/7", "Personalización de marca"],
-      cta: "Prueba el Pro",
+      description: "El favorito de los equipos",
+      features: [
+        "Hasta 20 usuarios",
+        "Gestión de inventario",
+        "Reportes y analytics",
+        "Soporte prioritario 24/7",
+        "Personalización de marca",
+      ],
+      cta: "Probar el Pro",
       popular: true,
+      highlight: true,
+    },
+    {
+      name: "Plan Enterprise",
+      price: "$50",
+      cycle: "/mes",
+      description: "Para operaciones a gran escala",
+      features: [
+        "Hasta 100 usuarios",
+        "Todo el Plan Pro incluido",
+        "Gestor de cuenta dedicado",
+        "SLA garantizado 99.9%",
+        "Integraciones personalizadas",
+      ],
+      cta: "Contactar ventas",
+      popular: false,
+      highlight: false,
     },
   ];
 
@@ -34,7 +79,7 @@ export default function LandingPage() {
           </span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
-          <Link href="#features" className="text-sm font-medium hover:underline underline-offset-4">
+          <Link href="/caracteristicas" className="text-sm font-medium hover:underline underline-offset-4">
             Características
           </Link>
           <Link href="#pricing" className="text-sm font-medium hover:underline underline-offset-4">
@@ -64,7 +109,7 @@ export default function LandingPage() {
                 <Link href="/register">
                   <Button size="lg" className="bg-blue-600 hover:bg-blue-700 dark:bg-primary dark:hover:bg-primary/90">Comenzar Gratis</Button>
                 </Link>
-                <Link href="#features">
+                <Link href="/caracteristicas">
                   <Button variant="outline" size="lg">Saber más</Button>
                 </Link>
               </div>
@@ -76,7 +121,7 @@ export default function LandingPage() {
         <section id="pricing" className="w-full py-12 md:py-24 lg:py-32 dark:bg-background">
           <div className="container px-4 md:px-6 mx-auto text-center">
             <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl mb-12">Planes que crecen contigo</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto items-stretch">
               {plans.map((plan) => (
                 <Card key={plan.name} className={`relative flex flex-col ${plan.popular ? 'border-blue-500 shadow-xl scale-105' : ''} dark:bg-card dark:border-border`}>
                   {plan.popular && (
@@ -85,7 +130,8 @@ export default function LandingPage() {
                     </Badge>
                   )}
                   <CardHeader>
-                    <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                    <CardTitle className="text-xl">{plan.name}</CardTitle>
+                    <CardDescription className="text-sm">{plan.description}</CardDescription>
                     <div className="mt-4 flex items-baseline justify-center">
                       <span className="text-4xl font-bold">{plan.price}</span>
                       <span className="ml-1 text-gray-500 dark:text-gray-400">{plan.cycle}</span>
