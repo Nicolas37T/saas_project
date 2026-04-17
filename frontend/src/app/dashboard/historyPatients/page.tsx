@@ -578,10 +578,20 @@ export default function HistoryPatientsPage() {
                         <h4 className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest mb-3">
                           Resumen de Evolución
                         </h4>
-                        <p className="leading-relaxed bg-muted/30 p-4 rounded-xl border border-border/50 text-sm">
-                          {history.description ||
-                            "Múltiples tratamientos realizados."}
-                        </p>
+                        <div className="space-y-3">
+                          {(history.description || "Múltiples tratamientos realizados.")
+                            .split("\n\n---\n\n")
+                            .map((entry: string, idx: number) => (
+                              <p 
+                                key={idx} 
+                                className="leading-relaxed bg-muted/30 p-4 rounded-xl border border-border/50 text-sm relative"
+                              >
+                                <span className="absolute -left-2 top-4 w-1 h-8 bg-primary rounded-full opacity-50"></span>
+                                {entry}
+                              </p>
+                            ))
+                          }
+                        </div>
                       </div>
 
                       <div className="pt-2">

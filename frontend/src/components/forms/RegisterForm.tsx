@@ -141,7 +141,24 @@ export default function RegisterForm() {
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="business_name">Nombre del Negocio</Label>
-                        <Input id="business_name" name="business_name" placeholder="Ej: Mi Tienda Online" required />
+                        <Input 
+                            id="business_name" 
+                            name="business_name" 
+                            required 
+                            onChange={(e) => {
+                                const slug = e.target.value
+                                    .toLowerCase()
+                                    .trim()
+                                    .replace(/[^\w\s-]/g, "")
+                                    .replace(/[\s_-]+/g, "-")
+                                    .replace(/^-+|-+$/g, "");
+                                const subdomainInput = document.getElementById("subdomain") as HTMLInputElement;
+                                if (subdomainInput) {
+                                    subdomainInput.value = slug;
+                                    validateSubdomain(slug);
+                                }
+                            }}
+                        />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="business_type">Tipo de Negocio</Label>
@@ -175,14 +192,13 @@ export default function RegisterForm() {
                         </select>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
                         <div className="space-y-2">
                             <Label htmlFor="subdomain">Subdominio deseado</Label>
                             <div className="flex items-center">
                                 <Input 
                                     id="subdomain" 
                                     name="subdomain" 
-                                    placeholder="tienda" 
                                     className={`rounded-r-none ${subdomainError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                                     onChange={handleSubdomainChange}
                                     required 
@@ -195,22 +211,18 @@ export default function RegisterForm() {
                                 {subdomainError && (
                                     <p className="text-xs text-red-500">{subdomainError}</p>
                                 )}
-                                <p className="text-xs text-gray-400">
-                                    Dirección inicial del sistema. No usar: www, admin, api, localhost
-                                </p>
                             </div>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="domain">Dominio propio (Opcional)</Label>
-                            <Input id="domain" name="domain" placeholder="Ej: www.minegocio.com" />
-                            <p className="text-xs text-gray-400">Si ya tienes tu propia web url.</p>
+                            <Input id="domain" name="domain" />
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
                         <div className="space-y-2">
                             <Label htmlFor="email">Tu Correo Electrónico</Label>
-                            <Input id="email" name="email" type="email" placeholder="tu@email.com" required />
+                            <Input id="email" name="email" type="email" required />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="password">Contraseña</Label>
@@ -219,7 +231,6 @@ export default function RegisterForm() {
                                     id="password"
                                     name="password"
                                     type={showPassword ? "text" : "password"}
-                                    placeholder="••••••••"
                                     required
                                     className="pr-10"
                                 />
