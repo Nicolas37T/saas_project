@@ -22,6 +22,7 @@ interface CalendarViewProps {
   onEdit: (apt: Appointment) => void;
   onDelete: (id: string) => void;
   onCreateFromDate: (dateStr: string) => void;
+  onMonthChange?: (year: number, month: number) => void;
   getPatientName: (id: string) => string;
   getDoctorName: (id?: string) => string;
   getStatusStyle: (status: string) => string;
@@ -42,6 +43,7 @@ export default function CalendarView({
   onEdit,
   onDelete,
   onCreateFromDate,
+  onMonthChange,
   getPatientName,
   getDoctorName,
   getStatusStyle,
@@ -116,29 +118,40 @@ export default function CalendarView({
   }, [currentMonth, currentYear]);
 
   const goToPrevMonth = () => {
+    let newMonth = currentMonth;
+    let newYear = currentYear;
     if (currentMonth === 0) {
-      setCurrentMonth(11);
-      setCurrentYear(currentYear - 1);
+      newMonth = 11;
+      newYear = currentYear - 1;
     } else {
-      setCurrentMonth(currentMonth - 1);
+      newMonth = currentMonth - 1;
     }
+    setCurrentMonth(newMonth);
+    setCurrentYear(newYear);
     setSelectedDate(null);
+    onMonthChange?.(newYear, newMonth);
   };
 
   const goToNextMonth = () => {
+    let newMonth = currentMonth;
+    let newYear = currentYear;
     if (currentMonth === 11) {
-      setCurrentMonth(0);
-      setCurrentYear(currentYear + 1);
+      newMonth = 0;
+      newYear = currentYear + 1;
     } else {
-      setCurrentMonth(currentMonth + 1);
+      newMonth = currentMonth + 1;
     }
+    setCurrentMonth(newMonth);
+    setCurrentYear(newYear);
     setSelectedDate(null);
+    onMonthChange?.(newYear, newMonth);
   };
 
   const goToToday = () => {
     setCurrentMonth(today.getMonth());
     setCurrentYear(today.getFullYear());
     setSelectedDate(null);
+    onMonthChange?.(today.getFullYear(), today.getMonth());
   };
 
   const getDateKey = (day: { date: number; month: number; year: number }) => {
