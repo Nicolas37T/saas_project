@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Edit3,
 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { tenantApi, Patient } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -451,9 +452,19 @@ export default function HistoryPatientsPage() {
                           <h2 className="text-lg sm:text-xl font-bold leading-tight break-words">
                             {patient.first_name} {patient.last_name}
                           </h2>
-                          <p className="text-muted-foreground text-xs sm:text-sm italic">
-                            {patient.phone}
-                          </p>
+                          {patient.phone && (
+                            <button
+                              onClick={() => {
+                                const cleanPhone = patient.phone!.replace(/\D/g, "");
+                                window.open(`https://wa.me/${cleanPhone}`, "_blank");
+                              }}
+                              className="text-muted-foreground text-xs sm:text-sm italic hover:text-green-500 transition-colors flex items-center gap-2"
+                              title="Abrir WhatsApp"
+                            >
+                              <WhatsAppIcon size={14} className="flex-shrink-0" />
+                              <span>{patient.phone}</span>
+                            </button>
+                          )}
                         </div>
                       </div>
                     </CardHeader>

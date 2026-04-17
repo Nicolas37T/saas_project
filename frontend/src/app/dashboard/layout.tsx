@@ -18,7 +18,8 @@ import {
   ClipboardClock,
   User as UserIcon,
   Contact,
-  Pill
+  Pill,
+  DollarSign
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { tenantApi } from "@/lib/api";
@@ -138,6 +139,11 @@ export default function DashboardLayout({
         href: "/dashboard/prescription",
         icon: <Pill size={20} />,
       },
+      {
+        name: "Cotizaciones",
+        href: "/dashboard/price",
+        icon: <DollarSign size={20} />,
+      }
     ] : []),
     {
       name: "Pagos",

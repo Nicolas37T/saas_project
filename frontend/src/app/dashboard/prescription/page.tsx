@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Pill, Printer, Plus, Trash2, Search, FileText, Share2, User, MessageCircle } from "lucide-react";
+import { Pill, Printer, Plus, Trash2, Search, FileText, Share2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { tenantApi, Medicine, SettingData, Patient } from "@/lib/api";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 
 // Helper function to decode JWT and get user info
 function decodeJWT(token: string): { email?: string; full_name?: string; sub?: string } | null {
@@ -29,7 +30,7 @@ export default function PrescriptionPage() {
 
   // Form State
   const [selectedPatient, setSelectedPatient] = useState<string>("");
-  const [prescriptionItems, setPrescriptionItems] = useState<{ medicineId: string; medicineName: string; dosage: string; instructions: string }[]>([]);
+  const [prescriptionItems, setPrescriptionItems] = useState<{ medicineId: string; medicineName: string; quantity: string; dosage: string; instructions: string }[]>([]);
   const [notes, setNotes] = useState("");
   const [date] = useState(new Date().toLocaleDateString());
 
@@ -75,7 +76,7 @@ export default function PrescriptionPage() {
   }, []);
 
   const addMedicine = (med: Medicine) => {
-    setPrescriptionItems([...prescriptionItems, { medicineId: med.id, medicineName: med.name, dosage: "", instructions: "" }]);
+    setPrescriptionItems([...prescriptionItems, { medicineId: med.id, medicineName: med.name, quantity: "", dosage: "", instructions: "" }]);
     setSearchTerm("");
     setShowMedicineList(false);
   };
@@ -113,7 +114,9 @@ export default function PrescriptionPage() {
     text += `━━━━━━━━━━━━━━━━━━━━\n\n`;
     
     prescriptionItems.forEach((item, idx) => {
-      text += `${idx + 1}. ${item.medicineName}\n`;
+      text += `${idx + 1}. ${item.medicineName}`;
+      if (item.quantity) text += ` — Cantidad: ${item.quantity}`;
+      text += `\n`;
       if (item.dosage) text += `   📌 Dosis: ${item.dosage}\n`;
       if (item.instructions) text += `   📝 Instrucciones: ${item.instructions}\n`;
       text += `\n`;
@@ -290,7 +293,16 @@ export default function PrescriptionPage() {
                          <span className="w-2 h-2 rounded-full bg-green-500"></span>
                          {item.medicineName}
                       </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-xs text-muted-foreground">Cantidad</label>
+                          <Input
+                            value={item.quantity}
+                            onChange={(e) => updateItem(index, 'quantity', e.target.value)}
+                            placeholder="Ej: 20 tabletas"
+                            className="bg-muted/50 border-border h-8 text-sm"
+                          />
+                        </div>
                         <div className="space-y-1">
                           <label className="text-xs text-muted-foreground">Dosis / Frecuencia</label>
                           <Input
@@ -387,7 +399,14 @@ export default function PrescriptionPage() {
                   <div className="space-y-6">
                     {prescriptionItems.map((item, idx) => (
                       <div key={idx} className="space-y-1">
-                        <p className="font-bold text-lg text-slate-800 uppercase tracking-tight">{item.medicineName}</p>
+                        <div className="flex items-baseline justify-between gap-2">
+                          <p className="font-bold text-lg text-slate-800 uppercase tracking-tight">{item.medicineName}</p>
+                          {item.quantity && (
+                            <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full whitespace-nowrap">
+                              Cant: {item.quantity}
+                            </span>
+                          )}
+                        </div>
                         <div className="pl-4 border-l-2 border-blue-200 ml-1">
                            <p className="text-sm font-medium text-slate-700">{item.dosage || "Sin dosis"}</p>
                            <p className="text-xs text-slate-500 italic">{item.instructions}</p>
@@ -426,7 +445,7 @@ export default function PrescriptionPage() {
             <div className="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <MessageCircle size={20} />
+                  <WhatsAppIcon size={20} />
                   Compartir por WhatsApp
                 </h3>
                 <button
@@ -447,10 +466,17 @@ export default function PrescriptionPage() {
                   {currentPatient?.first_name} {currentPatient?.last_name}
                 </p>
                 {currentPatient?.phone ? (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <MessageCircle size={12} />
-                    <p>Teléfono: {currentPatient.phone}</p>
-                  </div>
+                  <button
+                    onClick={() => {
+                      const cleanPhone = currentPatient.phone!.replace(/\D/g, "");
+                      window.open(`https://wa.me/${cleanPhone}`, "_blank");
+                    }}
+                    className="flex items-center gap-2 text-xs text-muted-foreground hover:text-green-500 transition-colors"
+                    title="Abrir WhatsApp"
+                  >
+                    <WhatsAppIcon size={14} className="flex-shrink-0" />
+                    <span>Teléfono: {currentPatient.phone}</span>
+                  </button>
                 ) : (
                   <p className="text-xs text-destructive">
                     ⚠️ El paciente no tiene un número de teléfono registrado
@@ -480,7 +506,7 @@ export default function PrescriptionPage() {
                   className="flex-1 bg-green-500 hover:bg-green-600 text-white"
                   disabled={isSharing || !currentPatient?.phone}
                 >
-                  <MessageCircle size={16} className="mr-2" />
+                  <WhatsAppIcon size={16} className="mr-2" />
                   Enviar por WhatsApp
                 </Button>
               </div>

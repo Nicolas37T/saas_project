@@ -5,13 +5,13 @@ import {
   Search,
   User,
   FileText,
-  Phone,
   MoreVertical,
   Pencil,
   Trash2,
   Calendar,
   Share2,
 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { tenantApi, Patient, Employee } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -382,10 +382,17 @@ export default function PatientsPage() {
 
                   <div className="space-y-2 mt-auto">
                     {patient.phone && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Phone size={14} className="text-muted-foreground" />
+                      <button 
+                        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-green-500 transition-colors"
+                        onClick={() => {
+                          const cleanPhone = patient.phone!.replace(/\D/g, "");
+                          window.open(`https://wa.me/${cleanPhone}`, "_blank");
+                        }}
+                        title="Contactar por WhatsApp"
+                      >
+                        <WhatsAppIcon size={14} className="flex-shrink-0" />
                         <span>{patient.phone}</span>
-                      </div>
+                      </button>
                     )}
                     {patient.birth_day && mounted && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -508,7 +515,7 @@ export default function PatientsPage() {
               </label>
               <Input
                 type="tel"
-                placeholder="555-0000"
+                placeholder="+ 591 12342596"
                 value={newPatient.phone}
                 onChange={(e) =>
                   setNewPatient({ ...newPatient, phone: e.target.value })

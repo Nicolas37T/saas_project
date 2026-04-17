@@ -3,6 +3,7 @@
 import React, { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Activity, FileText, Calendar } from "lucide-react";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import {
   tenantApi,
   Patient,
@@ -210,7 +211,19 @@ export default function PatientProfilePage({
               </div>
             </h1>
             <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
-              {patient.phone && <span>📞 {patient.phone}</span>}
+              {patient.phone && (
+                <button
+                  onClick={() => {
+                    const cleanPhone = patient.phone!.replace(/\D/g, "");
+                    window.open(`https://wa.me/${cleanPhone}`, "_blank");
+                  }}
+                  className="hover:text-green-500 transition-colors flex items-center gap-2"
+                  title="Abrir WhatsApp"
+                >
+                  <WhatsAppIcon size={14} className="flex-shrink-0" />
+                  <span>{patient.phone}</span>
+                </button>
+              )}
               <span>🗓️ {patient.status ? "Activo" : "Inactivo"}</span>
               <span className="hidden sm:inline">
                 ⏳ Registro: {new Date(patient.created_at).toLocaleDateString()}
