@@ -146,8 +146,8 @@ export default function PrescriptionPage() {
     // Remove any non-numeric characters from phone
     const cleanPhone = currentPatient.phone.replace(/\D/g, "");
 
-    // Add country code if not present (default to Mexico +52 if needed)
-    const phoneWithCode = cleanPhone.length <= 10 ? `52${cleanPhone}` : cleanPhone;
+    // Add country code if not present (default to Mexico +52 if needed) ES BOLIVIAAAAA
+    const phoneWithCode = cleanPhone.length <= 10 ? `591${cleanPhone}` : cleanPhone;
 
     const whatsappUrl = `https://wa.me/${phoneWithCode}?text=${encodedText}`;
     window.open(whatsappUrl, "_blank");
