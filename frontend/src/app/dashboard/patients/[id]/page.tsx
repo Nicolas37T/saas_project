@@ -383,7 +383,9 @@ export default function PatientProfilePage({
                   </p>
                 </div>
               ) : (
-                <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
+
+                <div className="space-y-3 sm:space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
+
                   {treatments.map((treatment) => {
                     const totalPaid = treatment.payments?.reduce((acc, p) => acc + p.amount, 0) ?? 0;
                     const isPaid = treatment.price === 0 || totalPaid >= treatment.price;
@@ -403,9 +405,10 @@ export default function PatientProfilePage({
                               : "Sin fecha"}
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                          <div className="space-y-2 mt-2">
-                            <p className="text-sm">
+                        <CardContent className="p-3 sm:p-4 pt-0">
+                          <div className="space-y-1 sm:space-y-2 mt-2">
+                            <p className="text-xs sm:text-sm">
+
                               <span className="text-muted-foreground">Tratamiento:</span>{" "}
                               {treatment.description}
                             </p>
@@ -417,7 +420,7 @@ export default function PatientProfilePage({
                                 ? "En progreso"
                                 : "Pendiente"}
                             </p>
-                            <p className="text-sm">
+                            <p className="text-xs sm:text-sm">
                               <span className="text-muted-foreground">Precio:</span>{" "}
                               {treatment.price === 0 ? "Privado" : `$${treatment.price}`}
                             </p>
