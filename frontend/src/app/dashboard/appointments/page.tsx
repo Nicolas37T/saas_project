@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Plus,
   Calendar as CalendarIcon,
@@ -53,15 +53,73 @@ export default function AppointmentsPage() {
   const [createConflictError, setCreateConflictError] = useState("");
   const [editConflictError, setEditConflictError] = useState("");
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  // Date range filter for list view
+  type DateFilter = "today" | "week" | "upcoming" | "past" | "all";
+  const [dateFilter, setDateFilter] = useState<DateFilter>("today");
 
-  const loadData = async () => {
+  const [activeTab, setActiveTab] = useState("list");
+  const [calendarDate, setCalendarDate] = useState(() => {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() };
+  });
+
+  const getRangeForCalendar = (year: number, month: number) => {
+    const toISO = (d: Date) => d.toISOString().split("T")[0];
+    const start = new Date(year, month, 1);
+    start.setDate(start.getDate() - 7); // pad start
+    const end = new Date(year, month + 1, 1);
+    end.setDate(end.getDate() + 7); // pad end
+    return { date_from: toISO(start), date_to: toISO(end) };
+  };
+
+  // ── Compute date range for a given filter ───────────────────────────────
+  const getDateRangeForFilter = (filter: DateFilter): { date_from?: string; date_to?: string } => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const toISO = (d: Date) => d.toISOString().split("T")[0]; // "YYYY-MM-DD"
+
+    switch (filter) {
+      case "today": {
+        const tomorrow = new Date(todayStart);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        return { date_from: toISO(todayStart), date_to: toISO(tomorrow) };
+      }
+      case "week": {
+        const dow = now.getDay();
+        const diffMon = dow === 0 ? 6 : dow - 1;
+        const weekStart = new Date(todayStart);
+        weekStart.setDate(weekStart.getDate() - diffMon);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 7);
+        return { date_from: toISO(weekStart), date_to: toISO(weekEnd) };
+      }
+      case "upcoming":
+        return { date_from: toISO(todayStart) };
+      case "past":
+        return { date_to: toISO(todayStart) };
+      case "all":
+      default:
+        return {};
+    }
+  };
+
+  // ── Load data (with optional server-side date filter) ──────────────────
+  const loadData = async (dateRange?: { date_from?: string; date_to?: string }) => {
     setLoading(true);
     try {
+      // Use provided range, or compute from current context
+      let range = dateRange;
+      if (!range) {
+        if (activeTab === "list") {
+          range = getDateRangeForFilter(dateFilter);
+        } else {
+          range = getRangeForCalendar(calendarDate.year, calendarDate.month);
+        }
+      }
+
       const [appData, patData, empData] = await Promise.all([
-        tenantApi.getAppointments(),
+        tenantApi.getAppointments(range),
         tenantApi.getPatients(),
         tenantApi.getDoctors().catch(() => []),
       ]);
@@ -76,8 +134,6 @@ export default function AppointmentsPage() {
       setEmployees(empData.filter((e: Employee) => e.status));
       
       // Auto-select first doctor for new appointment form
-      // Use functional update to avoid stale closure — the check must
-      // read the LATEST state, not the captured closure value
       const activeEmployees = empData.filter((e: Employee) => e.status);
       if (activeEmployees.length > 0) {
         setNewAppointment(prev => ({
@@ -91,6 +147,16 @@ export default function AppointmentsPage() {
       setLoading(false);
     }
   };
+
+  // Re-fetch when context changes
+  useEffect(() => {
+    if (activeTab === "list") {
+      loadData(getDateRangeForFilter(dateFilter));
+    } else {
+      loadData(getRangeForCalendar(calendarDate.year, calendarDate.month));
+    }
+  }, [activeTab, dateFilter, calendarDate.year, calendarDate.month]);
+
 
   /**
    * Checks if `doctorId` already has an active appointment at the exact
@@ -288,6 +354,17 @@ export default function AppointmentsPage() {
     cancelled: "Cancelada",
   };
 
+  // Backend already filters by date range — filteredAppointments is the fetch result
+  const filteredAppointments = appointments;
+
+  const filterOptions: { key: DateFilter; label: string }[] = [
+    { key: "today", label: "Hoy" },
+    { key: "week", label: "Esta semana" },
+    { key: "upcoming", label: "Próximas" },
+    { key: "past", label: "Pasadas" },
+    { key: "all", label: "Todas" },
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -312,7 +389,7 @@ export default function AppointmentsPage() {
           <div className="animate-spin w-8 h-8 rounded-full border-2 border-primary border-t-transparent"></div>
         </div>
       ) : (
-        <Tabs defaultValue="list">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4">
             <TabsTrigger value="list" className="gap-1.5">
               <List size={15} /> Lista
@@ -323,23 +400,56 @@ export default function AppointmentsPage() {
           </TabsList>
 
           <TabsContent value="list">
-            {appointments.length === 0 ? (
+            {/* Date filter chips */}
+            <div className="flex flex-wrap items-center gap-2 mb-5">
+              {filterOptions.map((opt) => {
+                const isActive = dateFilter === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    onClick={() => setDateFilter(opt.key)}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-full border transition-all ${
+                      isActive
+                        ? "bg-primary text-primary-foreground border-primary shadow-[0_0_12px_rgba(37,99,235,0.3)]"
+                        : "bg-muted/50 text-muted-foreground border-border hover:bg-accent hover:text-foreground"
+                    }`}
+                  >
+                    {opt.label}
+                    {isActive && (
+                      <span className="ml-1.5 text-xs opacity-80 z-10">({filteredAppointments.length})</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {filteredAppointments.length === 0 ? (
               <Card className="bg-card border-border backdrop-blur-sm">
                 <CardContent className="flex flex-col items-center justify-center py-20">
                   <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
                     <CalendarIcon className="text-muted-foreground" size={32} />
                   </div>
                   <h3 className="text-xl font-medium mb-2">
-                    No tienes citas programadas
+                    {dateFilter === "today"
+                      ? "No tienes citas para hoy"
+                      : dateFilter === "week"
+                      ? "No hay citas esta semana"
+                      : dateFilter === "upcoming"
+                      ? "No hay citas próximas"
+                      : dateFilter === "past"
+                      ? "No hay citas pasadas"
+                      : "No tienes citas programadas"}
                   </h3>
                   <p className="text-muted-foreground">
-                    Tu agenda está libre. Haz clic en &quot;Nueva Cita&quot; para empezar.
+                    {dateFilter !== "all" && dateFilter !== "past"
+                      ? 'Tu agenda está libre. Haz clic en "Nueva Cita" para empezar.'
+                      : "No se encontraron citas con este filtro."}
                   </p>
                 </CardContent>
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {appointments.map((apt) => {
+                {filteredAppointments.map((apt) => {
                   const d = new Date(apt.appointment_date);
                   return (
                     <Card
@@ -444,6 +554,7 @@ export default function AppointmentsPage() {
                 }));
                 setIsAddModalOpen(true);
               }}
+              onMonthChange={(year, month) => setCalendarDate({ year, month })}
               getPatientName={getPatientName}
               getDoctorName={getDoctorName}
               getStatusStyle={getStatusStyle}
