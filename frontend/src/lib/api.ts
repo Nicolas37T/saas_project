@@ -430,7 +430,13 @@ export const tenantApi = {
 
   // Appointments
 
-  getAppointments: () => apiFetch<Appointment[]>("/api/tenant/appointments/"),
+  getAppointments: (params?: { date_from?: string; date_to?: string }) => {
+    const qs = new URLSearchParams();
+    if (params?.date_from) qs.set("date_from", params.date_from);
+    if (params?.date_to) qs.set("date_to", params.date_to);
+    const query = qs.toString() ? `?${qs.toString()}` : "";
+    return apiFetch<Appointment[]>(`/api/tenant/appointments/${query}`);
+  },
   createAppointment: (data: Partial<Appointment>) =>
     apiFetch<Appointment>("/api/tenant/appointments/", {
       method: "POST",
