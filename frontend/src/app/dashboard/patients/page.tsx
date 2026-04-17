@@ -546,10 +546,10 @@ export default function PatientsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">
-                Descripción / Notas
+                Motivo Consulta
               </label>
               <Input
-                placeholder="Observaciones generales..."
+                placeholder="Observaciones..."
                 value={newPatient.description}
                 onChange={(e) =>
                   setNewPatient({ ...newPatient, description: e.target.value })

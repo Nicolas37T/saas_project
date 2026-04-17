@@ -173,7 +173,7 @@ export default function SettingsPage() {
                   </label>
                   <Input
                     name="phone"
-                    placeholder="+1 234 567 890"
+                    placeholder="+ 591 00000000"
                     value={formData.phone}
                     onChange={handleChange}
                     className="bg-muted/50 border-border text-foreground focus-visible:ring-primary/50"
@@ -185,7 +185,7 @@ export default function SettingsPage() {
                   </label>
                   <Input
                     name="cellphone"
-                    placeholder="77766555"
+                    placeholder="+ 591 00000000"
                     value={formData.cellphone}
                     onChange={handleChange}
                     className="bg-muted/50 border-border text-foreground focus-visible:ring-primary/50"

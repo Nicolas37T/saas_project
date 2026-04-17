@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import {
   Plus,
   DollarSign,
@@ -18,8 +18,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CustomModal, SuccessModal } from "@/components/ui/custom-modal";
+import { useSearchParams } from "next/navigation";
 
-export default function PaymentsPage() {
+function PaymentsContent() {
+  const searchParams = useSearchParams();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -38,6 +40,17 @@ export default function PaymentsPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Manejar el pre-seleccionado por URL (Deep Linking desde Perfil)
+  useEffect(() => {
+    const patientId = searchParams.get("patientId");
+    if (patientId && !loading) {
+      setSelectedPatientId(patientId);
+      setIsAddModalOpen(true);
+      // Limpiar el parámetro de la URL
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, [searchParams, loading]);
 
   const loadData = async () => {
     setLoading(true);
@@ -274,7 +287,6 @@ export default function PaymentsPage() {
                         </th>
                         <th className="p-4 font-semibold">Monto</th>
                         <th className="p-4 font-semibold">Método de Pago</th>
-                        <th className="p-4 font-semibold">Estado</th>
                         <th className="p-4 font-semibold">
                           Fecha
                         </th>
@@ -306,15 +318,6 @@ export default function PaymentsPage() {
                               </span>
                               {getMethodLabel(p.payment_method)}
                             </div>
-                          </td>
-                          <td className="p-4">
-                            <span
-                              className={`px-3 py-1 text-xs font-semibold rounded-full border ${p.payment_status === "completed" ? "text-green-400 bg-green-500/10 border-green-500/20" : "text-orange-400 bg-orange-500/10 border-orange-500/20"}`}
-                            >
-                              {p.payment_status === "completed"
-                                ? "Pagado"
-                                : "Pendiente"}
-                            </span>
                           </td>
                           <td className="p-4 text-muted-foreground text-sm">
                             {new Date(p.created_at).toLocaleDateString()}
@@ -667,5 +670,13 @@ export default function PaymentsPage() {
         message="El cobro ha sido procesado exitosamente en el sistema."
       />
     </div>
+  );
+}
+
+export default function PaymentsPage() {
+  return (
+    <Suspense fallback={<div>Cargando panel de pagos...</div>}>
+      <PaymentsContent />
+    </Suspense>
   );
 }

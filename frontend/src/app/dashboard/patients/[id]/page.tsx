@@ -165,6 +165,26 @@ export default function PatientProfilePage({
       : "empleado";
   const isReceptionist = role === "recepcionista";
 
+  const calculateDebt = () => {
+    let totalCosto = 0;
+    let totalPagado = 0;
+
+    treatments.forEach((t) => {
+      // Logic same as payments page: only count if it belongs to this patient and price > 0
+      const odontogramPatientId = t.odontogram?.patient_id;
+      if (odontogramPatientId === id && t.price > 0) {
+        totalCosto += t.price;
+        const tPaid =
+          t.payments?.reduce((acc, pay) => acc + pay.amount, 0) || 0;
+        totalPagado += tPaid;
+      }
+    });
+
+    return Math.max(0, totalCosto - totalPagado);
+  };
+
+  const debt = calculateDebt();
+
   return (
     <div className="space-y-4 sm:space-y-6 max-w-5xl mx-auto">
       <button
@@ -178,6 +198,7 @@ export default function PatientProfilePage({
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center gap-4 sm:gap-6 w-full md:w-auto">
           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-primary to-blue-700 flex items-center justify-center text-2xl sm:text-3xl font-bold text-primary-foreground shadow-lg shadow-primary/20 flex-shrink-0">
+
             {patient.first_name[0]}
             {patient.last_name[0]}
           </div>
@@ -206,7 +227,17 @@ export default function PatientProfilePage({
             </div>
           </div>
         </div>
-        <div className="flex gap-2 sm:gap-3 w-full md:w-auto flex-wrap">
+
+        <div className="flex flex-wrap gap-3  w-full md:w-auto flex-wrap">
+          {debt > 0 && (
+            <Button
+              onClick={() => router.push(`/dashboard/payments?patientId=${id}`)}
+              className="bg-orange-600 hover:bg-orange-700 text-white gap-2 shadow-[0_0_15px_rgba(234,88,12,0.4)] animate-pulse"
+            >
+              <FileText size={18} />
+              Deuda Pendiente: ${debt}
+            </Button>
+          )}
           <Button
             variant="outline"
             onClick={handleOpenEdit}
