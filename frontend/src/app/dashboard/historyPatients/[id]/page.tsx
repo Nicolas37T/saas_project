@@ -193,26 +193,26 @@ export default function EditHistoryPatientPage() {
 
   // --- VISTA EDICION ---
   return (
-    <div className="space-y-6 pb-12 text-slate-200">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
+    <div className="space-y-4 sm:space-y-6 pb-12 text-slate-200">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
           <Button
             variant="ghost"
             onClick={() => router.push("/dashboard/historyPatients")}
-            className="text-slate-500 hover:text-white"
+            className="text-slate-500 hover:text-white flex-shrink-0"
           >
             <ArrowLeft size={20} />
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-white mb-1">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-1 break-words">
               Editar Registro Clínico
             </h1>
-            <p className="text-slate-400 text-sm">
+            <p className="text-slate-400 text-xs sm:text-sm">
               Modifica los datos del registro clínico y los tratamientos.
             </p>
           </div>
         </div>
-        <ClipboardClock className="text-blue-500/20" size={64} />
+        <ClipboardClock className="text-blue-500/20 flex-shrink-0 hidden sm:block" size={64} />
       </div>
 
       <Stepper currentStep={currentStep} />

@@ -8,6 +8,14 @@ async def tenant_middleware(request: Request, call_next):
     if request.method == "OPTIONS":
         return await call_next(request)
 
+    # 0.5 Rutas globales que NO necesitan resolución de tenant
+    GLOBAL_PATHS = ["/admin/", "/auth/", "/register", "/plans", "/docs", "/openapi.json"]
+    path = request.url.path
+    if any(path.startswith(gp) for gp in GLOBAL_PATHS):
+        request.state.tenant = None
+        response = await call_next(request)
+        return response
+
     # 1. Obtener el host sin el puerto (ej: negocio1.localhost:8000 -> negocio1.localhost)
     host = request.headers.get("host", "").split(":")[0]
     

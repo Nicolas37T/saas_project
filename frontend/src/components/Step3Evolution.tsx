@@ -1,18 +1,60 @@
 "use client";
-import React from "react";
-import { Activity, Stethoscope } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Activity, Stethoscope, Plus, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface Step3Props {
   formData: any;
   setFormData: (data: any) => void;
 }
 
+const DELIMITER = "\n\n---\n\n";
+
 export const Step3Evolution: React.FC<Step3Props> = ({
   formData,
   setFormData,
 }) => {
+  // Inicializar cajitas desde la descripción médica (split por el delimitador)
+  const [entries, setEntries] = useState<string[]>([]);
+
+  useEffect(() => {
+    const initialText = formData.medical_description || "";
+    if (initialText) {
+      const splitEntries = initialText.split(DELIMITER);
+      setEntries(splitEntries);
+    } else {
+      setEntries([""]); // Empezar con una vacía si no hay nada
+    }
+  }, []); // Solo al montar
+
+  // Actualizar el formData global cuando las cajitas locales cambian
+  const syncToGlobal = (newEntries: string[]) => {
+    setEntries(newEntries);
+    const joinedText = newEntries.filter(e => e.trim() !== "").join(DELIMITER);
+    setFormData({ ...formData, medical_description: joinedText });
+  };
+
+  const handleEntryChange = (index: number, value: string) => {
+    const newEntries = [...entries];
+    newEntries[index] = value;
+    syncToGlobal(newEntries);
+  };
+
+  const addEntry = () => {
+    syncToGlobal([...entries, ""]);
+  };
+
+  const removeEntry = (index: number) => {
+    if (entries.length <= 1) {
+      syncToGlobal([""]);
+      return;
+    }
+    const newEntries = entries.filter((_, i) => i !== index);
+    syncToGlobal(newEntries);
+  };
+
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto space-y-6">
       <Card className="bg-card border-border backdrop-blur-sm shadow-xl">
@@ -47,7 +89,7 @@ export const Step3Evolution: React.FC<Step3Props> = ({
               Condiciones
             </label>
             <Input
-              className="bg-muted/50 border-border h-11"
+              className="bg-muted/50 border-border h-10 sm:h-11 text-xs sm:text-sm"
               placeholder="Diabetes..."
               value={formData.conditions}
               onChange={(e) =>
@@ -60,7 +102,7 @@ export const Step3Evolution: React.FC<Step3Props> = ({
               Alergias
             </label>
             <Input
-              className="bg-muted/50 border-border h-11"
+              className="bg-muted/50 border-border h-10 sm:h-11 text-xs sm:text-sm"
               placeholder="Latex..."
               value={formData.allergies}
               onChange={(e) =>
@@ -73,7 +115,7 @@ export const Step3Evolution: React.FC<Step3Props> = ({
               Medicación
             </label>
             <Input
-              className="bg-muted/50 border-border h-11"
+              className="bg-muted/50 border-border h-10 sm:h-11 text-xs sm:text-sm"
               placeholder="Aspirina..."
               value={formData.medications}
               onChange={(e) =>

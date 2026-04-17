@@ -7,7 +7,8 @@ import {
   Search,
   Stethoscope,
   CheckCircle2,
-  RefreshCw
+  RefreshCw,
+  User
 } from "lucide-react";
 import { tenantApi, Treatment, Odontogram } from "@/lib/api";
 import { Input } from "@/components/ui/input";
@@ -150,21 +151,21 @@ export default function TreatmentsPage() {
   }, [allProcedures, activeFilter, search]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight mb-1 flex items-center gap-2">
-            <Stethoscope className="text-primary" />
-            Control de Tratamientos
+        <div className="w-full sm:w-auto">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 flex items-center gap-2">
+            <Stethoscope className="text-primary flex-shrink-0" size={24} />
+            <span className="break-words">Control de Tratamientos</span>
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-xs sm:text-sm">
             Detalle pormenorizado de procedimientos clínicos por pieza dental.
           </p>
         </div>
         <Button
           variant="outline"
           onClick={loadData}
-          className="bg-muted border-border hover:bg-accent"
+          className="bg-muted border-border hover:bg-accent w-full sm:w-auto text-sm"
         >
           <RefreshCw size={16} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
           Refrescar
@@ -225,7 +226,8 @@ export default function TreatmentsPage() {
         </Card>
       ) : (
         <div className="bg-card rounded-2xl border border-border shadow-2xl overflow-hidden backdrop-blur-md">
-          <div className="overflow-x-auto">
+          {/* Desktop Table */}
+          <div className="overflow-x-auto hidden md:block">
             <table className="w-full text-left text-xs whitespace-nowrap">
               <thead className="bg-muted/80 text-muted-foreground uppercase tracking-[0.1em] font-black border-b border-border/80">
                 <tr>
@@ -309,13 +311,81 @@ export default function TreatmentsPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden divide-y divide-border">
+            {filteredProcedures.map((item, idx) => (
+              <div key={item.id || idx} className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="w-10 h-10 bg-gradient-to-br from-primary to-blue-600 rounded-lg flex items-center justify-center text-primary-foreground font-black text-sm shadow-lg shadow-primary/20 flex-shrink-0">
+                      {item.patient_name.charAt(0)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-bold truncate">{item.patient_name}</div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge className="bg-muted/60 text-primary border border-primary/30 px-2 py-0.5 font-black text-[10px] rounded-md">
+                          #{item.tooth_number}
+                        </Badge>
+                        <span className="text-[10px] text-muted-foreground font-bold uppercase">
+                          {item.tooth_type === 'adult' ? 'Permanente' : 'Temporal'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <span className={`px-2.5 py-1 rounded-md text-[10px] font-black border ${getStatusTheme(item.procedure_status)} uppercase tracking-widest shadow-sm`}>
+                      {getStatusLabel(item.procedure_status)}
+                    </span>
+                    <span className={`font-black text-sm ${item.price === 0 ? "text-muted-foreground italic" : "text-amber-500"}`}>
+                      {item.price === 0 ? "Privado" : `Bs. ${item.price.toLocaleString()}`}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <p className="font-black tracking-tight uppercase text-sm mb-1">
+                    {item.description}
+                  </p>
+                  {item.notes && (
+                    <p className="text-[11px] text-muted-foreground italic truncate">
+                      {item.notes}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-muted-foreground font-mono font-medium text-xs">
+                    <Calendar size={12} />
+                    {item.treatment_date ? new Date(item.treatment_date).toLocaleDateString() : "--"}
+                  </div>
+                  {item.procedure_status !== 'completado' && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-xs hover:text-green-500 hover:bg-green-500/10 transition-all rounded-full"
+                      onClick={() => handleStatusUpdate(item.id, 'completado')}
+                      disabled={updatingId === item.id}
+                    >
+                      {updatingId === item.id ? (
+                        <RefreshCw size={12} className="animate-spin" />
+                      ) : (
+                        <>
+                          <CheckCircle2 size={12} className="mr-1" />
+                          Completar
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
           {/* Summary Footer */}
-          <div className="bg-muted/40 px-6 py-4 flex justify-between items-center border-t border-border">
+          <div className="bg-muted/40 px-4 md:px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-t border-border">
             <p className="text-muted-foreground text-[10px] uppercase font-black tracking-widest">
               Total procedimientos listados: {filteredProcedures.length}
             </p>
-            <div className="flex items-center gap-2">
-                 <p className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest leading-tight text-right w-40">
+            <div className="flex items-center gap-2 w-full md:w-auto">
+                 <p className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest leading-tight text-right md:w-40 hidden md:block">
                     Calculado excluyendo
                     <br />
                     tratamientos privados

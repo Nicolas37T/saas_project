@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Plus,
   Calendar as CalendarIcon,
@@ -49,15 +49,77 @@ export default function AppointmentsPage() {
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [successInfo, setSuccessInfo] = useState({ title: "", message: "" });
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  // Conflict error for create / edit forms
+  const [createConflictError, setCreateConflictError] = useState("");
+  const [editConflictError, setEditConflictError] = useState("");
 
-  const loadData = async () => {
+  // Date range filter for list view
+  type DateFilter = "today" | "week" | "upcoming" | "past" | "all";
+  const [dateFilter, setDateFilter] = useState<DateFilter>("today");
+
+  const [activeTab, setActiveTab] = useState("list");
+  const [calendarDate, setCalendarDate] = useState(() => {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() };
+  });
+
+  const getRangeForCalendar = (year: number, month: number) => {
+    const toISO = (d: Date) => d.toISOString().split("T")[0];
+    const start = new Date(year, month, 1);
+    start.setDate(start.getDate() - 7); // pad start
+    const end = new Date(year, month + 1, 1);
+    end.setDate(end.getDate() + 7); // pad end
+    return { date_from: toISO(start), date_to: toISO(end) };
+  };
+
+  // ── Compute date range for a given filter ───────────────────────────────
+  const getDateRangeForFilter = (filter: DateFilter): { date_from?: string; date_to?: string } => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const toISO = (d: Date) => d.toISOString().split("T")[0]; // "YYYY-MM-DD"
+
+    switch (filter) {
+      case "today": {
+        const tomorrow = new Date(todayStart);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        return { date_from: toISO(todayStart), date_to: toISO(tomorrow) };
+      }
+      case "week": {
+        const dow = now.getDay();
+        const diffMon = dow === 0 ? 6 : dow - 1;
+        const weekStart = new Date(todayStart);
+        weekStart.setDate(weekStart.getDate() - diffMon);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 7);
+        return { date_from: toISO(weekStart), date_to: toISO(weekEnd) };
+      }
+      case "upcoming":
+        return { date_from: toISO(todayStart) };
+      case "past":
+        return { date_to: toISO(todayStart) };
+      case "all":
+      default:
+        return {};
+    }
+  };
+
+  // ── Load data (with optional server-side date filter) ──────────────────
+  const loadData = async (dateRange?: { date_from?: string; date_to?: string }) => {
     setLoading(true);
     try {
+      // Use provided range, or compute from current context
+      let range = dateRange;
+      if (!range) {
+        if (activeTab === "list") {
+          range = getDateRangeForFilter(dateFilter);
+        } else {
+          range = getRangeForCalendar(calendarDate.year, calendarDate.month);
+        }
+      }
+
       const [appData, patData, empData] = await Promise.all([
-        tenantApi.getAppointments(),
+        tenantApi.getAppointments(range),
         tenantApi.getPatients(),
         tenantApi.getDoctors().catch(() => []),
       ]);
@@ -71,9 +133,13 @@ export default function AppointmentsPage() {
       setPatients(patData);
       setEmployees(empData.filter((e: Employee) => e.status));
       
-      // Auto-select first doctor if creating new appointment
-      if (empData.length > 0 && !newAppointment.assigned_doctor_id) {
-        setNewAppointment(prev => ({ ...prev, assigned_doctor_id: empData[0].id }));
+      // Auto-select first doctor for new appointment form
+      const activeEmployees = empData.filter((e: Employee) => e.status);
+      if (activeEmployees.length > 0) {
+        setNewAppointment(prev => ({
+          ...prev,
+          assigned_doctor_id: prev.assigned_doctor_id || activeEmployees[0].id,
+        }));
       }
     } catch (error) {
       console.error("Failed to load appointments data", error);
@@ -82,37 +148,87 @@ export default function AppointmentsPage() {
     }
   };
 
+  // Re-fetch when context changes
+  useEffect(() => {
+    if (activeTab === "list") {
+      loadData(getDateRangeForFilter(dateFilter));
+    } else {
+      loadData(getRangeForCalendar(calendarDate.year, calendarDate.month));
+    }
+  }, [activeTab, dateFilter, calendarDate.year, calendarDate.month]);
+
+
+  /**
+   * Checks if `doctorId` already has an active appointment at the exact
+   * same date+time (compared to the minute). Returns an error string or null.
+   * `excludeId` lets us skip the appointment being edited (it's not a conflict with itself).
+   */
+  const checkDoctorConflict = (
+    doctorId: string,
+    dateTimeStr: string,   // "YYYY-MM-DDTHH:MM:00"
+    excludeId?: string,
+  ): string | null => {
+    if (!doctorId) return null;
+    const newMin = dateTimeStr.substring(0, 16); // "YYYY-MM-DDTHH:MM"
+    const conflict = appointments.find((apt) => {
+      if (!apt.status) return false;
+      if (apt.assigned_doctor_id !== doctorId) return false;
+      if (excludeId && apt.id === excludeId) return false;
+      return apt.appointment_date.substring(0, 16) === newMin;
+    });
+    return conflict
+      ? "El doctor ya tiene una cita programada en esa fecha y hora."
+      : null;
+  };
+
   const handleCreateAppointment = async (e: React.FormEvent) => {
     e.preventDefault();
+    setCreateConflictError("");
     try {
-      // Combine date and time
-      const combinedDate = new Date(
-        `${newAppointment.appointment_date}T${newAppointment.appointment_time}`,
+      // Combine date and time as ISO string WITHOUT timezone conversion
+      const appointmentDateTime = `${newAppointment.appointment_date}T${newAppointment.appointment_time}:00`;
+
+      // ── Frontend conflict guard (instant, no round-trip) ──────────────────
+      const frontendError = checkDoctorConflict(
+        newAppointment.assigned_doctor_id,
+        appointmentDateTime,
       );
+      if (frontendError) {
+        setCreateConflictError(frontendError);
+        return;
+      }
+      // ─────────────────────────────────────────────────────────────────────
 
       await tenantApi.createAppointment({
         patient_id: newAppointment.patient_id,
-        appointment_date: combinedDate.toISOString(),
+        appointment_date: appointmentDateTime,
         notes: newAppointment.notes,
         appointment_status: newAppointment.appointment_status,
         assigned_doctor_id: newAppointment.assigned_doctor_id || undefined,
       });
 
       setIsAddModalOpen(false);
+      // Reset form — pre-set doctor to first available to avoid blank value
       setNewAppointment({
         patient_id: "",
         appointment_date: "",
         appointment_time: "",
         notes: "",
         appointment_status: "scheduled",
-        assigned_doctor_id: "",
+        assigned_doctor_id: employees.length > 0 ? employees[0].id : "",
       });
       
       setSuccessInfo({ title: "Cita Programada", message: "La cita ha sido agendada con éxito." });
       setIsSuccessModalOpen(true);
-      loadData(); // refresh list
-    } catch (error) {
-      console.error("Error creating appointment", error);
+      loadData();
+    } catch (error: any) {
+      // Backend 409 fallback (race condition, etc.)
+      const msg = error?.message || "";
+      if (msg.includes("doctor ya tiene") || msg.includes("409")) {
+        setCreateConflictError("El doctor ya tiene una cita programada en esa fecha y hora.");
+      } else {
+        console.error("Error creating appointment", error);
+      }
     }
   };
 
@@ -137,14 +253,26 @@ export default function AppointmentsPage() {
   const handleUpdateAppointment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingAppointment) return;
+    setEditConflictError("");
     try {
-      const combinedDate = new Date(
-        `${editingAppointment.date}T${editingAppointment.time}`,
+      // Combine date and time as ISO string WITHOUT timezone conversion
+      const appointmentDateTime = `${editingAppointment.date}T${editingAppointment.time}:00`;
+
+      // ── Frontend conflict guard ───────────────────────────────────────────
+      const frontendError = checkDoctorConflict(
+        editingAppointment.assigned_doctor_id || "",
+        appointmentDateTime,
+        editingAppointment.id,  // exclude self
       );
+      if (frontendError) {
+        setEditConflictError(frontendError);
+        return;
+      }
+      // ─────────────────────────────────────────────────────────────────────
 
       await tenantApi.updateAppointment(editingAppointment.id, {
         patient_id: editingAppointment.patient_id,
-        appointment_date: combinedDate.toISOString(),
+        appointment_date: appointmentDateTime,
         notes: editingAppointment.notes,
         appointment_status: editingAppointment.appointment_status,
         assigned_doctor_id: editingAppointment.assigned_doctor_id || undefined,
@@ -156,8 +284,13 @@ export default function AppointmentsPage() {
       setSuccessInfo({ title: "Cita Actualizada", message: "Los cambios se guardaron correctamente." });
       setIsSuccessModalOpen(true);
       loadData();
-    } catch (error) {
-      console.error("Error updating appointment", error);
+    } catch (error: any) {
+      const msg = error?.message || "";
+      if (msg.includes("doctor ya tiene") || msg.includes("409")) {
+        setEditConflictError("El doctor ya tiene una cita programada en esa fecha y hora.");
+      } else {
+        console.error("Error updating appointment", error);
+      }
     }
   };
 
@@ -221,6 +354,17 @@ export default function AppointmentsPage() {
     cancelled: "Cancelada",
   };
 
+  // Backend already filters by date range — filteredAppointments is the fetch result
+  const filteredAppointments = appointments;
+
+  const filterOptions: { key: DateFilter; label: string }[] = [
+    { key: "today", label: "Hoy" },
+    { key: "week", label: "Esta semana" },
+    { key: "upcoming", label: "Próximas" },
+    { key: "past", label: "Pasadas" },
+    { key: "all", label: "Todas" },
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -245,7 +389,7 @@ export default function AppointmentsPage() {
           <div className="animate-spin w-8 h-8 rounded-full border-2 border-primary border-t-transparent"></div>
         </div>
       ) : (
-        <Tabs defaultValue="list">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4">
             <TabsTrigger value="list" className="gap-1.5">
               <List size={15} /> Lista
@@ -256,23 +400,56 @@ export default function AppointmentsPage() {
           </TabsList>
 
           <TabsContent value="list">
-            {appointments.length === 0 ? (
+            {/* Date filter chips */}
+            <div className="flex flex-wrap items-center gap-2 mb-5">
+              {filterOptions.map((opt) => {
+                const isActive = dateFilter === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    onClick={() => setDateFilter(opt.key)}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-full border transition-all ${
+                      isActive
+                        ? "bg-primary text-primary-foreground border-primary shadow-[0_0_12px_rgba(37,99,235,0.3)]"
+                        : "bg-muted/50 text-muted-foreground border-border hover:bg-accent hover:text-foreground"
+                    }`}
+                  >
+                    {opt.label}
+                    {isActive && (
+                      <span className="ml-1.5 text-xs opacity-80 z-10">({filteredAppointments.length})</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {filteredAppointments.length === 0 ? (
               <Card className="bg-card border-border backdrop-blur-sm">
                 <CardContent className="flex flex-col items-center justify-center py-20">
                   <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
                     <CalendarIcon className="text-muted-foreground" size={32} />
                   </div>
                   <h3 className="text-xl font-medium mb-2">
-                    No tienes citas programadas
+                    {dateFilter === "today"
+                      ? "No tienes citas para hoy"
+                      : dateFilter === "week"
+                      ? "No hay citas esta semana"
+                      : dateFilter === "upcoming"
+                      ? "No hay citas próximas"
+                      : dateFilter === "past"
+                      ? "No hay citas pasadas"
+                      : "No tienes citas programadas"}
                   </h3>
                   <p className="text-muted-foreground">
-                    Tu agenda está libre. Haz clic en &quot;Nueva Cita&quot; para empezar.
+                    {dateFilter !== "all" && dateFilter !== "past"
+                      ? 'Tu agenda está libre. Haz clic en "Nueva Cita" para empezar.'
+                      : "No se encontraron citas con este filtro."}
                   </p>
                 </CardContent>
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {appointments.map((apt) => {
+                {filteredAppointments.map((apt) => {
                   const d = new Date(apt.appointment_date);
                   return (
                     <Card
@@ -377,6 +554,7 @@ export default function AppointmentsPage() {
                 }));
                 setIsAddModalOpen(true);
               }}
+              onMonthChange={(year, month) => setCalendarDate({ year, month })}
               getPatientName={getPatientName}
               getDoctorName={getDoctorName}
               getStatusStyle={getStatusStyle}
@@ -424,12 +602,10 @@ export default function AppointmentsPage() {
               required
               className="w-full p-2.5 rounded-md bg-muted/50 border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
               value={newAppointment.assigned_doctor_id}
-              onChange={(e) =>
-                setNewAppointment({
-                  ...newAppointment,
-                  assigned_doctor_id: e.target.value,
-                })
-              }
+              onChange={(e) => {
+                setNewAppointment({ ...newAppointment, assigned_doctor_id: e.target.value });
+                setCreateConflictError("");
+              }}
             >
               {employees.map((emp) => (
                 <option key={emp.id} value={emp.id}>
@@ -448,12 +624,10 @@ export default function AppointmentsPage() {
                 type="date"
                 required
                 value={newAppointment.appointment_date}
-                onChange={(e) =>
-                  setNewAppointment({
-                    ...newAppointment,
-                    appointment_date: e.target.value,
-                  })
-                }
+                onChange={(e) => {
+                  setNewAppointment({ ...newAppointment, appointment_date: e.target.value });
+                  setCreateConflictError("");
+                }}
                 className="bg-muted/50 border-border text-foreground"
               />
             </div>
@@ -465,12 +639,10 @@ export default function AppointmentsPage() {
                 type="time"
                 required
                 value={newAppointment.appointment_time}
-                onChange={(e) =>
-                  setNewAppointment({
-                    ...newAppointment,
-                    appointment_time: e.target.value,
-                  })
-                }
+                onChange={(e) => {
+                  setNewAppointment({ ...newAppointment, appointment_time: e.target.value });
+                  setCreateConflictError("");
+                }}
                 className="bg-muted/50 border-border text-foreground"
               />
             </div>
@@ -512,11 +684,18 @@ export default function AppointmentsPage() {
               }
             />
           </div>
+          {/* Conflict error */}
+          {createConflictError && (
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm">
+              <span className="shrink-0 mt-0.5">⚠️</span>
+              <span>{createConflictError}</span>
+            </div>
+          )}
           <div className="flex justify-end gap-3 mt-6">
             <Button
               variant="ghost"
               type="button"
-              onClick={() => setIsAddModalOpen(false)}
+              onClick={() => { setIsAddModalOpen(false); setCreateConflictError(""); }}
               className="hover:bg-accent"
             >
               Cancelar
@@ -566,12 +745,10 @@ export default function AppointmentsPage() {
                 required
                 className="w-full p-2.5 rounded-md bg-muted/50 border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                 value={editingAppointment.assigned_doctor_id}
-                onChange={(e) =>
-                  setEditingAppointment({
-                    ...editingAppointment,
-                    assigned_doctor_id: e.target.value,
-                  })
-                }
+                onChange={(e) => {
+                  setEditingAppointment({ ...editingAppointment, assigned_doctor_id: e.target.value });
+                  setEditConflictError("");
+                }}
               >
                 {employees.map((emp) => (
                   <option key={emp.id} value={emp.id}>
@@ -590,12 +767,10 @@ export default function AppointmentsPage() {
                   type="date"
                   required
                   value={editingAppointment.date}
-                  onChange={(e) =>
-                    setEditingAppointment({
-                      ...editingAppointment,
-                      date: e.target.value,
-                    })
-                  }
+                  onChange={(e) => {
+                    setEditingAppointment({ ...editingAppointment, date: e.target.value });
+                    setEditConflictError("");
+                  }}
                   className="bg-muted/50 border-border text-foreground"
                 />
               </div>
@@ -607,12 +782,10 @@ export default function AppointmentsPage() {
                   type="time"
                   required
                   value={editingAppointment.time}
-                  onChange={(e) =>
-                    setEditingAppointment({
-                      ...editingAppointment,
-                      time: e.target.value,
-                    })
-                  }
+                  onChange={(e) => {
+                    setEditingAppointment({ ...editingAppointment, time: e.target.value });
+                    setEditConflictError("");
+                  }}
                   className="bg-muted/50 border-border text-foreground"
                 />
               </div>
@@ -654,6 +827,13 @@ export default function AppointmentsPage() {
                 }
               />
             </div>
+            {/* Conflict error */}
+            {editConflictError && (
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm">
+                <span className="shrink-0 mt-0.5">⚠️</span>
+                <span>{editConflictError}</span>
+              </div>
+            )}
             <div className="flex justify-end gap-3 mt-6">
               <Button
                 variant="ghost"
@@ -661,6 +841,7 @@ export default function AppointmentsPage() {
                 onClick={() => {
                     setIsEditModalOpen(false);
                     setEditingAppointment(null);
+                    setEditConflictError("");
                 }}
                 className="hover:bg-accent"
               >
