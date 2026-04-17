@@ -49,6 +49,10 @@ export default function AppointmentsPage() {
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [successInfo, setSuccessInfo] = useState({ title: "", message: "" });
 
+  // Conflict error for create / edit forms
+  const [createConflictError, setCreateConflictError] = useState("");
+  const [editConflictError, setEditConflictError] = useState("");
+
   useEffect(() => {
     loadData();
   }, []);
@@ -88,12 +92,46 @@ export default function AppointmentsPage() {
     }
   };
 
+  /**
+   * Checks if `doctorId` already has an active appointment at the exact
+   * same date+time (compared to the minute). Returns an error string or null.
+   * `excludeId` lets us skip the appointment being edited (it's not a conflict with itself).
+   */
+  const checkDoctorConflict = (
+    doctorId: string,
+    dateTimeStr: string,   // "YYYY-MM-DDTHH:MM:00"
+    excludeId?: string,
+  ): string | null => {
+    if (!doctorId) return null;
+    const newMin = dateTimeStr.substring(0, 16); // "YYYY-MM-DDTHH:MM"
+    const conflict = appointments.find((apt) => {
+      if (!apt.status) return false;
+      if (apt.assigned_doctor_id !== doctorId) return false;
+      if (excludeId && apt.id === excludeId) return false;
+      return apt.appointment_date.substring(0, 16) === newMin;
+    });
+    return conflict
+      ? "El doctor ya tiene una cita programada en esa fecha y hora."
+      : null;
+  };
+
   const handleCreateAppointment = async (e: React.FormEvent) => {
     e.preventDefault();
+    setCreateConflictError("");
     try {
       // Combine date and time as ISO string WITHOUT timezone conversion
-      // Using toISOString() would shift hours to UTC, causing wrong times to be saved
       const appointmentDateTime = `${newAppointment.appointment_date}T${newAppointment.appointment_time}:00`;
+
+      // ── Frontend conflict guard (instant, no round-trip) ──────────────────
+      const frontendError = checkDoctorConflict(
+        newAppointment.assigned_doctor_id,
+        appointmentDateTime,
+      );
+      if (frontendError) {
+        setCreateConflictError(frontendError);
+        return;
+      }
+      // ─────────────────────────────────────────────────────────────────────
 
       await tenantApi.createAppointment({
         patient_id: newAppointment.patient_id,
@@ -116,9 +154,15 @@ export default function AppointmentsPage() {
       
       setSuccessInfo({ title: "Cita Programada", message: "La cita ha sido agendada con éxito." });
       setIsSuccessModalOpen(true);
-      loadData(); // refresh list
-    } catch (error) {
-      console.error("Error creating appointment", error);
+      loadData();
+    } catch (error: any) {
+      // Backend 409 fallback (race condition, etc.)
+      const msg = error?.message || "";
+      if (msg.includes("doctor ya tiene") || msg.includes("409")) {
+        setCreateConflictError("El doctor ya tiene una cita programada en esa fecha y hora.");
+      } else {
+        console.error("Error creating appointment", error);
+      }
     }
   };
 
@@ -143,9 +187,22 @@ export default function AppointmentsPage() {
   const handleUpdateAppointment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingAppointment) return;
+    setEditConflictError("");
     try {
       // Combine date and time as ISO string WITHOUT timezone conversion
       const appointmentDateTime = `${editingAppointment.date}T${editingAppointment.time}:00`;
+
+      // ── Frontend conflict guard ───────────────────────────────────────────
+      const frontendError = checkDoctorConflict(
+        editingAppointment.assigned_doctor_id || "",
+        appointmentDateTime,
+        editingAppointment.id,  // exclude self
+      );
+      if (frontendError) {
+        setEditConflictError(frontendError);
+        return;
+      }
+      // ─────────────────────────────────────────────────────────────────────
 
       await tenantApi.updateAppointment(editingAppointment.id, {
         patient_id: editingAppointment.patient_id,
@@ -161,8 +218,13 @@ export default function AppointmentsPage() {
       setSuccessInfo({ title: "Cita Actualizada", message: "Los cambios se guardaron correctamente." });
       setIsSuccessModalOpen(true);
       loadData();
-    } catch (error) {
-      console.error("Error updating appointment", error);
+    } catch (error: any) {
+      const msg = error?.message || "";
+      if (msg.includes("doctor ya tiene") || msg.includes("409")) {
+        setEditConflictError("El doctor ya tiene una cita programada en esa fecha y hora.");
+      } else {
+        console.error("Error updating appointment", error);
+      }
     }
   };
 
@@ -429,12 +491,10 @@ export default function AppointmentsPage() {
               required
               className="w-full p-2.5 rounded-md bg-muted/50 border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
               value={newAppointment.assigned_doctor_id}
-              onChange={(e) =>
-                setNewAppointment({
-                  ...newAppointment,
-                  assigned_doctor_id: e.target.value,
-                })
-              }
+              onChange={(e) => {
+                setNewAppointment({ ...newAppointment, assigned_doctor_id: e.target.value });
+                setCreateConflictError("");
+              }}
             >
               {employees.map((emp) => (
                 <option key={emp.id} value={emp.id}>
@@ -453,12 +513,10 @@ export default function AppointmentsPage() {
                 type="date"
                 required
                 value={newAppointment.appointment_date}
-                onChange={(e) =>
-                  setNewAppointment({
-                    ...newAppointment,
-                    appointment_date: e.target.value,
-                  })
-                }
+                onChange={(e) => {
+                  setNewAppointment({ ...newAppointment, appointment_date: e.target.value });
+                  setCreateConflictError("");
+                }}
                 className="bg-muted/50 border-border text-foreground"
               />
             </div>
@@ -470,12 +528,10 @@ export default function AppointmentsPage() {
                 type="time"
                 required
                 value={newAppointment.appointment_time}
-                onChange={(e) =>
-                  setNewAppointment({
-                    ...newAppointment,
-                    appointment_time: e.target.value,
-                  })
-                }
+                onChange={(e) => {
+                  setNewAppointment({ ...newAppointment, appointment_time: e.target.value });
+                  setCreateConflictError("");
+                }}
                 className="bg-muted/50 border-border text-foreground"
               />
             </div>
@@ -517,11 +573,18 @@ export default function AppointmentsPage() {
               }
             />
           </div>
+          {/* Conflict error */}
+          {createConflictError && (
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm">
+              <span className="shrink-0 mt-0.5">⚠️</span>
+              <span>{createConflictError}</span>
+            </div>
+          )}
           <div className="flex justify-end gap-3 mt-6">
             <Button
               variant="ghost"
               type="button"
-              onClick={() => setIsAddModalOpen(false)}
+              onClick={() => { setIsAddModalOpen(false); setCreateConflictError(""); }}
               className="hover:bg-accent"
             >
               Cancelar
@@ -571,12 +634,10 @@ export default function AppointmentsPage() {
                 required
                 className="w-full p-2.5 rounded-md bg-muted/50 border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                 value={editingAppointment.assigned_doctor_id}
-                onChange={(e) =>
-                  setEditingAppointment({
-                    ...editingAppointment,
-                    assigned_doctor_id: e.target.value,
-                  })
-                }
+                onChange={(e) => {
+                  setEditingAppointment({ ...editingAppointment, assigned_doctor_id: e.target.value });
+                  setEditConflictError("");
+                }}
               >
                 {employees.map((emp) => (
                   <option key={emp.id} value={emp.id}>
@@ -595,12 +656,10 @@ export default function AppointmentsPage() {
                   type="date"
                   required
                   value={editingAppointment.date}
-                  onChange={(e) =>
-                    setEditingAppointment({
-                      ...editingAppointment,
-                      date: e.target.value,
-                    })
-                  }
+                  onChange={(e) => {
+                    setEditingAppointment({ ...editingAppointment, date: e.target.value });
+                    setEditConflictError("");
+                  }}
                   className="bg-muted/50 border-border text-foreground"
                 />
               </div>
@@ -612,12 +671,10 @@ export default function AppointmentsPage() {
                   type="time"
                   required
                   value={editingAppointment.time}
-                  onChange={(e) =>
-                    setEditingAppointment({
-                      ...editingAppointment,
-                      time: e.target.value,
-                    })
-                  }
+                  onChange={(e) => {
+                    setEditingAppointment({ ...editingAppointment, time: e.target.value });
+                    setEditConflictError("");
+                  }}
                   className="bg-muted/50 border-border text-foreground"
                 />
               </div>
@@ -659,6 +716,13 @@ export default function AppointmentsPage() {
                 }
               />
             </div>
+            {/* Conflict error */}
+            {editConflictError && (
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm">
+                <span className="shrink-0 mt-0.5">⚠️</span>
+                <span>{editConflictError}</span>
+              </div>
+            )}
             <div className="flex justify-end gap-3 mt-6">
               <Button
                 variant="ghost"
@@ -666,6 +730,7 @@ export default function AppointmentsPage() {
                 onClick={() => {
                     setIsEditModalOpen(false);
                     setEditingAppointment(null);
+                    setEditConflictError("");
                 }}
                 className="hover:bg-accent"
               >

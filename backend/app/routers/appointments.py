@@ -10,11 +10,48 @@ from app.schemas.tenant_schemas import AppointmentCreate, AppointmentRead, Appoi
 
 router = APIRouter(prefix="/appointments", tags=["Appointments"])
 
+
+def _check_doctor_conflict(
+    session: Session,
+    doctor_id: uuid.UUID,
+    appointment_date,
+    exclude_id: uuid.UUID | None = None,
+):
+    """
+    Raises HTTP 409 if the doctor already has an active appointment
+    at the exact same minute as `appointment_date`.
+    Pass `exclude_id` when editing so the appointment doesn't conflict with itself.
+    """
+    new_dt = appointment_date.replace(second=0, microsecond=0)
+
+    query = select(Appointment).where(
+        Appointment.assigned_doctor_id == doctor_id,
+        Appointment.status == True,
+    )
+    if exclude_id is not None:
+        query = query.where(Appointment.id != exclude_id)
+
+    for apt in session.exec(query).all():
+        existing_dt = apt.appointment_date.replace(second=0, microsecond=0)
+        if existing_dt == new_dt:
+            raise HTTPException(
+                status_code=409,
+                detail="El doctor ya tiene una cita programada en esa fecha y hora."
+            )
+
+
 @router.post("/", response_model=AppointmentRead)
 def create_appointment(
     appointment: AppointmentCreate,
     session: Session = Depends(get_session_for_tenant)
 ):
+    if appointment.assigned_doctor_id and appointment.appointment_date:
+        _check_doctor_conflict(
+            session,
+            appointment.assigned_doctor_id,
+            appointment.appointment_date,
+        )
+
     db_appointment = Appointment.model_validate(appointment)
     session.add(db_appointment)
     session.commit()
@@ -77,6 +114,21 @@ def update_appointment(
     db_appointment = session.get(Appointment, appointment_id)
     if not db_appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    # Resolve final doctor + date after the update is applied
+    doctor_id = (
+        appointment_update.assigned_doctor_id
+        if appointment_update.assigned_doctor_id is not None
+        else db_appointment.assigned_doctor_id
+    )
+    new_date = (
+        appointment_update.appointment_date
+        if appointment_update.appointment_date is not None
+        else db_appointment.appointment_date
+    )
+
+    if doctor_id and new_date:
+        _check_doctor_conflict(session, doctor_id, new_date, exclude_id=appointment_id)
     
     update_data = appointment_update.model_dump(exclude_unset=True)
     db_appointment.sqlmodel_update(update_data)
