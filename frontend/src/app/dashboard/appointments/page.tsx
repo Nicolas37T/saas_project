@@ -71,9 +71,15 @@ export default function AppointmentsPage() {
       setPatients(patData);
       setEmployees(empData.filter((e: Employee) => e.status));
       
-      // Auto-select first doctor if creating new appointment
-      if (empData.length > 0 && !newAppointment.assigned_doctor_id) {
-        setNewAppointment(prev => ({ ...prev, assigned_doctor_id: empData[0].id }));
+      // Auto-select first doctor for new appointment form
+      // Use functional update to avoid stale closure — the check must
+      // read the LATEST state, not the captured closure value
+      const activeEmployees = empData.filter((e: Employee) => e.status);
+      if (activeEmployees.length > 0) {
+        setNewAppointment(prev => ({
+          ...prev,
+          assigned_doctor_id: prev.assigned_doctor_id || activeEmployees[0].id,
+        }));
       }
     } catch (error) {
       console.error("Failed to load appointments data", error);
@@ -85,27 +91,27 @@ export default function AppointmentsPage() {
   const handleCreateAppointment = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Combine date and time
-      const combinedDate = new Date(
-        `${newAppointment.appointment_date}T${newAppointment.appointment_time}`,
-      );
+      // Combine date and time as ISO string WITHOUT timezone conversion
+      // Using toISOString() would shift hours to UTC, causing wrong times to be saved
+      const appointmentDateTime = `${newAppointment.appointment_date}T${newAppointment.appointment_time}:00`;
 
       await tenantApi.createAppointment({
         patient_id: newAppointment.patient_id,
-        appointment_date: combinedDate.toISOString(),
+        appointment_date: appointmentDateTime,
         notes: newAppointment.notes,
         appointment_status: newAppointment.appointment_status,
         assigned_doctor_id: newAppointment.assigned_doctor_id || undefined,
       });
 
       setIsAddModalOpen(false);
+      // Reset form — pre-set doctor to first available to avoid blank value
       setNewAppointment({
         patient_id: "",
         appointment_date: "",
         appointment_time: "",
         notes: "",
         appointment_status: "scheduled",
-        assigned_doctor_id: "",
+        assigned_doctor_id: employees.length > 0 ? employees[0].id : "",
       });
       
       setSuccessInfo({ title: "Cita Programada", message: "La cita ha sido agendada con éxito." });
@@ -138,13 +144,12 @@ export default function AppointmentsPage() {
     e.preventDefault();
     if (!editingAppointment) return;
     try {
-      const combinedDate = new Date(
-        `${editingAppointment.date}T${editingAppointment.time}`,
-      );
+      // Combine date and time as ISO string WITHOUT timezone conversion
+      const appointmentDateTime = `${editingAppointment.date}T${editingAppointment.time}:00`;
 
       await tenantApi.updateAppointment(editingAppointment.id, {
         patient_id: editingAppointment.patient_id,
-        appointment_date: combinedDate.toISOString(),
+        appointment_date: appointmentDateTime,
         notes: editingAppointment.notes,
         appointment_status: editingAppointment.appointment_status,
         assigned_doctor_id: editingAppointment.assigned_doctor_id || undefined,
