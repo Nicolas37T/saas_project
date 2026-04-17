@@ -96,7 +96,12 @@ export default function PatientProfilePage({
               a.appointment_status !== "cancelled",
           ),
         );
-        setTreatments(treatmentsData);
+        // Filter treatments: only those whose odontogram belongs to this patient
+        setTreatments(
+          treatmentsData.filter(
+            (t: Treatment) => t.odontogram?.patient_id === id
+          )
+        );
         setEmployeesList(employees.filter((emp: Employee) => emp.status));
       } catch (error) {
         console.error("Error loading patient data:", error);
@@ -358,7 +363,10 @@ export default function PatientProfilePage({
                 </div>
               ) : (
                 <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
-                  {treatments.map((treatment) => (
+                  {treatments.map((treatment) => {
+                    const totalPaid = treatment.payments?.reduce((acc, p) => acc + p.amount, 0) ?? 0;
+                    const isPaid = treatment.price === 0 || totalPaid >= treatment.price;
+                    return (
                     <div
                       key={treatment.id}
                       className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active"
@@ -372,21 +380,12 @@ export default function PatientProfilePage({
                             {treatment.treatment_date
                               ? new Date(treatment.treatment_date).toLocaleDateString()
                               : "Sin fecha"}
-                            {treatment.treatment_date &&
-                              ` a las ${new Date(
-                                treatment.treatment_date,
-                              ).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}`}
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="p-4 pt-0">
                           <div className="space-y-2 mt-2">
                             <p className="text-sm">
-                              <span className="text-muted-foreground">
-                                Tratamiento:
-                              </span>{" "}
+                              <span className="text-muted-foreground">Tratamiento:</span>{" "}
                               {treatment.description}
                             </p>
                             <p className="text-sm capitalize">
@@ -398,14 +397,39 @@ export default function PatientProfilePage({
                                 : "Pendiente"}
                             </p>
                             <p className="text-sm">
-                              <span className="text-muted-foreground">Precio:</span> $
-                              {treatment.price === 0 ? "Privado" : treatment.price}
+                              <span className="text-muted-foreground">Precio:</span>{" "}
+                              {treatment.price === 0 ? "Privado" : `$${treatment.price}`}
                             </p>
+                            {treatment.odontogram?.tooth_number && (
+                              <p className="text-sm flex items-center gap-2">
+                                <span className="text-muted-foreground">Pieza:</span>
+                                <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary/15 text-primary text-xs font-bold border border-primary/30">
+                                  {treatment.odontogram.tooth_number}
+                                </span>
+                              </p>
+                            )}
+                            {treatment.odontogram?.notes && (
+                              <p className="text-sm text-muted-foreground italic border-l-2 border-border pl-2">
+                                {treatment.odontogram.notes}
+                              </p>
+                            )}
+                            {treatment.price > 0 && (
+                              <span
+                                className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
+                                  isPaid
+                                    ? "bg-green-500/15 text-green-600 border border-green-500/30"
+                                    : "bg-orange-500/15 text-orange-600 border border-orange-500/30"
+                                }`}
+                              >
+                                {isPaid ? "✓ Pagado" : "⏳ Pendiente de pago"}
+                              </span>
+                            )}
                           </div>
                         </CardContent>
                       </Card>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
