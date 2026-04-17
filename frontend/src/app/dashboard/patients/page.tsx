@@ -471,7 +471,7 @@ export default function PatientsPage() {
         title="Nuevo Paciente"
       >
         <form onSubmit={handleCreatePatient} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">
                 Nombre *
@@ -501,7 +501,7 @@ export default function PatientsPage() {
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">
                 Teléfono
@@ -543,7 +543,7 @@ export default function PatientsPage() {
               className="bg-muted/50 border-border text-foreground focus-visible:ring-primary"
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">
                 Descripción / Notas
@@ -580,7 +580,7 @@ export default function PatientsPage() {
               </select>
             </div>
           </div>
-          <div className="flex gap-3 justify-end mt-8">
+          <div className="flex flex-col sm:flex-row gap-3 justify-end mt-8">
             <Button
               type="button"
               variant="ghost"
@@ -607,7 +607,7 @@ export default function PatientsPage() {
       >
         {editingPatient && (
           <form onSubmit={handleSaveEdit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">
                   Nombre *
@@ -635,7 +635,7 @@ export default function PatientsPage() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">
                   Teléfono
@@ -676,7 +676,7 @@ export default function PatientsPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">
                   Descripción / Notas
@@ -712,7 +712,7 @@ export default function PatientsPage() {
                 </select>
               </div>
             </div>
-            <div className="flex gap-3 justify-end mt-8">
+            <div className="flex flex-col sm:flex-row gap-3 justify-end mt-8">
               <Button
                 type="button"
                 variant="ghost"
@@ -793,7 +793,7 @@ export default function PatientsPage() {
             </select>
           </div>
 
-          <div className="flex gap-3 justify-end mt-8">
+          <div className="flex flex-col sm:flex-row gap-3 justify-end mt-8">
             <Button
               type="button"
               variant="ghost"

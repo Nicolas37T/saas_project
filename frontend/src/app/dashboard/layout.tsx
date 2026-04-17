@@ -254,30 +254,37 @@ export default function DashboardLayout({
 
       {/* Mobile Sidebar */}
       {sidebarOpen && (
-        <div className="md:hidden fixed inset-0 top-16 bg-background/95 backdrop-blur-md z-20 flex flex-col">
-          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-            {navItems.map((item) => {
-              const isActive =
-                pathname === item.href ||
-                (item.href !== "/dashboard" && pathname.startsWith(item.href));
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-4 rounded-xl transition-all ${
-                    isActive
-                      ? "bg-primary/20 text-primary font-medium"
-                      : "text-foreground hover:text-foreground hover:bg-accent"
-                  }`}
-                >
-                  {item.icon}
-                  {item.name}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
+        <>
+          {/* Backdrop */}
+          <div 
+            className="md:hidden fixed inset-0 top-16 bg-black/50 backdrop-blur-sm z-10"
+            onClick={() => setSidebarOpen(false)}
+          />
+          <div className="md:hidden fixed inset-0 top-16 bg-background z-20 flex flex-col">
+            <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+              {navItems.map((item) => {
+                const isActive =
+                  pathname === item.href ||
+                  (item.href !== "/dashboard" && pathname.startsWith(item.href));
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-4 rounded-xl transition-all ${
+                      isActive
+                        ? "bg-primary/20 text-primary font-medium"
+                        : "text-foreground hover:text-foreground hover:bg-accent"
+                    }`}
+                  >
+                    {item.icon}
+                    {item.name}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+        </>
       )}
 
       {/* Main Content Area */}

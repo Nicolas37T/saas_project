@@ -170,78 +170,140 @@ export default function EmployeesPage() {
             <p className="text-muted-foreground text-lg">No se encontraron empleados activos.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-muted/50">
-                  <th className="px-6 py-4 text-muted-foreground font-medium text-sm border-b border-border">Empleado</th>
-                  <th className="px-6 py-4 text-muted-foreground font-medium text-sm border-b border-border">Usuario</th>
-                  <th className="px-6 py-4 text-muted-foreground font-medium text-sm border-b border-border">Rol</th>
-                  <th className="px-6 py-4 text-muted-foreground font-medium text-sm border-b border-border">Estado</th>
-                  <th className="px-6 py-4 text-muted-foreground font-medium text-sm border-b border-border text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {filteredEmployees.map((emp) => (
-                  <tr key={emp.id} className="hover:bg-muted/30 transition-colors group">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center text-primary border border-primary/20 font-bold">
-                          {emp.full_name.charAt(0)}
-                        </div>
-                        <div>
-                          <div className="font-medium">{emp.full_name}</div>
-                          <div className="text-muted-foreground text-xs flex items-center gap-1">
-                            <Mail size={12} /> {emp.email}
+          <>
+            {/* Desktop Table */}
+            <div className="overflow-x-auto hidden md:block">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-muted/50">
+                    <th className="px-6 py-4 text-muted-foreground font-medium text-sm border-b border-border">Empleado</th>
+                    <th className="px-6 py-4 text-muted-foreground font-medium text-sm border-b border-border">Usuario</th>
+                    <th className="px-6 py-4 text-muted-foreground font-medium text-sm border-b border-border">Rol</th>
+                    <th className="px-6 py-4 text-muted-foreground font-medium text-sm border-b border-border">Estado</th>
+                    <th className="px-6 py-4 text-muted-foreground font-medium text-sm border-b border-border text-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {filteredEmployees.map((emp) => (
+                    <tr key={emp.id} className="hover:bg-muted/30 transition-colors group">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center text-primary border border-primary/20 font-bold">
+                            {emp.full_name.charAt(0)}
+                          </div>
+                          <div>
+                            <div className="font-medium">{emp.full_name}</div>
+                            <div className="text-muted-foreground text-xs flex items-center gap-1">
+                              <Mail size={12} /> {emp.email}
+                            </div>
                           </div>
                         </div>
+                      </td>
+                      <td className="px-6 py-4 text-muted-foreground">@{emp.username}</td>
+                      <td className="px-6 py-4">
+                        <span className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 text-xs font-medium uppercase tracking-wider">
+                          {emp.role?.name || "Sin Rol"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {emp.status ? (
+                          <span className="flex items-center gap-1.5 text-green-500 text-sm">
+                            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                            Activo
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1.5 text-muted-foreground text-sm">
+                            <span className="w-2 h-2 rounded-full bg-muted-foreground"></span>
+                            Inactivo
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                          <div className="flex justify-end gap-2">
+                              <button
+                                  onClick={() => handleOpenEdit(emp)}
+                                  className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                                  title="Editar"
+                              >
+                                  <Edit2 size={18} />
+                              </button>
+                              <button
+                                  onClick={() => {
+                                      setEditingEmployee(emp);
+                                      setShowDeleteConfirm(emp.id);
+                                  }}
+                                  className="p-2 text-muted-foreground  hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
+                                  title="Eliminar"
+                              >
+                                  <Trash2 size={18} />
+                              </button>
+                          </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="md:hidden space-y-3">
+              {filteredEmployees.map((emp) => (
+                <div key={emp.id} className="bg-card border border-border rounded-xl p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center text-primary border border-primary/20 font-bold flex-shrink-0">
+                        {emp.full_name.charAt(0)}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-muted-foreground">@{emp.username}</td>
-                    <td className="px-6 py-4">
-                      <span className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 text-xs font-medium uppercase tracking-wider">
-                        {emp.role?.name || "Sin Rol"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
+                      <div className="min-w-0 flex-1">
+                        <div className="font-semibold truncate">{emp.full_name}</div>
+                        <div className="text-muted-foreground text-xs flex items-center gap-1">
+                          <Mail size={12} /> {emp.email}
+                        </div>
+                        <div className="text-muted-foreground text-xs mt-0.5">@{emp.username}</div>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
                       {emp.status ? (
-                        <span className="flex items-center gap-1.5 text-green-500 text-sm">
+                        <span className="flex items-center gap-1.5 text-green-500 text-xs">
                           <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                           Activo
                         </span>
                       ) : (
-                        <span className="flex items-center gap-1.5 text-muted-foreground text-sm">
+                        <span className="flex items-center gap-1.5 text-muted-foreground text-xs">
                           <span className="w-2 h-2 rounded-full bg-muted-foreground"></span>
                           Inactivo
                         </span>
                       )}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end gap-2">
-                            <button
-                                onClick={() => handleOpenEdit(emp)}
-                                className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
-                                title="Editar"
-                            >
-                                <Edit2 size={18} />
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setEditingEmployee(emp);
-                                    setShowDeleteConfirm(emp.id);
-                                }}
-                                className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all text-red-500"
-                                title="Eliminar"
-                            >
-                                <Trash2 size={18} />
-                            </button>
-                        </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      <div className="flex gap-1">
+                        <button
+                            onClick={() => handleOpenEdit(emp)}
+                            className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                            title="Editar"
+                        >
+                            <Edit2 size={16} />
+                        </button>
+                        <button
+                            onClick={() => {
+                                setEditingEmployee(emp);
+                                setShowDeleteConfirm(emp.id);
+                            }}
+                            className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
+                            title="Eliminar"
+                        >
+                            <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <span className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 text-xs font-medium uppercase tracking-wider">
+                      {emp.role?.name || "Sin Rol"}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 

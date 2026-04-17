@@ -277,23 +277,23 @@ export default function HistoryPatientsPage() {
   return (
     <div className="space-y-6 pb-12">
       {view === "list" && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center bg-card p-6 rounded-2xl border border-border backdrop-blur-md">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
-                <ClipboardClock className="text-primary" size={32} />
-                Historiales Médicos
+        <div className="space-y-4 sm:space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-card p-4 sm:p-6 rounded-2xl border border-border backdrop-blur-md">
+            <div className="w-full sm:w-auto">
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2 flex items-center gap-2 sm:gap-3">
+                <ClipboardClock className="text-primary flex-shrink-0" size={24} />
+                <span className="break-words">Historiales Médicos</span>
               </h1>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground text-sm sm:text-base">
                 Gestión centralizada de registros clínicos y tratamientos.
               </p>
             </div>
             <Button
               onClick={() => setView("form")}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 h-11 px-6 shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all transform hover:-translate-y-0.5"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 h-10 sm:h-11 px-4 sm:px-6 shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all transform hover:-translate-y-0.5 w-full sm:w-auto flex-shrink-0"
             >
-              <Plus size={20} />
-              Nuevo Registro
+              <Plus size={18} />
+              <span>Nuevo Registro</span>
             </Button>
           </div>
 
@@ -301,12 +301,12 @@ export default function HistoryPatientsPage() {
             <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
             <Card className="relative bg-card border-border backdrop-blur-xl">
               <CardHeader className="border-b border-border/50 pb-4">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <CardTitle className="text-base sm:text-lg font-semibold flex items-center gap-2">
                     <Activity size={18} className="text-primary" />
                     Todos los registros
                   </CardTitle>
-                  <div className="relative w-72">
+                  <div className="relative w-full sm:w-72">
                     <Search
                       className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                       size={16}
@@ -339,35 +339,35 @@ export default function HistoryPatientsPage() {
                       <div
                         key={h.id}
                         onClick={() => handleShowDetail(h.id)}
-                        className="group flex items-center justify-between p-4 hover:bg-muted/40 transition-all cursor-pointer"
+                        className="group flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 hover:bg-muted/40 transition-all cursor-pointer gap-3 sm:gap-4"
                       >
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 group-hover:scale-110 transition-transform">
-                            <Users size={22} />
+                        <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20 group-hover:scale-110 transition-transform flex-shrink-0">
+                            <Users size={20} />
                           </div>
-                          <div>
-                            <p className="font-semibold flex items-center gap-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold flex flex-wrap items-center gap-2">
                               {h.history_number && (
-                                <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded font-mono">
+                                <span className="text-[10px] sm:text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded font-mono">
                                   #{h.history_number}
                                 </span>
                               )}
-                              {h.patient_name}
+                              <span className="truncate">{h.patient_name}</span>
                               <Badge
                                 variant="outline"
-                                className="text-[10px] uppercase tracking-tighter border-border text-muted-foreground"
+                                className="text-[10px] uppercase tracking-tighter border-border text-muted-foreground flex-shrink-0"
                               >
                                 {new Date(h.created_at).toLocaleDateString()}
                               </Badge>
                             </p>
-                            <p className="text-sm text-muted-foreground truncate max-w-md mt-0.5">
+                            <p className="text-sm text-muted-foreground truncate max-w-[250px] sm:max-w-md mt-0.5">
                               {h.description ||
                                 "Sin descripción clínica adicional"}
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <div className="text-right hidden sm:block">
+                        <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                          <div className="text-right sm:block">
                             <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
                               Último Ingreso
                             </p>
@@ -378,8 +378,8 @@ export default function HistoryPatientsPage() {
                               })}
                             </p>
                           </div>
-                          <div className="w-10 h-10 rounded-full flex items-center justify-center text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-all">
-                            <ChevronRight size={20} />
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-all flex-shrink-0">
+                            <ChevronRight size={18} />
                           </div>
                         </div>
                       </div>
@@ -393,23 +393,23 @@ export default function HistoryPatientsPage() {
       )}
 
       {view === "detail" && selectedHistory && (
-        <div className="space-y-6 pb-20">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-4">
+        <div className="space-y-4 sm:space-y-6 pb-20">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
               <Button
                 variant="outline"
                 onClick={() => setView("list")}
-                className="border-border bg-muted/50 text-muted-foreground hover:text-foreground"
+                className="border-border bg-muted/50 text-muted-foreground hover:text-foreground w-full sm:w-auto"
               >
                 <ArrowLeft size={18} className="mr-2" />
                 Volver a la lista
               </Button>
-              <div className="h-6 w-px bg-border"></div>
+              <div className="h-6 w-px bg-border hidden sm:block"></div>
               <span className="text-muted-foreground text-sm">
                 Detalle de Sesión Clínica
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
               <Button
                 variant="outline"
                 onClick={() =>
@@ -417,18 +417,18 @@ export default function HistoryPatientsPage() {
                     `/dashboard/historyPatients/${selectedHistory.history.id}`,
                   )
                 }
-                className="border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 gap-2"
+                className="border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 gap-2 flex-1 sm:flex-initial"
               >
                 <Edit3 size={16} />
-                Editar
+                <span className="hidden sm:inline">Editar</span>
               </Button>
               <Button
                 variant="outline"
                 onClick={handleDelete}
-                className="border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20 gap-2"
+                className="border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20 gap-2 flex-1 sm:flex-initial"
               >
                 <Trash2 size={16} />
-                Eliminar
+                <span className="hidden sm:inline">Eliminar</span>
               </Button>
             </div>
           </div>
@@ -438,52 +438,52 @@ export default function HistoryPatientsPage() {
             const totalPrice = odontograms?.reduce((sum: number, o: any) => sum + (o.treatments?.reduce((tSum: number, t: any) => tSum + t.price, 0) || 0), 0) || 0;
             return (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-1 space-y-6">
+                <div className="lg:col-span-1 space-y-4 sm:space-y-6">
                   <Card className="bg-card border-border shadow-xl overflow-hidden">
                     <div className="bg-gradient-to-r from-primary to-indigo-600 h-2"></div>
-                    <CardHeader className="pt-6">
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="w-16 h-16 rounded-full bg-muted border-2 border-primary/30 flex items-center justify-center text-primary text-2xl font-bold">
+                    <CardHeader className="pt-4 sm:pt-6">
+                      <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-muted border-2 border-primary/30 flex items-center justify-center text-primary text-xl sm:text-2xl font-bold flex-shrink-0">
                           {patient.first_name[0]}
                           {patient.last_name[0]}
                         </div>
-                        <div>
-                          <h2 className="text-xl font-bold leading-tight">
+                        <div className="min-w-0 flex-1">
+                          <h2 className="text-lg sm:text-xl font-bold leading-tight break-words">
                             {patient.first_name} {patient.last_name}
                           </h2>
-                          <p className="text-muted-foreground text-sm italic">
+                          <p className="text-muted-foreground text-xs sm:text-sm italic">
                             {patient.phone}
                           </p>
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="space-y-4 pt-0">
-                      <div className="p-3 rounded-lg bg-muted/40 border border-border">
-                        <p className="text-[12px] text-muted-foreground uppercase tracking-widest font-bold mb-2">
+                    <CardContent className="space-y-3 sm:space-y-4 pt-0">
+                      <div className="p-2 sm:p-3 rounded-lg bg-muted/40 border border-border">
+                        <p className="text-[10px] sm:text-[12px] text-muted-foreground uppercase tracking-widest font-bold mb-2">
                           Resumen de Salud
                         </p>
-                        <div className="space-y-3">
+                        <div className="space-y-2 sm:space-y-3">
                           <div>
-                            <span className="text-md text-muted-foreground">
+                            <span className="text-xs sm:text-sm text-muted-foreground">
                               Condiciones:
                             </span>
-                            <p className="text-sm font-medium">
+                            <p className="text-xs sm:text-sm font-medium break-words">
                               {history.conditions || "Ninguna registrada"}
                             </p>
                           </div>
                           <div>
-                            <span className="text-md text-muted-foreground">
+                            <span className="text-xs sm:text-sm text-muted-foreground">
                               Alergias:
                             </span>
-                            <p className="text-sm font-medium">
+                            <p className="text-xs sm:text-sm font-medium break-words">
                               {history.allergies || "Ninguna"}
                             </p>
                           </div>
                           <div>
-                            <span className="text-md text-muted-foreground">
+                            <span className="text-xs sm:text-sm text-muted-foreground">
                               Medicaciones:
                             </span>
-                            <p className="text-sm font-medium">
+                            <p className="text-xs sm:text-sm font-medium break-words">
                               {history.medications || "Ninguna"}
                             </p>
                           </div>
@@ -494,46 +494,46 @@ export default function HistoryPatientsPage() {
 
                   <Card className="bg-card border-border shadow-xl">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-bold uppercase tracking-wider flex items-center gap-2">
+                      <CardTitle className="text-xs sm:text-sm font-bold uppercase tracking-wider flex items-center gap-2">
                         <ShieldCheck size={16} className="text-green-500" />
                         Higiene Bucal
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-3">
+                    <CardContent className="space-y-2 sm:space-y-3">
                       <div className="grid grid-cols-2 gap-2">
                         <div
-                          className={`p-2 rounded border ${history.uses_toothbrush ? "bg-green-500/10 border-green-500/20 text-green-800 dark:text-green-400" : "bg-destructive/5 border-destructive/20 text-destructive"} text-xs font-semibold text-center`}
+                          className={`p-2 rounded border ${history.uses_toothbrush ? "bg-green-500/10 border-green-500/20 text-green-800 dark:text-green-400" : "bg-destructive/5 border-destructive/20 text-destructive"} text-[10px] sm:text-xs font-semibold text-center`}
                         >
                           Usa Cepillo: {history.uses_toothbrush ? "SÍ" : "NO"}
                         </div>
                         <div
-                          className={`p-2 rounded border ${history.uses_dentifrice ? "bg-green-500/10 border-green-500/20 text-green-800 dark:text-green-400" : "bg-destructive/5 border-destructive/20 text-destructive"} text-xs font-semibold text-center`}
+                          className={`p-2 rounded border ${history.uses_dentifrice ? "bg-green-500/10 border-green-500/20 text-green-800 dark:text-green-400" : "bg-destructive/5 border-destructive/20 text-destructive"} text-[10px] sm:text-xs font-semibold text-center`}
                         >
                           Usa Dentífrico:{" "}
                           {history.uses_dentifrice ? "SÍ" : "NO"}
                         </div>
                       </div>
-                      <div className="p-3 rounded bg-muted/40 border border-border">
+                      <div className="p-2 sm:p-3 rounded bg-muted/40 border border-border">
                         <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">
                           Frecuencia de cepillado
                         </p>
-                        <p className="text-sm">
+                        <p className="text-xs sm:text-sm">
                           {history.brushing_frequency || "No especificado"}
                           {history.brushing_frequency === 1
                             ? " vez al dia"
                             : " veces al dia"}
                         </p>
                       </div>
-                      <div className="p-3 rounded bg-muted/40 border border-border">
+                      <div className="p-2 sm:p-3 rounded bg-muted/40 border border-border">
                         <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">
                           Técnica
                         </p>
-                        <p className="text-sm">
+                        <p className="text-xs sm:text-sm">
                           {history.brushing_technique || "No especificado"}
                         </p>
                       </div>
                       <div
-                        className={`p-3 rounded border text-center font-bold text-sm ${history.uses_floss ? "bg-green-500/10 border-green-500/20 text-green-800 dark:text-green-400" : "bg-muted/50 border-border text-muted-foreground"}`}
+                        className={`p-2 sm:p-3 rounded border text-center font-bold text-xs sm:text-sm ${history.uses_floss ? "bg-green-500/10 border-green-500/20 text-green-800 dark:text-green-400" : "bg-muted/50 border-border text-muted-foreground"}`}
                       >
                         {history.uses_floss
                           ? "✓ USA HILO DENTAL"
@@ -543,28 +543,28 @@ export default function HistoryPatientsPage() {
                   </Card>
                 </div>
 
-                <div className="lg:col-span-2 space-y-6">
+                <div className="lg:col-span-2 space-y-4 sm:space-y-6">
                   <Card className="bg-card border-border shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4">
-                      <Badge className="bg-primary text-primary-foreground border-none py-1 px-3">
+                    <div className="absolute top-0 right-0 p-2 sm:p-4">
+                      <Badge className="bg-primary text-primary-foreground border-none py-1 px-2 sm:py-1 sm:px-3 text-xs sm:text-sm">
                         FINALIZADO
                       </Badge>
                     </div>
-                    <CardHeader className="border-b border-border/60 pb-6 pt-8">
+                    <CardHeader className="border-b border-border/60 pb-4 sm:pb-6 pt-6 sm:pt-8">
                       <div className="flex flex-col gap-1">
-                        <p className="text-primary font-bold text-xs uppercase tracking-[0.2em] mb-1">
+                        <p className="text-primary font-bold text-[10px] sm:text-xs uppercase tracking-[0.2em] mb-1">
                           Evolución Clínica
                         </p>
-                        <h3 className="text-2xl font-bold flex items-center gap-3">
-                          Registro de Seguimiento
+                        <h3 className="text-xl sm:text-2xl font-bold flex flex-wrap items-center gap-2 sm:gap-3">
+                          <span className="break-words">Registro de Seguimiento</span>
                           {history.history_number && (
-                            <span className="text-base bg-primary/10 text-primary px-2 py-1 rounded font-mono">
+                            <span className="text-sm sm:text-base bg-primary/10 text-primary px-2 py-1 rounded font-mono flex-shrink-0">
                               #{history.history_number}
                             </span>
                           )}
                         </h3>
-                        <div className="flex items-center gap-6 mt-2">
-                          <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                        <div className="flex items-center gap-4 sm:gap-6 mt-2">
+                          <div className="flex items-center gap-2 text-muted-foreground text-xs sm:text-sm">
                             <Calendar size={14} className="text-primary" />
                             {history.created_at
                               ? new Date(history.created_at).toLocaleDateString()
@@ -573,19 +573,19 @@ export default function HistoryPatientsPage() {
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="pt-6 space-y-8">
+                    <CardContent className="pt-4 sm:pt-6 space-y-6 sm:space-y-8">
                       <div>
-                        <h4 className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest mb-3">
+                        <h4 className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest mb-2 sm:mb-3">
                           Resumen de Evolución
                         </h4>
-                        <p className="leading-relaxed bg-muted/30 p-4 rounded-xl border border-border/50 text-sm">
+                        <p className="leading-relaxed bg-muted/30 p-3 sm:p-4 rounded-xl border border-border/50 text-xs sm:text-sm">
                           {history.description ||
                             "Múltiples tratamientos realizados."}
                         </p>
                       </div>
 
                       <div className="pt-2">
-                        <h4 className="text-primary/80 text-[10px] font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <h4 className="text-primary/80 text-[10px] font-bold uppercase tracking-widest mb-2 sm:mb-3 flex items-center gap-2">
                           <Activity size={12} /> Detalles del Tratamiento
                         </h4>
                         <div className="bg-muted/40 rounded-xl border border-border/50 overflow-x-auto">
@@ -605,13 +605,13 @@ export default function HistoryPatientsPage() {
                                     key={`${item.id}-${idx}`}
                                     className="hover:bg-muted/30 transition-colors"
                                   >
-                                    <td className="px-4 py-3">
-                                      <Badge className="bg-muted text-foreground border-none">
+                                    <td className="px-3 sm:px-4 py-2 sm:py-3">
+                                      <Badge className="bg-muted text-foreground border-none text-[10px] sm:text-xs">
                                         #{item.tooth_number}
                                       </Badge>
                                     </td>
-                                    <td className="px-4 py-3">
-                                      <p className="font-semibold">
+                                    <td className="px-3 sm:px-4 py-2 sm:py-3">
+                                      <p className="font-semibold text-xs sm:text-sm">
                                         {t.description}
                                       </p>
                                       <p className="text-[10px] text-muted-foreground uppercase tracking-tighter">
@@ -619,16 +619,16 @@ export default function HistoryPatientsPage() {
                                         • {t.procedure_status}
                                       </p>
                                     </td>
-                                    <td className="px-4 py-3 text-muted-foreground">
+                                    <td className="px-3 sm:px-4 py-2 sm:py-3 text-muted-foreground text-xs sm:text-sm">
                                       {t.treatment_date
                                         ? new Date(
                                             t.treatment_date,
                                           ).toLocaleDateString()
                                         : "--"}
                                     </td>
-                                    <td className="px-4 py-3 text-right font-bold text-amber-500">
+                                    <td className="px-3 sm:px-4 py-2 sm:py-3 text-right font-bold text-amber-500 text-xs sm:text-sm">
                                       {t.price === 0 ? (
-                                        <span className="text-muted-foreground italic text-xs font-normal relative pr-4">
+                                        <span className="text-muted-foreground italic text-[10px] sm:text-xs font-normal relative pr-4">
                                           Privado
                                           <span className="absolute top-1/2 right-1 w-1.5 h-1.5 bg-muted-foreground rounded-full -translate-y-1/2"></span>
                                         </span>
@@ -641,7 +641,7 @@ export default function HistoryPatientsPage() {
                               )}
                               {!odontograms?.length && (
                                 <tr>
-                                  <td colSpan={4} className="py-8 text-center text-muted-foreground text-sm">
+                                  <td colSpan={4} className="py-6 sm:py-8 text-center text-muted-foreground text-xs sm:text-sm">
                                     No hay procedimientos registrados en este historial.
                                   </td>
                                 </tr>
@@ -651,14 +651,14 @@ export default function HistoryPatientsPage() {
                         </div>
                       </div>
 
-                      <div className="pt-6 border-t border-border/50">
-                        <div className="flex flex-wrap items-center justify-between gap-6">
+                      <div className="pt-4 sm:pt-6 border-t border-border/50">
+                        <div className="flex flex-wrap items-center justify-between gap-4 sm:gap-6">
                           <div className="space-y-1">
                             <p className="text-muted-foreground text-[10px] font-bold uppercase">
                               Costo Total
                             </p>
-                            <div className="flex items-center gap-3">
-                              <span className="font-bold text-lg">
+                            <div className="flex items-center gap-2 sm:gap-3">
+                              <span className="font-bold text-sm sm:text-lg">
                                 Bs {totalPrice}
                               </span>
                             </div>
@@ -675,26 +675,27 @@ export default function HistoryPatientsPage() {
       )}
 
       {view === "form" && (
-        <div className="space-y-6 pb-12">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
+        <div className="space-y-4 sm:space-y-6 pb-12">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
               <Button
                 variant="ghost"
                 onClick={() => setView("list")}
+                className="flex-shrink-0"
               >
                 <ArrowLeft size={20} />
               </Button>
-              <div>
-                <h1 className="text-3xl font-bold tracking-tight mb-1">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 break-words">
                   Nuevo Registro Clínico
                 </h1>
-                <p className="text-muted-foreground text-sm">
+                <p className="text-muted-foreground text-xs sm:text-sm">
                   Completa el registro clínico, tratamiento y cobro en un solo
                   paso.
                 </p>
               </div>
             </div>
-            <ClipboardClock className="text-primary/20" size={64} />
+            <ClipboardClock className="text-primary/20 flex-shrink-0 hidden sm:block" size={64} />
           </div>
 
           <Stepper currentStep={currentStep} />

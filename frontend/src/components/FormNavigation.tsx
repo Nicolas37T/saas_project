@@ -28,11 +28,11 @@ export const FormNavigation: React.FC<FormNavigationProps> = ({
   const finishButtonClass = "bg-emerald-600 hover:bg-emerald-700 text-white hover:shadow-emerald-500/25";
 
   return (
-    <div className="flex justify-between items-center pt-10 border-t border-slate-800 max-w-5xl mx-auto w-full mt-10">
+    <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 pt-6 sm:pt-10 border-t border-slate-800 max-w-5xl mx-auto w-full mt-6 sm:mt-10">
       <Button
         type="button"
         variant="ghost"
-        className={`${buttonBaseClass} ${previousButtonClass}`}
+        className={`${buttonBaseClass} ${previousButtonClass} w-full sm:w-auto`}
         onClick={(e) => {
           e.preventDefault();
           if (currentStep > 1) setCurrentStep(currentStep - 1);
@@ -43,7 +43,7 @@ export const FormNavigation: React.FC<FormNavigationProps> = ({
         {currentStep === 1 ? "Cancelar" : "Anterior"}
       </Button>
 
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
         {currentStep < 3 ? (
           <Button
             type="button"
@@ -52,7 +52,7 @@ export const FormNavigation: React.FC<FormNavigationProps> = ({
               setCurrentStep(currentStep + 1);
             }}
             disabled={!canGoNext}
-            className={`${buttonBaseClass} ${nextButtonClass} disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`${buttonBaseClass} ${nextButtonClass} disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto`}
           >
             {nextLabel}
             <ChevronRight size={18} className="ml-2" />
@@ -61,12 +61,12 @@ export const FormNavigation: React.FC<FormNavigationProps> = ({
           <Button
             type="submit"
             disabled={submitting || !canGoNext}
-            className={`${buttonBaseClass} ${finishButtonClass} disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`${buttonBaseClass} ${finishButtonClass} disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto`}
           >
             {submitting ? (
               "Guardando..."
             ) : (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <CheckCircle2
                   size={24}
                   className="group-hover:scale-110 transition-transform"
