@@ -3,6 +3,7 @@
 import React, { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Activity, FileText, Calendar } from "lucide-react";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import {
   tenantApi,
   Patient,
@@ -186,7 +187,7 @@ export default function PatientProfilePage({
   const debt = calculateDebt();
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-4 sm:space-y-6 max-w-5xl mx-auto">
       <button
         onClick={() => router.back()}
         className="flex items-center text-muted-foreground hover:text-foreground transition-colors text-sm mb-4"
@@ -196,27 +197,41 @@ export default function PatientProfilePage({
 
       {/* Header Profile */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex items-center gap-6">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-blue-700 flex items-center justify-center text-3xl font-bold text-primary-foreground shadow-lg shadow-primary/20">
+        <div className="flex items-center gap-4 sm:gap-6 w-full md:w-auto">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-primary to-blue-700 flex items-center justify-center text-2xl sm:text-3xl font-bold text-primary-foreground shadow-lg shadow-primary/20 flex-shrink-0">
+
             {patient.first_name[0]}
             {patient.last_name[0]}
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl md:text-3xl font-bold mb-1 leading-tight">
-              <div className="break-all">{patient.first_name}</div>
-              <div className="break-all text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 leading-tight">
+              <div className="break-words">{patient.first_name}</div>
+              <div className="break-words text-muted-foreground">
                 {patient.last_name}
               </div>
             </h1>
-            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-              {patient.phone && <span>📞 {patient.phone}</span>}
+            <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
+              {patient.phone && (
+                <button
+                  onClick={() => {
+                    const cleanPhone = patient.phone!.replace(/\D/g, "");
+                    window.open(`https://wa.me/${cleanPhone}`, "_blank");
+                  }}
+                  className="hover:text-green-500 transition-colors flex items-center gap-2"
+                  title="Abrir WhatsApp"
+                >
+                  <WhatsAppIcon size={14} className="flex-shrink-0" />
+                  <span>{patient.phone}</span>
+                </button>
+              )}
               <span>🗓️ {patient.status ? "Activo" : "Inactivo"}</span>
-              <span>
+              <span className="hidden sm:inline">
                 ⏳ Registro: {new Date(patient.created_at).toLocaleDateString()}
               </span>
               {patient.assigned_doctor_id && (
                 <span className="text-primary">
-                  👨‍⚕️ Doctor:{" "}
+                  👨‍⚕️{" "}
+                  <span className="hidden sm:inline">Doctor: </span>
                   {employeesList.find(
                     (e) => e.id === patient.assigned_doctor_id,
                   )?.full_name || "Asignado"}
@@ -225,7 +240,8 @@ export default function PatientProfilePage({
             </div>
           </div>
         </div>
-        <div className="flex flex-wrap gap-3">
+
+        <div className="flex flex-wrap gap-3  w-full md:w-auto flex-wrap">
           {debt > 0 && (
             <Button
               onClick={() => router.push(`/dashboard/payments?patientId=${id}`)}
@@ -238,41 +254,43 @@ export default function PatientProfilePage({
           <Button
             variant="outline"
             onClick={handleOpenEdit}
-            className="border-border bg-muted hover:bg-accent"
+            className="border-border bg-muted hover:bg-accent flex-1 md:flex-initial"
           >
-            Editar Perfil
+            <span className="hidden sm:inline">Editar Perfil</span>
+            <span className="sm:hidden">Editar</span>
           </Button>
-          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_15px_rgba(37,99,235,0.3)]">
+          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_15px_rgba(37,99,235,0.3)] flex-1 md:flex-initial">
             Nueva Cita
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mt-6 sm:mt-8">
         {/* Information Column */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {!isReceptionist && (
             <Card className="bg-card border-border backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <CardHeader className="pb-2 sm:pb-3">
+                <CardTitle className="text-sm sm:text-lg font-semibold flex items-center gap-2">
                   <Activity size={18} className="text-primary" />
-                  Historial Clínico
+                  <span className="hidden sm:inline">Historial Clínico</span>
+                  <span className="sm:hidden">Historial</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {history.length === 0 ? (
-                  <p className="text-sm text-muted-foreground italic">
+                  <p className="text-xs sm:text-sm text-muted-foreground italic">
                     No hay registros médicos.
                   </p>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {/* Muestra el más reciente en el resumen */}
-                    <div className="p-3 bg-muted rounded-lg border border-border/50">
-                      <p className="text-sm mb-2">
+                    <div className="p-2 sm:p-3 bg-muted rounded-lg border border-border/50">
+                      <p className="text-xs sm:text-sm mb-2">
                         <span className="text-muted-foreground">Condiciones:</span>{" "}
                         {history[history.length - 1].conditions || "Ninguna"}
                       </p>
-                      <p className="text-sm">
+                      <p className="text-xs sm:text-sm">
                         <span className="text-muted-foreground">Alergias:</span>{" "}
                         {history[history.length - 1].allergies || "Ninguna"}
                       </p>
@@ -284,24 +302,26 @@ export default function PatientProfilePage({
           )}
 
           <Card className="bg-card border-border backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Calendar size={18} className="text-primary" /> Citas Próximas
+            <CardHeader className="pb-2 sm:pb-3">
+              <CardTitle className="text-sm sm:text-lg flex items-center gap-2">
+                <Calendar size={18} className="text-primary" />
+                <span className="hidden sm:inline">Citas Próximas</span>
+                <span className="sm:hidden">Citas</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               {appointments.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
+                <p className="text-xs sm:text-sm text-muted-foreground text-center py-4">
                   No hay citas programadas.
                 </p>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   {appointments.map((apt) => (
                     <div
                       key={apt.id}
-                      className="p-3 bg-muted/50 rounded-lg border border-border/50"
+                      className="p-2 sm:p-3 bg-muted/50 rounded-lg border border-border/50"
                     >
-                      <p className="text-sm font-medium">
+                      <p className="text-xs sm:text-sm font-medium">
                         {new Date(apt.appointment_date).toLocaleDateString()} a
                         las{" "}
                         {new Date(apt.appointment_date).toLocaleTimeString([], {
@@ -309,7 +329,7 @@ export default function PatientProfilePage({
                           minute: "2-digit",
                         })}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1 uppercase">
+                      <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 uppercase">
                         Estado:{" "}
                         {translateStatus(
                           apt.appointment_status,
@@ -317,7 +337,7 @@ export default function PatientProfilePage({
                         )}
                       </p>
                       {apt.assigned_doctor_id && (
-                        <p className="text-xs text-primary mt-1 font-medium">
+                        <p className="text-[10px] sm:text-xs text-primary mt-1 font-medium">
                           👨‍⚕️ Dr.{" "}
                           {employeesList.find(
                             (e) => e.id === apt.assigned_doctor_id,
@@ -329,7 +349,7 @@ export default function PatientProfilePage({
                         </p>
                       )}
                       {apt.notes && (
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
                           {apt.notes}
                         </p>
                       )}
@@ -342,33 +362,34 @@ export default function PatientProfilePage({
         </div>
 
         {/* Main Timeline Column */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
           {/* Timeline of treatments */}
           {!isReceptionist && (
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold flex items-center gap-2">
-                <FileText size={20} className="text-primary" /> Historial de
-                Tratamientos
+            <div className="space-y-3 sm:space-y-4">
+              <h3 className="text-lg sm:text-xl font-bold flex items-center gap-2">
+                <FileText size={20} className="text-primary" />
+                <span className="hidden sm:inline">Historial de Tratamientos</span>
+                <span className="sm:hidden">Tratamientos</span>
               </h3>
               {treatments.length === 0 ? (
-                <div className="p-8 text-center border border-dashed border-border rounded-xl bg-muted/30">
-                  <p className="text-muted-foreground">
+                <div className="p-6 sm:p-8 text-center border border-dashed border-border rounded-xl bg-muted/30">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Este paciente no tiene tratamientos registrados.
                   </p>
                 </div>
               ) : (
-                <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
+                <div className="space-y-3 sm:space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
                   {treatments.map((treatment) => (
                     <div
                       key={treatment.id}
                       className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active"
                     >
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-background bg-muted group-hover:bg-primary text-muted-foreground group-hover:text-primary-foreground shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-lg transition-colors duration-300">
-                        <Activity size={16} />
+                      <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full border-4 border-background bg-muted group-hover:bg-primary text-muted-foreground group-hover:text-primary-foreground shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-lg transition-colors duration-300">
+                        <Activity size={14} />
                       </div>
-                      <Card className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-card border-border backdrop-blur-sm group-hover:border-border transition-colors">
-                        <CardHeader className="p-4 pb-2">
-                          <CardTitle className="text-sm font-medium">
+                      <Card className="w-[calc(100%-3rem)] sm:w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-card border-border backdrop-blur-sm group-hover:border-border transition-colors">
+                        <CardHeader className="p-3 sm:p-4 pb-2">
+                          <CardTitle className="text-xs sm:text-sm font-medium">
                             {treatment.treatment_date
                               ? new Date(treatment.treatment_date).toLocaleDateString()
                               : "Sin fecha"}
@@ -381,15 +402,15 @@ export default function PatientProfilePage({
                               })}`}
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                          <div className="space-y-2 mt-2">
-                            <p className="text-sm">
+                        <CardContent className="p-3 sm:p-4 pt-0">
+                          <div className="space-y-1 sm:space-y-2 mt-2">
+                            <p className="text-xs sm:text-sm">
                               <span className="text-muted-foreground">
                                 Tratamiento:
                               </span>{" "}
                               {treatment.description}
                             </p>
-                            <p className="text-sm capitalize">
+                            <p className="text-xs sm:text-sm capitalize">
                               <span className="text-muted-foreground">Estado:</span>{" "}
                               {treatment.procedure_status === "completado"
                                 ? "Completado"
@@ -397,7 +418,7 @@ export default function PatientProfilePage({
                                 ? "En progreso"
                                 : "Pendiente"}
                             </p>
-                            <p className="text-sm">
+                            <p className="text-xs sm:text-sm">
                               <span className="text-muted-foreground">Precio:</span> $
                               {treatment.price === 0 ? "Privado" : treatment.price}
                             </p>
@@ -421,9 +442,9 @@ export default function PatientProfilePage({
       >
         {patient && (
           <form onSubmit={handleSaveEdit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">
+                <label className="text-xs sm:text-sm font-medium">
                   Nombre *
                 </label>
                 <Input
@@ -432,11 +453,11 @@ export default function PatientProfilePage({
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setEditForm({ ...editForm, first_name: e.target.value })
                   }
-                  className="bg-muted/50 border-border focus-visible:ring-primary"
+                  className="bg-muted/50 border-border focus-visible:ring-primary text-sm"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">
+                <label className="text-xs sm:text-sm font-medium">
                   Apellidos *
                 </label>
                 <Input
@@ -445,11 +466,11 @@ export default function PatientProfilePage({
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setEditForm({ ...editForm, last_name: e.target.value })
                   }
-                  className="bg-muted/50 border-border focus-visible:ring-primary"
+                  className="bg-muted/50 border-border focus-visible:ring-primary text-sm"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">
+                <label className="text-xs sm:text-sm font-medium">
                   Teléfono
                 </label>
                 <Input
@@ -458,11 +479,11 @@ export default function PatientProfilePage({
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setEditForm({ ...editForm, phone: e.target.value })
                   }
-                  className="bg-muted/50 border-border focus-visible:ring-primary"
+                  className="bg-muted/50 border-border focus-visible:ring-primary text-sm"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">
+                <label className="text-xs sm:text-sm font-medium">
                   Fecha de Nacimiento
                 </label>
                 <Input
@@ -471,12 +492,12 @@ export default function PatientProfilePage({
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setEditForm({ ...editForm, birth_day: e.target.value })
                   }
-                  className="bg-muted/50 border-border focus-visible:ring-primary"
+                  className="bg-muted/50 border-border focus-visible:ring-primary text-sm"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">
+              <label className="text-xs sm:text-sm font-medium">
                 Dirección
               </label>
               <Input
@@ -484,12 +505,12 @@ export default function PatientProfilePage({
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setEditForm({ ...editForm, address: e.target.value })
                 }
-                className="bg-muted/50 border-border focus-visible:ring-primary"
+                className="bg-muted/50 border-border focus-visible:ring-primary text-sm"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">
+                <label className="text-xs sm:text-sm font-medium">
                   Descripción / Notas
                 </label>
                 <Input
@@ -497,11 +518,11 @@ export default function PatientProfilePage({
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setEditForm({ ...editForm, description: e.target.value })
                   }
-                  className="bg-muted/50 border-border focus-visible:ring-primary"
+                  className="bg-muted/50 border-border focus-visible:ring-primary text-sm"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">
+                <label className="text-xs sm:text-sm font-medium">
                   Doctor Asignado
                 </label>
                 <select
@@ -513,7 +534,7 @@ export default function PatientProfilePage({
                       assigned_doctor_id: e.target.value,
                     })
                   }
-                  className="flex h-10 w-full rounded-md border border-border bg-muted/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="flex h-9 sm:h-10 w-full rounded-md border border-border bg-muted/50 px-3 py-2 text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   {employeesList.map((emp) => (
                     <option key={emp.id} value={emp.id}>
@@ -523,18 +544,18 @@ export default function PatientProfilePage({
                 </select>
               </div>
             </div>
-            <div className="flex gap-3 justify-end mt-8">
+            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 justify-end mt-4 sm:mt-8">
               <Button
                 type="button"
                 variant="ghost"
                 onClick={() => setIsEditModalOpen(false)}
-                className="hover:bg-accent"
+                className="hover:bg-accent text-sm"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm"
               >
                 Guardar Cambios
               </Button>

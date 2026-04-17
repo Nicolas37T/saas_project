@@ -25,21 +25,21 @@ export const CustomModal: React.FC<ModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <Card className={`w-full ${maxWidth} bg-popover border-border shadow-2xl relative overflow-hidden animate-in fade-in zoom-in duration-200`}>
-        <div className="p-6">
-          {(title || showCloseButton) && (
-            <div className="flex justify-between items-center mb-6">
-              {title && <h2 className="text-xl font-bold">{title}</h2>}
-              {showCloseButton && (
-                <button
-                  onClick={onClose}
-                  className="text-muted-foreground hover:text-foreground transition-colors p-1"
-                >
-                  <X size={20} />
-                </button>
-              )}
-            </div>
-          )}
+      <Card className={`w-full ${maxWidth} bg-popover border-border shadow-2xl relative overflow-hidden animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col`}>
+        {(title || showCloseButton) && (
+          <div className="flex justify-between items-center p-6 pb-4 flex-shrink-0">
+            {title && <h2 className="text-xl font-bold">{title}</h2>}
+            {showCloseButton && (
+              <button
+                onClick={onClose}
+                className="text-muted-foreground hover:text-foreground transition-colors p-1"
+              >
+                <X size={20} />
+              </button>
+            )}
+          </div>
+        )}
+        <div className="p-6 pt-0 overflow-y-auto flex-1">
           {children}
         </div>
       </Card>

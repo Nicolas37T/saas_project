@@ -8,6 +8,9 @@ import {
   CreditCard,
   Banknote,
   ArrowUpRight,
+  Calendar,
+  User,
+  Receipt,
 } from "lucide-react";
 import { tenantApi, Payment, Treatment, Patient } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -272,57 +275,96 @@ function PaymentsContent() {
               </CardContent>
             </Card>
           ) : (
-            <div className="bg-card border border-border rounded-xl overflow-hidden backdrop-blur-sm shadow-xl">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead className="bg-muted/80 border-b border-border font-medium text-sm">
-                    <tr>
-                      <th className="p-4 pl-6 font-semibold">
-                        Paciente / Tratamiento
-                      </th>
-                      <th className="p-4 font-semibold">Monto</th>
-                      <th className="p-4 font-semibold">Método de Pago</th>
-                      <th className="p-4 font-semibold hidden md:table-cell">
-                        Fecha
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/50">
-                    {payments.map((p) => (
-                      <tr
-                        key={p.id}
-                        className="hover:bg-muted/30 transition-colors"
-                      >
-                        <td className="p-4 pl-6 font-medium">
-                          <div className="flex flex-col">
-                            <span className="font-medium">{getTreatmentDetails(p.treatment_id).patientName}</span>
-                            <span className="text-sm text-muted-foreground truncate max-w-[200px]">
-                              {getTreatmentDetails(p.treatment_id).desc}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <span className="font-bold">
-                            {formatCurrency(p.amount)}
-                          </span>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <span className="text-muted-foreground">
-                              {getMethodIcon(p.payment_method)}
-                            </span>
-                            {getMethodLabel(p.payment_method)}
-                          </div>
-                        </td>
-                        <td className="p-4 text-muted-foreground text-sm hidden md:table-cell">
-                          {new Date(p.created_at).toLocaleDateString()}
-                        </td>
+            <>
+              {/* Desktop Table */}
+              <div className="bg-card border border-border rounded-xl overflow-hidden backdrop-blur-sm shadow-xl hidden md:block">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead className="bg-muted/80 border-b border-border font-medium text-sm">
+                      <tr>
+                        <th className="p-4 pl-6 font-semibold">
+                          Paciente / Tratamiento
+                        </th>
+                        <th className="p-4 font-semibold">Monto</th>
+                        <th className="p-4 font-semibold">Método de Pago</th>
+                        <th className="p-4 font-semibold">
+                          Fecha
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-border/50">
+                      {payments.map((p) => (
+                        <tr
+                          key={p.id}
+                          className="hover:bg-muted/30 transition-colors"
+                        >
+                          <td className="p-4 pl-6 font-medium">
+                            <div className="flex flex-col">
+                              <span className="font-medium">{getTreatmentDetails(p.treatment_id).patientName}</span>
+                              <span className="text-sm text-muted-foreground truncate max-w-[200px]">
+                                {getTreatmentDetails(p.treatment_id).desc}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <span className="font-bold">
+                              {formatCurrency(p.amount)}
+                            </span>
+                          </td>
+                          <td className="p-4">
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <span className="text-muted-foreground">
+                                {getMethodIcon(p.payment_method)}
+                              </span>
+                              {getMethodLabel(p.payment_method)}
+                            </div>
+                          </td>
+                          <td className="p-4 text-muted-foreground text-sm">
+                            {new Date(p.created_at).toLocaleDateString()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
+
+              {/* Mobile Cards */}
+              <div className="md:hidden space-y-3">
+                {payments.map((p) => (
+                  <div key={p.id} className="bg-card border border-border rounded-xl p-4 shadow-sm">
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold truncate">
+                          {getTreatmentDetails(p.treatment_id).patientName}
+                        </div>
+                        <div className="text-xs text-muted-foreground truncate mt-0.5">
+                          {getTreatmentDetails(p.treatment_id).desc}
+                        </div>
+                      </div>
+                      <span className="font-bold text-lg">
+                        {formatCurrency(p.amount)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        {getMethodIcon(p.payment_method)}
+                        <span className="text-xs">{getMethodLabel(p.payment_method)}</span>
+                      </div>
+                      <span
+                        className={`px-3 py-1 text-xs font-semibold rounded-full border ${p.payment_status === "completed" ? "text-green-400 bg-green-500/10 border-green-500/20" : "text-orange-400 bg-orange-500/10 border-orange-500/20"}`}
+                      >
+                        {p.payment_status === "completed" ? "Pagado" : "Pendiente"}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                      <Calendar size={12} />
+                      {new Date(p.created_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </TabsContent>
 
@@ -346,61 +388,115 @@ function PaymentsContent() {
               </CardContent>
             </Card>
           ) : (
-            <div className="bg-card border border-border rounded-xl overflow-hidden backdrop-blur-sm shadow-xl">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead className="bg-muted/80 border-b border-border font-medium text-sm">
-                    <tr>
-                      <th className="p-4 pl-6 font-semibold">
-                        Paciente
-                      </th>
-                      <th className="p-4 font-semibold">Costo Total Histórico</th>
-                      <th className="p-4 font-semibold">Total Abonado</th>
-                      <th className="p-4 font-semibold">Saldo Deudor</th>
-                      <th className="p-4 text-center font-semibold">Acción</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/50">
-                    {debtors.map((d) => (
-                      <tr
-                        key={d.patient.id}
-                        className="hover:bg-muted/30 transition-colors"
-                      >
-                        <td className="p-4 pl-6 font-medium">
-                          {d.patient.first_name} {d.patient.last_name}
-                        </td>
-                        <td className="p-4 text-muted-foreground">
-                          {formatCurrency(d.totalCosto)}
-                        </td>
-                        <td className="p-4 text-green-400/80">
-                          {formatCurrency(d.totalPagado)}
-                        </td>
-                        <td className="p-4 text-orange-400 font-bold">
-                          {formatCurrency(d.saldoDeudor)}
-                        </td>
-                        <td className="p-4 text-center">
-                          <Button
-                            size="sm"
-                            className="bg-green-600/20 text-green-400 hover:bg-green-600 hover:text-white"
-                            onClick={() => {
-                              setSelectedPatientId(d.patient.id);
-                              setSelectedTreatments({});
-                              setPaymentOptions({
-                                payment_method: "cash",
-                                payment_status: "completed",
-                              });
-                              setIsAddModalOpen(true);
-                            }}
-                          >
-                            Cobrar
-                          </Button>
-                        </td>
+            <>
+              {/* Desktop Table */}
+              <div className="bg-card border border-border rounded-xl overflow-hidden backdrop-blur-sm shadow-xl hidden md:block">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead className="bg-muted/80 border-b border-border font-medium text-sm">
+                      <tr>
+                        <th className="p-4 pl-6 font-semibold">
+                          Paciente
+                        </th>
+                        <th className="p-4 font-semibold">Costo Total Histórico</th>
+                        <th className="p-4 font-semibold">Total Abonado</th>
+                        <th className="p-4 font-semibold">Saldo Deudor</th>
+                        <th className="p-4 text-center font-semibold">Acción</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-border/50">
+                      {debtors.map((d) => (
+                        <tr
+                          key={d.patient.id}
+                          className="hover:bg-muted/30 transition-colors"
+                        >
+                          <td className="p-4 pl-6 font-medium">
+                            {d.patient.first_name} {d.patient.last_name}
+                          </td>
+                          <td className="p-4 text-muted-foreground">
+                            {formatCurrency(d.totalCosto)}
+                          </td>
+                          <td className="p-4 text-green-400/80">
+                            {formatCurrency(d.totalPagado)}
+                          </td>
+                          <td className="p-4 text-orange-400 font-bold">
+                            {formatCurrency(d.saldoDeudor)}
+                          </td>
+                          <td className="p-4 text-center">
+                            <Button
+                              size="sm"
+                              className="bg-green-600/20 text-green-400 hover:bg-green-600 hover:text-white"
+                              onClick={() => {
+                                setSelectedPatientId(d.patient.id);
+                                setSelectedTreatments({});
+                                setPaymentOptions({
+                                  payment_method: "cash",
+                                  payment_status: "completed",
+                                });
+                                setIsAddModalOpen(true);
+                              }}
+                            >
+                              Cobrar
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
+
+              {/* Mobile Cards */}
+              <div className="md:hidden space-y-3">
+                {debtors.map((d) => (
+                  <div key={d.patient.id} className="bg-card border border-border rounded-xl p-4 shadow-sm">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500/20 to-orange-500/10 flex items-center justify-center text-orange-500 border border-orange-500/20 font-bold flex-shrink-0">
+                        {d.patient.first_name.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold truncate">
+                          {d.patient.first_name} {d.patient.last_name}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Saldo pendiente</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Costo total:</span>
+                        <span className="font-medium">{formatCurrency(d.totalCosto)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Total abonado:</span>
+                        <span className="text-green-400/80 font-medium">{formatCurrency(d.totalPagado)}</span>
+                      </div>
+                      <div className="flex justify-between text-base font-bold border-t border-border pt-2">
+                        <span className="text-orange-400">Saldo deudor:</span>
+                        <span className="text-orange-400">{formatCurrency(d.saldoDeudor)}</span>
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <Button
+                        size="sm"
+                        className="w-full bg-green-600/20 text-green-400 hover:bg-green-600 hover:text-white"
+                        onClick={() => {
+                          setSelectedPatientId(d.patient.id);
+                          setSelectedTreatments({});
+                          setPaymentOptions({
+                            payment_method: "cash",
+                            payment_status: "completed",
+                          });
+                          setIsAddModalOpen(true);
+                        }}
+                      >
+                        <Receipt size={14} className="mr-2" />
+                        Cobrar
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </TabsContent>
       </Tabs>

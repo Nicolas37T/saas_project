@@ -5,13 +5,13 @@ import {
   Search,
   User,
   FileText,
-  Phone,
   MoreVertical,
   Pencil,
   Trash2,
   Calendar,
   Share2,
 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { tenantApi, Patient, Employee } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -382,10 +382,17 @@ export default function PatientsPage() {
 
                   <div className="space-y-2 mt-auto">
                     {patient.phone && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Phone size={14} className="text-muted-foreground" />
+                      <button 
+                        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-green-500 transition-colors"
+                        onClick={() => {
+                          const cleanPhone = patient.phone!.replace(/\D/g, "");
+                          window.open(`https://wa.me/${cleanPhone}`, "_blank");
+                        }}
+                        title="Contactar por WhatsApp"
+                      >
+                        <WhatsAppIcon size={14} className="flex-shrink-0" />
                         <span>{patient.phone}</span>
-                      </div>
+                      </button>
                     )}
                     {patient.birth_day && mounted && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -471,7 +478,7 @@ export default function PatientsPage() {
         title="Nuevo Paciente"
       >
         <form onSubmit={handleCreatePatient} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">
                 Nombre *
@@ -501,14 +508,14 @@ export default function PatientsPage() {
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">
                 Teléfono
               </label>
               <Input
                 type="tel"
-                placeholder="555-0000"
+                placeholder="+ 591 12342596"
                 value={newPatient.phone}
                 onChange={(e) =>
                   setNewPatient({ ...newPatient, phone: e.target.value })
@@ -543,7 +550,7 @@ export default function PatientsPage() {
               className="bg-muted/50 border-border text-foreground focus-visible:ring-primary"
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">
                 Motivo Consulta
@@ -580,7 +587,7 @@ export default function PatientsPage() {
               </select>
             </div>
           </div>
-          <div className="flex gap-3 justify-end mt-8">
+          <div className="flex flex-col sm:flex-row gap-3 justify-end mt-8">
             <Button
               type="button"
               variant="ghost"
@@ -607,7 +614,7 @@ export default function PatientsPage() {
       >
         {editingPatient && (
           <form onSubmit={handleSaveEdit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">
                   Nombre *
@@ -635,7 +642,7 @@ export default function PatientsPage() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">
                   Teléfono
@@ -676,7 +683,7 @@ export default function PatientsPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">
                   Descripción / Notas
@@ -712,7 +719,7 @@ export default function PatientsPage() {
                 </select>
               </div>
             </div>
-            <div className="flex gap-3 justify-end mt-8">
+            <div className="flex flex-col sm:flex-row gap-3 justify-end mt-8">
               <Button
                 type="button"
                 variant="ghost"
@@ -793,7 +800,7 @@ export default function PatientsPage() {
             </select>
           </div>
 
-          <div className="flex gap-3 justify-end mt-8">
+          <div className="flex flex-col sm:flex-row gap-3 justify-end mt-8">
             <Button
               type="button"
               variant="ghost"
