@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Activity, Plus, Trash2, ChevronDown, ChevronUp, Stethoscope, DollarSign, Hash } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,11 @@ export interface OdontogramItem {
   treatments: TreatmentItem[];
 }
 
+export interface CatalogOption {
+  id: string;
+  name: string;
+  default_price: number | null;
+}
 
 export interface NewToothWithTreatment extends OdontogramItem {
   first_treatment_description: string;
@@ -38,7 +43,125 @@ interface Step2Props {
   setNewTooth: (tooth: NewToothWithTreatment) => void;
   handleAddTooth: () => void;
   handleRemoveTooth: (index: number) => void;
+  treatmentCatalog?: CatalogOption[];
 }
+
+// --- TreatmentAutocomplete component ---
+interface AutocompleteProps {
+  value: string;
+  onChange: (value: string) => void;
+  onSelect: (item: CatalogOption) => void;
+  catalog: CatalogOption[];
+  placeholder?: string;
+  className?: string;
+  disabled?: boolean;
+}
+
+const TreatmentAutocomplete: React.FC<AutocompleteProps> = ({
+  value,
+  onChange,
+  onSelect,
+  catalog,
+  placeholder = "Ej: Endodoncia, Limpieza...",
+  className = "",
+  disabled = false,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [highlightIdx, setHighlightIdx] = useState(-1);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const filtered = value.trim()
+    ? catalog.filter((c) =>
+        c.name.toLowerCase().includes(value.toLowerCase())
+      )
+    : catalog;
+
+  // Close on click outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Reset highlight when filtered changes
+  useEffect(() => {
+    setHighlightIdx(-1);
+  }, [value]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!isOpen || filtered.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightIdx((prev) => (prev < filtered.length - 1 ? prev + 1 : 0));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightIdx((prev) => (prev > 0 ? prev - 1 : filtered.length - 1));
+    } else if (e.key === "Enter" && highlightIdx >= 0) {
+      e.preventDefault();
+      onSelect(filtered[highlightIdx]);
+      setIsOpen(false);
+    } else if (e.key === "Escape") {
+      setIsOpen(false);
+    }
+  };
+
+  return (
+    <div ref={containerRef} className="relative">
+      <Input
+        placeholder={placeholder}
+        className={className}
+        value={value}
+        disabled={disabled}
+        onChange={(e) => {
+          onChange(e.target.value);
+          setIsOpen(true);
+        }}
+        onFocus={() => setIsOpen(true)}
+        onKeyDown={handleKeyDown}
+      />
+      {isOpen && filtered.length > 0 && !disabled && (
+        <div
+          ref={listRef}
+          className="absolute z-50 top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-popover border border-border rounded-lg shadow-xl backdrop-blur-md animate-in fade-in slide-in-from-top-2 duration-200"
+        >
+          {filtered.map((item, idx) => (
+            <button
+              key={item.id}
+              type="button"
+              className={`w-full text-left px-3 py-2 text-sm flex items-center justify-between gap-2 transition-colors ${
+                idx === highlightIdx
+                  ? "bg-primary/15 text-primary"
+                  : "hover:bg-muted/70 text-foreground"
+              }`}
+              onMouseEnter={() => setHighlightIdx(idx)}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                onSelect(item);
+                setIsOpen(false);
+              }}
+            >
+              <span className="flex items-center gap-2 min-w-0">
+                <Stethoscope size={12} className="text-primary/60 flex-shrink-0" />
+                <span className="truncate font-medium">{item.name}</span>
+              </span>
+              {item.default_price != null && item.default_price > 0 && (
+                <span className="text-amber-500 text-xs font-bold flex-shrink-0">
+                  Bs. {item.default_price}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const EMPTY_TREATMENT: TreatmentItem = {
   description: "",
@@ -65,6 +188,7 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
   setNewTooth,
   handleAddTooth,
   handleRemoveTooth,
+  treatmentCatalog = [],
 }) => {
   // All teeth expanded by default — collapsed set tracks which ones user manually collapsed
   const [collapsedTeeth, setCollapsedTeeth] = React.useState<Set<number>>(new Set());
@@ -236,14 +360,25 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                 <label className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">
                   Procedimiento *
                 </label>
-                <Input
+                <TreatmentAutocomplete
+                  catalog={treatmentCatalog}
                   placeholder="Ej: Endodoncia, Limpieza..."
                   className="bg-muted/50 border-gray-500 dark:border-white/50 focus:border-purple-500 text-xs sm:text-sm"
                   value={newTooth.first_treatment_description}
-                  onChange={(e) =>
+                  onChange={(val) =>
                     setNewTooth({
                       ...newTooth,
-                      first_treatment_description: e.target.value,
+                      first_treatment_description: val,
+                    })
+                  }
+                  onSelect={(item) =>
+                    setNewTooth({
+                      ...newTooth,
+                      first_treatment_description: item.name,
+                      first_treatment_price:
+                        item.default_price != null && item.default_price > 0
+                          ? item.default_price
+                          : newTooth.first_treatment_price,
                     })
                   }
                 />
@@ -423,22 +558,45 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                                 }`}>
                                   Procedimiento
                                 </label>
-                                <Input
-                                  placeholder="Ej: Endodoncia"
-                                  className={`bg-muted/50 border-gray-500 dark:border-gray-500/50 h-8 text-xs ${
-                                    isReadonly ? "opacity-60 cursor-not-allowed text-muted-foreground" : ""
-                                  }`}
-                                  value={treatment.description}
-                                  disabled={isReadonly}
-                                  onChange={(e) =>
-                                    updateTreatmentField(
-                                      toothIdx,
-                                      treatIdx,
-                                      "description",
-                                      e.target.value
-                                    )
-                                  }
-                                />
+                                {isReadonly ? (
+                                  <Input
+                                    placeholder="Ej: Endodoncia"
+                                    className="bg-muted/50 border-gray-500 dark:border-gray-500/50 h-8 text-xs opacity-60 cursor-not-allowed text-muted-foreground"
+                                    value={treatment.description}
+                                    disabled
+                                  />
+                                ) : (
+                                  <TreatmentAutocomplete
+                                    catalog={treatmentCatalog}
+                                    placeholder="Ej: Endodoncia"
+                                    className="bg-muted/50 border-gray-500 dark:border-gray-500/50 h-8 text-xs"
+                                    value={treatment.description}
+                                    onChange={(val) =>
+                                      updateTreatmentField(
+                                        toothIdx,
+                                        treatIdx,
+                                        "description",
+                                        val
+                                      )
+                                    }
+                                    onSelect={(item) => {
+                                      updateTreatmentField(
+                                        toothIdx,
+                                        treatIdx,
+                                        "description",
+                                        item.name
+                                      );
+                                      if (item.default_price != null && item.default_price > 0) {
+                                        updateTreatmentField(
+                                          toothIdx,
+                                          treatIdx,
+                                          "price",
+                                          item.default_price
+                                        );
+                                      }
+                                    }}
+                                  />
+                                )}
                               </div>
                             <div className="space-y-1">
                               <label className={`text-[10px] uppercase tracking-widest ${

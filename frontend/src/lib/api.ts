@@ -279,6 +279,14 @@ export interface Medicine {
   updated_at: string;
 }
 
+export interface TreatmentCatalogItem {
+  id: string;
+  name: string;
+  default_price: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Role {
   id: string;
   name: string;
@@ -512,6 +520,24 @@ export const tenantApi = {
     }),
   deleteMedicine: (id: string) =>
     apiFetch<{ ok: boolean }>(`/api/tenant/medicines/${id}`, {
+      method: "DELETE",
+    }),
+
+  // Treatment Catalog
+  getTreatmentCatalog: () =>
+    apiFetch<TreatmentCatalogItem[]>("/api/tenant/treatment-catalog/"),
+  createTreatmentCatalogItem: (data: { name: string; default_price?: number | null }) =>
+    apiFetch<TreatmentCatalogItem>("/api/tenant/treatment-catalog/", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  updateTreatmentCatalogItem: (id: string, data: { name?: string; default_price?: number | null }) =>
+    apiFetch<TreatmentCatalogItem>(`/api/tenant/treatment-catalog/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+  deleteTreatmentCatalogItem: (id: string) =>
+    apiFetch<{ ok: boolean }>(`/api/tenant/treatment-catalog/${id}`, {
       method: "DELETE",
     }),
 };
