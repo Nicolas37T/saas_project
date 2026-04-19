@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { ClipboardClock, Trash2, ArrowLeft } from "lucide-react";
-import { tenantApi, Patient } from "@/lib/api";
+import { tenantApi, Patient, TreatmentCatalogItem } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CustomModal, SuccessModal } from "@/components/ui/custom-modal";
@@ -51,6 +51,7 @@ export default function EditHistoryPatientPage() {
 
   const [odontogramItems, setOdontogramItems] = useState<OdontogramItem[]>([]);
   const [newTooth, setNewTooth] = useState<NewToothWithTreatment>({ ...DEFAULT_NEW_TOOTH });
+  const [treatmentCatalog, setTreatmentCatalog] = useState<TreatmentCatalogItem[]>([]);
 
   useEffect(() => {
     const initializeData = async () => {
@@ -60,6 +61,13 @@ export default function EditHistoryPatientPage() {
         if (historyId) {
           const data = await tenantApi.getMedicalHistoryDetail(historyId);
           await loadHistoryDataIntoForm(data);
+        }
+        // Load treatment catalog for autocomplete
+        try {
+          const catalog = await tenantApi.getTreatmentCatalog();
+          setTreatmentCatalog(catalog || []);
+        } catch (err) {
+          console.error("Error loading treatment catalog", err);
         }
       } catch (error) {
         console.error("Error initializing edit view", error);
@@ -243,6 +251,7 @@ export default function EditHistoryPatientPage() {
             setNewTooth={setNewTooth}
             handleAddTooth={handleAddTooth}
             handleRemoveTooth={handleRemoveTooth}
+            treatmentCatalog={treatmentCatalog}
           />
         )}
 

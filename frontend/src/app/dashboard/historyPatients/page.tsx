@@ -16,7 +16,7 @@ import {
   Edit3,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
-import { tenantApi, Patient } from "@/lib/api";
+import { tenantApi, Patient, TreatmentCatalogItem } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -84,12 +84,14 @@ export default function HistoryPatientsPage() {
 
   const [odontogramItems, setOdontogramItems] = useState<OdontogramItem[]>([]);
   const [newTooth, setNewTooth] = useState<NewToothWithTreatment>({ ...DEFAULT_NEW_TOOTH });
+  const [treatmentCatalog, setTreatmentCatalog] = useState<TreatmentCatalogItem[]>([]);
 
   useEffect(() => {
     if (view === "list") {
       loadHistories();
     } else if (view === "form") {
       loadPatients();
+      loadTreatmentCatalog();
     }
   }, [view]);
 
@@ -143,6 +145,15 @@ export default function HistoryPatientsPage() {
       console.error("Error loading histories", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadTreatmentCatalog = async () => {
+    try {
+      const data = await tenantApi.getTreatmentCatalog();
+      setTreatmentCatalog(data || []);
+    } catch (error) {
+      console.error("Error loading treatment catalog", error);
     }
   };
 
@@ -751,6 +762,7 @@ export default function HistoryPatientsPage() {
                 setNewTooth={setNewTooth}
                 handleAddTooth={handleAddTooth}
                 handleRemoveTooth={handleRemoveTooth}
+                treatmentCatalog={treatmentCatalog}
               />
             )}
 

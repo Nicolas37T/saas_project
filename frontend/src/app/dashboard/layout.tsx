@@ -19,7 +19,8 @@ import {
   User as UserIcon,
   Contact,
   Pill,
-  DollarSign
+  DollarSign,
+  BookOpen
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { tenantApi } from "@/lib/api";
@@ -143,6 +144,11 @@ export default function DashboardLayout({
         name: "Cotizaciones",
         href: "/dashboard/price",
         icon: <DollarSign size={20} />,
+      },
+      {
+        name: "Catálogo",
+        href: "/dashboard/treatment-catalog",
+        icon: <BookOpen size={20} />,
       }
     ] : []),
     {
