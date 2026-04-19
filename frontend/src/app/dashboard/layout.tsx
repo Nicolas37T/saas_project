@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import {
@@ -36,6 +36,95 @@ function decodeJWT(token: string): { email?: string; full_name?: string; sub?: s
   } catch {
     return null;
   }
+}
+
+function UserMenuHeader({
+  navItems,
+  pathname,
+  userName,
+  onLogout,
+}: {
+  navItems: { name: string; href: string }[];
+  pathname: string;
+  userName: string;
+  onLogout: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Close on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const pageTitle =
+    navItems.find(
+      (i) => pathname === i.href || (i.href !== "/dashboard" && pathname.startsWith(i.href))
+    )?.name || "Dashboard";
+
+  const initials = userName
+    ? userName.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()
+    : "U";
+
+  return (
+    <header className="hidden md:flex h-16 border-b border-border/50 bg-background/50 backdrop-blur-sm sticky top-0 z-10 items-center justify-between px-8">
+      <h2 className="text-xl font-semibold">{pageTitle}</h2>
+      <div className="flex items-center gap-3">
+        <ThemeToggle />
+        {/* User menu */}
+        <div ref={ref} className="relative">
+          <button
+            id="user-menu-trigger"
+            onClick={() => setOpen((v) => !v)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-accent transition-colors group"
+            aria-haspopup="true"
+            aria-expanded={open}
+          >
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-primary-foreground text-sm font-semibold shadow-sm select-none">
+              {initials}
+            </div>
+            {userName && (
+              <span className="text-sm font-medium text-foreground max-w-[140px] truncate">
+                {userName}
+              </span>
+            )}
+            <svg
+              className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+
+          {/* Dropdown */}
+          {open && (
+            <div className="absolute right-0 mt-2 w-52 rounded-2xl border border-border bg-popover shadow-xl shadow-black/10 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150 z-50">
+              <div className="px-4 py-3 border-b border-border/60">
+                <p className="text-xs text-muted-foreground">Sesión iniciada como</p>
+                <p className="text-sm font-semibold truncate mt-0.5">{userName || "Usuario"}</p>
+              </div>
+              <div className="p-1.5">
+                <button
+                  id="logout-button"
+                  onClick={() => { setOpen(false); onLogout(); }}
+                  className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-destructive hover:bg-destructive/10 rounded-xl transition-colors"
+                >
+                  <LogOut size={16} />
+                  Cerrar Sesión
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </header>
+  );
 }
 
 export default function DashboardLayout({
@@ -195,7 +284,7 @@ export default function DashboardLayout({
           </div>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-2">
+        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
           {navItems.map((item) => {
             const isActive =
               pathname === item.href ||
@@ -217,18 +306,7 @@ export default function DashboardLayout({
           })}
         </nav>
 
-        <div className="p-4 border-t border-border">
-          <button
-            onClick={() => {
-              localStorage.clear();
-              router.push("/login");
-            }}
-            className="flex items-center gap-3 w-full px-4 py-3 text-destructive hover:bg-destructive/10 rounded-xl transition-colors"
-          >
-            <LogOut size={20} />
-            Cerrar Sesión
-          </button>
-        </div>
+
       </aside>
 
       {/* Mobile Header & Overlay */}
@@ -295,6 +373,21 @@ export default function DashboardLayout({
                 );
               })}
             </nav>
+            {/* Logout — fijo al fondo, siempre visible */}
+            <div className="p-4 border-t border-border flex-shrink-0">
+              <button
+                id="mobile-logout-button"
+                onClick={() => {
+                  setSidebarOpen(false);
+                  localStorage.clear();
+                  router.push("/login");
+                }}
+                className="flex items-center gap-3 w-full px-4 py-3.5 text-destructive hover:bg-destructive/10 rounded-xl transition-colors font-medium"
+              >
+                <LogOut size={20} />
+                Cerrar Sesión
+              </button>
+            </div>
           </div>
         </>
       )}
@@ -302,23 +395,12 @@ export default function DashboardLayout({
       {/* Main Content Area */}
       <main className="flex-1 md:ml-64 pt-16 md:pt-0 min-h-screen flex flex-col">
         {/* Desktop Topbar */}
-        <header className="hidden md:flex h-20 border-b border-border/50 bg-background/50 backdrop-blur-sm sticky top-0 z-10 items-center justify-between px-8">
-          <h2 className="text-xl font-semibold">
-            {navItems.find(
-              (i) =>
-                pathname === i.href ||
-                (i.href !== "/dashboard" && pathname.startsWith(i.href)),
-            )?.name || "Dashboard"}
-          </h2>
-          <div className="flex items-center gap-4">
-            <ThemeToggle />
-            {/* <button className="w-10 h-10 rounded-full flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-foreground transition-colors relative">
-              <Bell size={20} />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border border-background"></span>
-            </button> */}
-            {/* <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-purple-600 border-2 border-border"></div> */}
-          </div>
-        </header>
+        <UserMenuHeader
+          navItems={navItems}
+          pathname={pathname}
+          userName={userName}
+          onLogout={() => { localStorage.clear(); router.push("/login"); }}
+        />
 
         <div className="flex-1 p-6 lg:p-10 relative">{children}</div>
       </main>
