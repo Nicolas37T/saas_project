@@ -179,3 +179,14 @@ class Medicine(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     created_by: Optional[uuid.UUID] = Field(default=None, foreign_key="users.id")
+
+class TreatmentCatalog(SQLModel, table=True):
+    """Predefined treatments that doctors can reuse when filling medical histories."""
+    __tablename__ = "treatment_catalog"
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    name: str = Field(index=True)
+    default_price: Optional[float] = Field(default=None)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    created_by: Optional[uuid.UUID] = Field(default=None, foreign_key="users.id")

@@ -348,3 +348,22 @@ class MedicineRead(MedicineBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+# --- Treatment Catalog ---
+class TreatmentCatalogBase(BaseModel):
+    name: str
+    default_price: Optional[float] = None
+
+class TreatmentCatalogCreate(TreatmentCatalogBase):
+    pass
+
+class TreatmentCatalogUpdate(BaseModel):
+    name: Optional[str] = None
+    default_price: Optional[float] = None
+
+class TreatmentCatalogRead(TreatmentCatalogBase):
+    id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
