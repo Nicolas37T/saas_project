@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship
+from sqlalchemy import Index
 import uuid
 
 # ─── TENANT ROLES & USERS ─────────────────────────────────────────────────────
@@ -129,6 +130,10 @@ class MedicalHistory(SQLModel, table=True):
 
 class Appointment(SQLModel, table=True):
     __tablename__ = "appointments"
+    __table_args__ = (
+        Index("ix_appointments_status_date", "status", "appointment_date"),
+        Index("ix_appointments_doctor_date", "assigned_doctor_id", "appointment_date"),
+    )
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     appointment_date: datetime
     notes: Optional[str] = None

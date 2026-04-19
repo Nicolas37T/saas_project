@@ -83,7 +83,7 @@ export default function PatientProfilePage({
         ] = await Promise.all([
           tenantApi.getPatient(id),
           tenantApi.getMedicalHistories(id).catch(() => []),
-          tenantApi.getAppointments().catch(() => []),
+          tenantApi.getAppointments({ patient_id: id }).catch(() => []),
           tenantApi.getTreatments().catch(() => []),
           tenantApi.getEmployees().catch(() => []),
         ]);

@@ -430,10 +430,11 @@ export const tenantApi = {
 
   // Appointments
 
-  getAppointments: (params?: { date_from?: string; date_to?: string }) => {
+  getAppointments: (params?: { date_from?: string; date_to?: string; patient_id?: string }) => {
     const qs = new URLSearchParams();
     if (params?.date_from) qs.set("date_from", params.date_from);
     if (params?.date_to) qs.set("date_to", params.date_to);
+    if (params?.patient_id) qs.set("patient_id", params.patient_id);
     const query = qs.toString() ? `?${qs.toString()}` : "";
     return apiFetch<Appointment[]>(`/api/tenant/appointments/${query}`);
   },

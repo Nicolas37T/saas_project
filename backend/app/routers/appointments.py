@@ -24,21 +24,24 @@ def _check_doctor_conflict(
     Pass `exclude_id` when editing so the appointment doesn't conflict with itself.
     """
     new_dt = appointment_date.replace(second=0, microsecond=0)
+    # Check 1-minute window in SQL instead of loading all doctor appointments
+    window_end = new_dt.replace(second=59)
 
     query = select(Appointment).where(
         Appointment.assigned_doctor_id == doctor_id,
         Appointment.status == True,
+        Appointment.appointment_date >= new_dt,
+        Appointment.appointment_date <= window_end,
     )
     if exclude_id is not None:
         query = query.where(Appointment.id != exclude_id)
 
-    for apt in session.exec(query).all():
-        existing_dt = apt.appointment_date.replace(second=0, microsecond=0)
-        if existing_dt == new_dt:
-            raise HTTPException(
-                status_code=409,
-                detail="El doctor ya tiene una cita programada en esa fecha y hora."
-            )
+    conflict = session.exec(query).first()
+    if conflict:
+        raise HTTPException(
+            status_code=409,
+            detail="El doctor ya tiene una cita programada en esa fecha y hora."
+        )
 
 
 @router.post("/", response_model=AppointmentRead)
@@ -66,6 +69,7 @@ def get_appointments(
     limit: int = 500,
     date_from: str | None = Query(None, description="ISO date YYYY-MM-DD — inclusive start"),
     date_to: str | None = Query(None, description="ISO date YYYY-MM-DD — exclusive end"),
+    patient_id: str | None = Query(None, description="Filter by patient UUID"),
     session: Session = Depends(get_session_for_tenant),
     current_user = Depends(get_current_tenant_user)
 ):
@@ -76,6 +80,10 @@ def get_appointments(
         role = current_user.computed_role.lower()
         if role not in ['owner', 'admin', 'recepcionista']:
             query = query.where(Appointment.assigned_doctor_id == current_user.id)
+
+        # Patient filter
+        if patient_id:
+            query = query.where(Appointment.patient_id == uuid.UUID(patient_id))
 
         # Server-side date range filtering
         if date_from:
