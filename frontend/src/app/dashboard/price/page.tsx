@@ -104,41 +104,41 @@ export default function PricePage() {
   };
 
   const generateQuoteText = () => {
-    let text = `💰 COTIZACIÓN DE TRATAMIENTO\n`;
+    let text = `COTIZACIÓN DE TRATAMIENTO\n`;
     text += `━━━━━━━━━━━━━━━━━━━━\n\n`;
-    text += `👤 Paciente: ${patientName || "No especificado"}\n`;
-    text += `📅 Fecha: ${date}\n`;
-    text += `👨‍⚕️ Doctor: ${doctorName}\n\n`;
+    text += ` Paciente: ${patientName || "No especificado"}\n`;
+    text += ` Fecha: ${date}\n`;
+    text += ` Doctor: ${doctorName}\n\n`;
 
     if (settings?.business_name) {
-      text += `🏥 ${settings.business_name}\n`;
+      text += ` ${settings.business_name}\n`;
     }
 
-    text += `\n🦷 TRATAMIENTOS:\n`;
+    text += `\n TRATAMIENTOS:\n`;
     text += `━━━━━━━━━━━━━━━━━━━━\n\n`;
 
     items.forEach((item, idx) => {
       text += `${idx + 1}. ${item.treatment}\n`;
-      if (item.description) text += `   📝 ${item.description}\n`;
-      text += `   💲 Bs. ${item.price.toFixed(2)}\n\n`;
+      if (item.description) text += `   ${item.description}\n`;
+      text += `   Bs. ${item.price.toFixed(2)}\n\n`;
     });
 
     text += `━━━━━━━━━━━━━━━━━━━━\n`;
-    text += `📊 Subtotal: Bs. ${subtotal.toFixed(2)}\n`;
+    text += ` Subtotal: Bs. ${subtotal.toFixed(2)}\n`;
     if (discount > 0) {
-      text += `🏷️ Descuento (${discount}%): -Bs. ${discountAmount.toFixed(2)}\n`;
+      text += ` Descuento (${discount}%): -Bs. ${discountAmount.toFixed(2)}\n`;
     }
-    text += `💰 TOTAL: Bs. ${total.toFixed(2)}\n`;
+    text += ` TOTAL: Bs. ${total.toFixed(2)}\n`;
 
     if (notes) {
-      text += `\n📋 OBSERVACIONES:\n`;
+      text += `\n OBSERVACIONES:\n`;
       text += `━━━━━━━━━━━━━━━━━━━━\n`;
       text += `${notes}\n\n`;
     }
 
     text += `\n━━━━━━━━━━━━━━━━━━━━\n`;
-    text += `✅ Dr(a). ${doctorName}\n`;
-    text += `⚠️ Esta cotización tiene una validez de 30 días.`;
+    text += ` Dr(a). ${doctorName}\n`;
+    text += `Esta cotización tiene una validez de 30 días.`;
 
     return text;
   };

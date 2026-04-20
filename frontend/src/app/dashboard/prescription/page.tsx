@@ -100,36 +100,36 @@ export default function PrescriptionPage() {
       ? `${currentPatient.first_name} ${currentPatient.last_name}` 
       : "Paciente";
     
-    let text = `📋 RECETA MÉDICA\n`;
+    let text = `RECETA MÉDICA\n`;
     text += `━━━━━━━━━━━━━━━━━━━━\n\n`;
-    text += `👤 Paciente: ${patientName}\n`;
-    text += `📅 Fecha: ${date}\n`;
-    text += `👨‍⚕️ Doctor: ${doctorName}\n\n`;
+    text += ` Paciente: ${patientName}\n`;
+    text += ` Fecha: ${date}\n`;
+    text += ` Doctor: ${doctorName}\n\n`;
     
     if (settings?.business_name) {
-      text += `🏥 ${settings.business_name}\n`;
+      text += ` ${settings.business_name}\n`;
     }
     
-    text += `\n💊 MEDICAMENTOS:\n`;
+    text += `\n MEDICAMENTOS:\n`;
     text += `━━━━━━━━━━━━━━━━━━━━\n\n`;
     
     prescriptionItems.forEach((item, idx) => {
       text += `${idx + 1}. ${item.medicineName}`;
       if (item.quantity) text += ` — Cantidad: ${item.quantity}`;
       text += `\n`;
-      if (item.dosage) text += `   📌 Dosis: ${item.dosage}\n`;
-      if (item.instructions) text += `   📝 Instrucciones: ${item.instructions}\n`;
+      if (item.dosage) text += `   Dosis: ${item.dosage}\n`;
+      if (item.instructions) text += `   Instrucciones: ${item.instructions}\n`;
       text += `\n`;
     });
     
     if (notes) {
-      text += `📋 OBSERVACIONES:\n`;
+      text += ` OBSERVACIONES:\n`;
       text += `━━━━━━━━━━━━━━━━━━━━\n`;
       text += `${notes}\n\n`;
     }
     
     text += `━━━━━━━━━━━━━━━━━━━━\n`;
-    text += `✅ Dr(a). ${doctorName}`;
+    text += ` Dr(a). ${doctorName}`;
     
     return text;
   };
