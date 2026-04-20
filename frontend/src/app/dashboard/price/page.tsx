@@ -5,8 +5,9 @@ import { Printer, Plus, Trash2, DollarSign, Share2, FileText, User } from "lucid
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { tenantApi, SettingData } from "@/lib/api";
+import { tenantApi, SettingData, TreatmentCatalogItem } from "@/lib/api";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
+import { TreatmentAutocomplete } from "@/components/Step2Odontogram";
 
 // Helper function to decode JWT and get user info
 function decodeJWT(token: string): { email?: string; full_name?: string; sub?: string } | null {
@@ -31,6 +32,7 @@ export default function PricePage() {
   const [settings, setSettings] = useState<SettingData | null>(null);
   const [doctorName, setDoctorName] = useState("");
   const [loading, setLoading] = useState(true);
+  const [treatmentCatalog, setTreatmentCatalog] = useState<TreatmentCatalogItem[]>([]);
 
   // Form State
   const [patientName, setPatientName] = useState("");
@@ -62,6 +64,14 @@ export default function PricePage() {
           } else if (decoded?.email) {
             setDoctorName(decoded.email.split('@')[0]);
           }
+        }
+
+        // Load treatment catalog for autocomplete
+        try {
+          const catalog = await tenantApi.getTreatmentCatalog();
+          setTreatmentCatalog(catalog || []);
+        } catch (err) {
+          console.error("Error loading treatment catalog", err);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -223,12 +233,18 @@ export default function PricePage() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1">
                     <label className="text-xs text-muted-foreground">Tratamiento *</label>
-                    <Input
+                    <TreatmentAutocomplete
+                      catalog={treatmentCatalog}
                       value={newTreatment}
-                      onChange={(e) => setNewTreatment(e.target.value)}
+                      onChange={(val) => setNewTreatment(val)}
+                      onSelect={(item) => {
+                        setNewTreatment(item.name);
+                        if (item.default_price != null && item.default_price > 0) {
+                          setNewPrice(String(item.default_price));
+                        }
+                      }}
                       placeholder="Ej: Limpieza dental"
                       className="bg-muted/50 border-border h-9 text-sm"
-                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addItem(); } }}
                     />
                   </div>
                   <div className="space-y-1">
