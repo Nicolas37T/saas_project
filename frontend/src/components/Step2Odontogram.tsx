@@ -57,7 +57,7 @@ interface AutocompleteProps {
   disabled?: boolean;
 }
 
-const TreatmentAutocomplete: React.FC<AutocompleteProps> = ({
+export const TreatmentAutocomplete: React.FC<AutocompleteProps> = ({
   value,
   onChange,
   onSelect,
