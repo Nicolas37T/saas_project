@@ -58,6 +58,7 @@ export default function AppointmentsPage() {
   const [dateFilter, setDateFilter] = useState<DateFilter>("today");
 
   const [activeTab, setActiveTab] = useState("list");
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [calendarDate, setCalendarDate] = useState(() => {
     const now = new Date();
     return { year: now.getFullYear(), month: now.getMonth() };
@@ -320,26 +321,32 @@ export default function AppointmentsPage() {
     return p ? `${p.first_name} ${p.last_name}` : "Paciente Desconocido";
   };
 
-  // Helper to get doctor name
   const getDoctorName = (id?: string) => {
     if (!id) return "Sin Asignar";
     const d = employees.find((e) => e.id === id);
     return d ? d.full_name || d.username : "Desconocido";
   };
 
+  const handleQuickStatusUpdate = async (id: string, newStatus: string) => {
+    try {
+      await tenantApi.updateAppointment(id, {
+        appointment_status: newStatus,
+      });
+      loadData();
+    } catch (error) {
+      console.error("Error updating status", error);
+    }
+  };
+
   // Helper for status styling
   const getStatusStyle = (status: string) => {
     switch (status.toLowerCase()) {
       case "scheduled":
-        return "bg-primary/20 text-primary border-primary/30";
-      case "confirmed":
-        return "bg-green-500/20 text-green-500 border-green-500/30";
-      case "pending":
-        return "bg-yellow-500/20 text-yellow-500 border-yellow-500/30";
+        return "bg-blue-500/20 text-blue-500 border-blue-500/30";
       case "completed":
-        return "bg-muted/50 text-muted-foreground border-muted-foreground/30";
+        return "bg-emerald-500/20 text-emerald-500 border-emerald-500/30";
       case "cancelled":
-        return "bg-destructive/20 text-destructive border-destructive/30";
+        return "bg-rose-500/20 text-rose-500 border-rose-500/30";
       default:
         return "bg-muted/50 text-muted-foreground border-muted-foreground/30";
     }
@@ -348,10 +355,17 @@ export default function AppointmentsPage() {
   // Helper strings to map status to spanish labels
   const statusLabels: Record<string, string> = {
     scheduled: "Programada",
-    confirmed: "Confirmada",
-    pending: "Pendiente",
     completed: "Completada",
     cancelled: "Cancelada",
+  };
+
+  const getStatusColorClass = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "scheduled": return "text-blue-500 bg-blue-500/10 border-blue-500/20 hover:bg-blue-500/20";
+      case "completed": return "text-emerald-500 bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20";
+      case "cancelled": return "text-rose-500 bg-rose-500/10 border-rose-500/20 hover:bg-rose-500/20";
+      default: return "text-muted-foreground bg-muted/20 border-border";
+    }
   };
 
   // Backend already filters by date range — filteredAppointments is the fetch result
@@ -473,32 +487,25 @@ export default function AppointmentsPage() {
                             })}
                           </span>
                         </div>
-                        <div className="flex flex-col items-end gap-2">
-                          <span
-                            className={`px-3 py-1 text-xs font-semibold rounded-full border uppercase tracking-wider ${getStatusStyle(apt.appointment_status)}`}
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 hover:bg-accent text-muted-foreground group-hover:text-foreground transition-colors"
+                            onClick={(e) => { e.stopPropagation(); openEditModal(apt); }}
+                            title="Editar"
                           >
-                            {statusLabels[apt.appointment_status.toLowerCase()] || apt.appointment_status}
-                          </span>
-                          <div className="flex items-center gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 hover:bg-accent"
-                                onClick={(e) => { e.stopPropagation(); openEditModal(apt); }}
-                                title="Editar"
-                              >
-                                  <Edit2 size={14} />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 text-destructive hover:bg-destructive/10"
-                                onClick={(e) => { e.stopPropagation(); confirmDeleteAction(apt.id); }}
-                                title="Eliminar"
-                              >
-                                  <Trash2 size={14} />
-                              </Button>
-                          </div>
+                            <Edit2 size={16} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive/50 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                            onClick={(e) => { e.stopPropagation(); confirmDeleteAction(apt.id); }}
+                            title="Eliminar"
+                          >
+                            <Trash2 size={16} />
+                          </Button>
                         </div>
                       </CardHeader>
                       <CardContent className="p-4 pt-4">
@@ -532,6 +539,53 @@ export default function AppointmentsPage() {
                             <p className="line-clamp-2">{apt.notes}</p>
                           </div>
                         )}
+
+                        {/* Status Dropdown - Moved to bottom */}
+                        <div className="mt-6 flex justify-end">
+                          <div className="relative">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenDropdownId(openDropdownId === apt.id ? null : apt.id);
+                              }}
+                              className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-full border transition-all flex items-center gap-2 shadow-sm ${getStatusColorClass(apt.appointment_status)}`}
+                            >
+                              {statusLabels[apt.appointment_status.toLowerCase()]}
+                              <Plus size={10} className={`transition-transform duration-300 ${openDropdownId === apt.id ? "rotate-45" : ""}`} />
+                            </button>
+
+                            {openDropdownId === apt.id && (
+                              <>
+                                <div 
+                                  className="fixed inset-0 z-10" 
+                                  onClick={() => setOpenDropdownId(null)}
+                                />
+                                <div className="absolute bottom-full right-0 mb-2 w-40 bg-card/95 backdrop-blur-xl border border-border/50 rounded-xl shadow-2xl p-1.5 z-20 animate-in fade-in slide-in-from-bottom-2 zoom-in-95 duration-200">
+                                  {Object.entries(statusLabels).map(([val, label]) => (
+                                    <button
+                                      key={val}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleQuickStatusUpdate(apt.id, val);
+                                        setOpenDropdownId(null);
+                                      }}
+                                      className={`w-full text-left px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors flex items-center justify-between group/item ${
+                                        apt.appointment_status === val 
+                                          ? "bg-primary/20 text-primary" 
+                                          : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                                      }`}
+                                    >
+                                      {label}
+                                      {apt.appointment_status === val && (
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                      )}
+                                    </button>
+                                  ))}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
                       </CardContent>
                     </Card>
                   );
@@ -662,8 +716,6 @@ export default function AppointmentsPage() {
               }
             >
               <option value="scheduled">Programada</option>
-              <option value="pending">Pendiente</option>
-              <option value="confirmed">Confirmada</option>
               <option value="completed">Completada</option>
               <option value="cancelled">Cancelada</option>
             </select>

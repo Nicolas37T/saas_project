@@ -129,6 +129,7 @@ def get_doctors(
 @router.post("/", response_model=EmployeeRead)
 def create_employee(
     data: EmployeeCreate,
+    request: Request,
     session: Session = Depends(get_session_for_tenant),
     current_user = Depends(get_current_tenant_user)
 ):
@@ -136,6 +137,23 @@ def create_employee(
     # 1. Verificar permisos
     if getattr(current_user, "computed_role", "") not in ["admin", "superadmin", "owner"]:
          raise HTTPException(status_code=403, detail="No tienes permiso para crear empleados")
+
+    # 1.5 Validar el límite de usuarios del plan
+    tenant_obj = getattr(request.state, "tenant", None)
+    if tenant_obj and tenant_obj.plan_id:
+        from app.db.session import engine
+        from app.db.models import Plan
+        with Session(engine) as public_session:
+            plan = public_session.get(Plan, tenant_obj.plan_id)
+            if plan and plan.max_users:
+                from sqlalchemy import func
+                active_users = session.exec(select(func.count(User.id)).where(User.status == True)).one()
+                if active_users >= plan.max_users:
+                    raise HTTPException(
+                        status_code=400, 
+                        detail=f"Límite alcanzado: Tu plan actual ({plan.name}) sólo permite hasta {plan.max_users} usuarios activos."
+                    )
+
 
     # 2. Verificar si ya existe
     existing_user = session.exec(select(User).where((User.email == data.email) | (User.username == data.username))).first()
@@ -167,6 +185,7 @@ def create_employee(
 def update_employee(
     employee_id: uuid.UUID,
     data: EmployeeUpdate,
+    request: Request,
     session: Session = Depends(get_session_for_tenant),
     current_user = Depends(get_current_tenant_user)
 ):
@@ -178,6 +197,23 @@ def update_employee(
     db_user = session.get(User, employee_id)
     if not db_user:
         raise HTTPException(status_code=404, detail="Empleado no encontrado")
+
+    # Si se intenta reactivar un empleado, validar el límite de usuarios del plan
+    if data.status is True and db_user.status is False:
+        tenant_obj = getattr(request.state, "tenant", None)
+        if tenant_obj and tenant_obj.plan_id:
+            from app.db.session import engine
+            from app.db.models import Plan
+            with Session(engine) as public_session:
+                plan = public_session.get(Plan, tenant_obj.plan_id)
+                if plan and plan.max_users:
+                    from sqlalchemy import func
+                    active_users = session.exec(select(func.count(User.id)).where(User.status == True)).one()
+                    if active_users >= plan.max_users:
+                        raise HTTPException(
+                            status_code=400, 
+                            detail=f"Límite alcanzado: Tu plan actual ({plan.name}) sólo permite hasta {plan.max_users} usuarios activos. No puedes reactivar este usuario."
+                        )
 
     update_data = data.model_dump(exclude_unset=True)
     

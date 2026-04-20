@@ -2,17 +2,28 @@
 
 import { useEffect, useState } from "react";
 import { adminApi, Plan } from "@/lib/api";
-import { CreditCard, AlertTriangle, Plus, X, Loader2 } from "lucide-react";
+import { CreditCard, AlertTriangle, Plus, Loader2, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CustomModal, ConfirmModal } from "@/components/ui/custom-modal";
 
 export default function PlansPage() {
     const [plans, setPlans] = useState<Plan[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-    const [showForm, setShowForm] = useState(false);
-    const [creating, setCreating] = useState(false);
+    
+    // Modal states
+    const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    
+    const [isSaving, setIsSaving] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    
+    const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
+    const [planToDelete, setPlanToDelete] = useState<Plan | null>(null);
+
     const [form, setForm] = useState({ name: "", price: "", billing_cycle: "monthly", max_users: "5" });
 
     useEffect(() => {
@@ -30,71 +41,189 @@ export default function PlansPage() {
         }
     }
 
-    async function handleCreate(e: React.FormEvent) {
+    const openCreate = () => {
+        setEditingPlan(null);
+        setForm({ name: "", price: "", billing_cycle: "monthly", max_users: "5" });
+        setIsFormModalOpen(true);
+    };
+
+    const openEdit = (plan: Plan) => {
+        setEditingPlan(plan);
+        setForm({ 
+            name: plan.name, 
+            price: plan.price.toString(), 
+            billing_cycle: plan.billing_cycle, 
+            max_users: plan.max_users ? plan.max_users.toString() : "5" 
+        });
+        setIsFormModalOpen(true);
+    };
+
+    const openDelete = (plan: Plan) => {
+        setPlanToDelete(plan);
+        setIsDeleteModalOpen(true);
+    };
+
+    async function handleSave(e: React.FormEvent) {
         e.preventDefault();
-        setCreating(true);
+        setIsSaving(true);
         setError("");
         try {
-            const newPlan = await adminApi.createPlan({
+            const data = {
                 name: form.name,
                 price: parseFloat(form.price),
                 billing_cycle: form.billing_cycle,
                 max_users: parseInt(form.max_users),
-            });
-            setPlans((prev) => [...prev, newPlan]);
-            setForm({ name: "", price: "", billing_cycle: "monthly", max_users: "5" });
-            setShowForm(false);
+            };
+
+            if (editingPlan) {
+                const updatedPlan = await adminApi.updatePlan(editingPlan.id, data);
+                setPlans(plans.map(p => p.id === updatedPlan.id ? updatedPlan : p));
+            } else {
+                const newPlan = await adminApi.createPlan(data);
+                setPlans((prev) => [...prev, newPlan]);
+            }
+            setIsFormModalOpen(false);
         } catch (e: any) {
-            setError(e.message);
+            setError(e.message || "Error al guardar el plan");
+            // Automatically clear error after 5s
+            setTimeout(() => setError(""), 5000);
         } finally {
-            setCreating(false);
+            setIsSaving(false);
+        }
+    }
+
+    async function handleDelete() {
+        if (!planToDelete) return;
+        setIsDeleting(true);
+        setError("");
+        try {
+            await adminApi.deletePlan(planToDelete.id);
+            setPlans(plans.filter(p => p.id !== planToDelete.id));
+            setIsDeleteModalOpen(false);
+            setPlanToDelete(null);
+        } catch (e: any) {
+            setError(e.message || "Error al eliminar el plan");
+            setIsDeleteModalOpen(false);
+            // Mostrar error brevemente arriba
+            setTimeout(() => setError(""), 6000);
+        } finally {
+            setIsDeleting(false);
         }
     }
 
     return (
-        <div className="p-8">
-            <div className="mb-8 flex items-center justify-between">
+        <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                        <CreditCard className="text-blue-400" />
-                        Planes
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
+                        <CreditCard className="text-primary" />
+                        Gestión de Planes
                     </h1>
-                    <p className="text-slate-400 mt-1">{plans.length} plan{plans.length !== 1 ? "es" : ""} disponible{plans.length !== 1 ? "s" : ""}</p>
+                    <p className="text-muted-foreground mt-1">Configura los límites y precios de los planes suscritos.</p>
                 </div>
                 <Button
-                    onClick={() => setShowForm(!showForm)}
-                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                    onClick={openCreate}
+                    className="flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-5 py-2.5 rounded-xl transition-all shadow-lg font-medium"
                 >
-                    {showForm ? <X size={16} /> : <Plus size={16} />}
-                    {showForm ? "Cancelar" : "Nuevo Plan"}
+                    <Plus size={18} />
+                    Nuevo Plan
                 </Button>
             </div>
 
             {error && (
-                <div className="mb-6 flex items-center gap-2 text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg p-4">
-                    <AlertTriangle size={18} /> <span>{error}</span>
+                <div className="mb-6 flex items-center gap-2 text-destructive bg-destructive/10 border border-destructive/20 rounded-xl p-4 animate-in fade-in slide-in-from-top-4">
+                    <AlertTriangle size={18} className="flex-shrink-0" /> 
+                    <span className="font-medium text-sm">{error}</span>
                 </div>
             )}
 
-            {/* Form */}
-            {showForm && (
-                <form
-                    onSubmit={handleCreate}
-                    className="mb-8 bg-slate-900 border border-blue-500/30 rounded-xl p-6 grid grid-cols-1 md:grid-cols-2 gap-4"
-                >
-                    <h2 className="md:col-span-2 text-white font-semibold text-lg">Crear Nuevo Plan</h2>
-                    <div className="space-y-1.5">
-                        <Label className="text-slate-400">Nombre del Plan</Label>
+            {/* Plans Grid */}
+            {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className="bg-card border border-border rounded-2xl p-6 space-y-4 shadow-sm">
+                            <div className="h-6 bg-muted rounded w-2/3" />
+                            <div className="h-10 bg-muted rounded w-1/3" />
+                            <div className="h-4 bg-muted rounded w-1/2" />
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {plans.map((p) => (
+                        <Card key={p.id} className="relative overflow-hidden hover:border-primary/50 transition-all shadow-sm group">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-xl flex justify-between items-center">
+                                    <span>{p.name}</span>
+                                </CardTitle>
+                                <p className="text-4xl font-extrabold text-primary mt-2">
+                                    ${p.price}
+                                    <span className="text-base text-muted-foreground font-medium ml-1">
+                                        /{p.billing_cycle === "monthly" ? "mes" : "año"}
+                                    </span>
+                                </p>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="mt-4 space-y-2 text-sm text-foreground/80 font-medium bg-muted/30 p-3 rounded-lg border border-border/50">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                        <p>Límite de {p.max_users} usuarios</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                        <p>Base de datos independiente</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2 mt-6">
+                                    <Button 
+                                        variant="outline" 
+                                        className="flex-1 border-border bg-transparent hover:bg-accent focus:ring-0 gap-2"
+                                        onClick={() => openEdit(p)}
+                                    >
+                                        <Pencil size={15} className="text-blue-500" /> Editar
+                                    </Button>
+                                    <Button 
+                                        variant="outline" 
+                                        className="flex-1 border-border bg-transparent hover:bg-destructive/10 focus:ring-0 gap-2 text-destructive hover:text-destructive"
+                                        onClick={() => openDelete(p)}
+                                    >
+                                        <Trash2 size={15} /> Borrar
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            )}
+
+            {!loading && plans.length === 0 && (
+                <div className="text-center py-20 text-muted-foreground bg-muted/20 rounded-2xl border border-dashed border-border">
+                    <CreditCard size={48} className="mx-auto mb-4 opacity-30" />
+                    <p className="text-lg font-medium text-foreground">No hay planes configurados</p>
+                    <p className="text-sm">Agrega tu primer plan desde el botón superior.</p>
+                </div>
+            )}
+
+            {/* Form Modal */}
+            <CustomModal
+                isOpen={isFormModalOpen}
+                onClose={() => setIsFormModalOpen(false)}
+                title={editingPlan ? "Editar Plan" : "Crear Nuevo Plan"}
+            >
+                <div className="text-sm text-muted-foreground">Ajusta los detalles de precios y límites del servicio.</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+                    <div className="space-y-2">
+                        <Label>Nombre del Plan</Label>
                         <Input
                             required
                             value={form.name}
                             onChange={(e) => setForm({ ...form, name: e.target.value })}
                             placeholder="Ej: Plan Pro"
-                            className="bg-slate-800 border-slate-700 text-white"
+                            className="bg-background"
                         />
                     </div>
-                    <div className="space-y-1.5">
-                        <Label className="text-slate-400">Precio (USD/mes)</Label>
+                    <div className="space-y-2">
+                        <Label>Precio (USD)</Label>
                         <Input
                             required
                             type="number"
@@ -102,77 +231,54 @@ export default function PlansPage() {
                             step="0.01"
                             value={form.price}
                             onChange={(e) => setForm({ ...form, price: e.target.value })}
-                            placeholder="29.00"
-                            className="bg-slate-800 border-slate-700 text-white"
+                            placeholder="Ej: 29.99"
+                            className="bg-background"
                         />
                     </div>
-                    <div className="space-y-1.5">
-                        <Label className="text-slate-400">Ciclo de Facturación</Label>
+                    <div className="space-y-2">
+                        <Label>Ciclo de Facturación</Label>
                         <select
                             value={form.billing_cycle}
                             onChange={(e) => setForm({ ...form, billing_cycle: e.target.value })}
-                            className="w-full rounded-md border border-slate-700 bg-slate-800 text-white px-3 py-2 text-sm"
+                            className="w-full flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <option value="monthly">Mensual</option>
                             <option value="yearly">Anual</option>
                         </select>
                     </div>
-                    <div className="space-y-1.5">
-                        <Label className="text-slate-400">Máx. Usuarios</Label>
+                    <div className="space-y-2">
+                        <Label>Límite de Usuarios Activos</Label>
                         <Input
                             required
                             type="number"
                             min="1"
                             value={form.max_users}
                             onChange={(e) => setForm({ ...form, max_users: e.target.value })}
-                            className="bg-slate-800 border-slate-700 text-white"
+                            placeholder="Ej: 5"
+                            className="bg-background"
                         />
                     </div>
-                    <div className="md:col-span-2">
-                        <Button type="submit" disabled={creating} className="bg-blue-600 hover:bg-blue-700 w-full">
-                            {creating ? <><Loader2 size={16} className="animate-spin mr-2" />Creando...</> : "Crear Plan"}
-                        </Button>
-                    </div>
-                </form>
-            )}
+                </div>
+                <div className="flex gap-3 justify-end mt-6 pt-4 border-t border-border/50">
+                    <Button variant="ghost" onClick={() => setIsFormModalOpen(false)} disabled={isSaving}>
+                        Cancelar
+                    </Button>
+                    <Button onClick={(e) => handleSave(e as any)} disabled={isSaving}>
+                        {isSaving ? "Guardando..." : "Guardar Plan"}
+                    </Button>
+                </div>
+            </CustomModal>
 
-            {/* Plans Grid */}
-            {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-pulse">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-3">
-                            <div className="h-5 bg-slate-800 rounded w-2/3" />
-                            <div className="h-8 bg-slate-800 rounded w-1/3" />
-                            <div className="h-4 bg-slate-800 rounded w-1/2" />
-                        </div>
-                    ))}
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {plans.map((p) => (
-                        <div
-                            key={p.id}
-                            className="bg-slate-900 border border-slate-800 hover:border-slate-600 rounded-xl p-6 transition-colors"
-                        >
-                            <h3 className="font-semibold text-white text-lg">{p.name}</h3>
-                            <p className="text-3xl font-bold text-blue-400 mt-2">
-                                ${p.price}
-                                <span className="text-sm text-slate-500 font-normal">/{p.billing_cycle === "monthly" ? "mes" : "año"}</span>
-                            </p>
-                            <div className="mt-3 space-y-1 text-sm text-slate-400">
-                                <p>👥 Hasta {p.max_users} usuarios</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
-
-            {!loading && plans.length === 0 && (
-                <div className="text-center py-16 text-slate-500">
-                    <CreditCard size={40} className="mx-auto mb-3 opacity-30" />
-                    <p>No hay planes configurados</p>
-                </div>
-            )}
+            {/* Delete Modal */}
+            <ConfirmModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                title="¿Eliminar Plan?"
+                message={`Estás a punto de eliminar el plan "${planToDelete?.name}". Esto fallará si existen clínicas utilizando este plan actualmente. ¿Estás seguro?`}
+                confirmText={isDeleting ? "Eliminando..." : "Eliminar Definitivamente"}
+                onConfirm={handleDelete as any}
+                variant="danger"
+            />
         </div>
     );
 }

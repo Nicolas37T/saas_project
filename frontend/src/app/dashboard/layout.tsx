@@ -393,7 +393,7 @@ export default function DashboardLayout({
       )}
 
       {/* Main Content Area */}
-      <main className="flex-1 md:ml-64 pt-16 md:pt-0 min-h-screen flex flex-col">
+      <main className="flex-1 md:ml-64 pt-16 md:pt-0 min-h-screen flex flex-col w-full max-w-[100vw] overflow-x-hidden relative">
         {/* Desktop Topbar */}
         <UserMenuHeader
           navItems={navItems}
@@ -402,7 +402,7 @@ export default function DashboardLayout({
           onLogout={() => { localStorage.clear(); router.push("/login"); }}
         />
 
-        <div className="flex-1 p-6 lg:p-10 relative">{children}</div>
+        <div className="flex-1 p-3 sm:p-4 md:p-6 lg:p-10 relative w-full">{children}</div>
       </main>
     </div>
   );

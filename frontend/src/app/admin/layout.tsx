@@ -27,7 +27,8 @@ const navItems = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
-    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [isDesktop, setIsDesktop] = useState(true);
     const [checking, setChecking] = useState(true);
 
     useEffect(() => {
@@ -40,6 +41,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         }
     }, [router]);
 
+    useEffect(() => {
+        const handleResize = () => {
+            const desk = window.innerWidth >= 768;
+            setIsDesktop(desk);
+            if (desk) setSidebarOpen(true);
+            else setSidebarOpen(false);
+        };
+        handleResize();
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
     const handleLogout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("user_role");
@@ -48,52 +61,73 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     if (checking) {
         return (
-            <div className="flex h-screen items-center justify-center bg-slate-950">
-                <Shield className="h-10 w-10 text-blue-400 animate-pulse" />
+            <div className="flex h-screen items-center justify-center bg-background">
+                <Shield className="h-12 w-12 text-primary animate-pulse" />
             </div>
         );
     }
 
     return (
-        <div className="flex h-screen bg-slate-950 text-white overflow-hidden">
+        <div className="flex h-screen bg-background text-foreground overflow-hidden">
+            {/* Mobile Header & Overlay */}
+            <div className="md:hidden fixed top-0 left-0 right-0 h-16 border-b border-border bg-card/80 backdrop-blur-md z-30 flex items-center justify-between px-4">
+                <div className="flex items-center gap-2 font-bold text-lg text-foreground">
+                    <Shield className="text-primary" size={24} />
+                    SaaS Admin
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
+                    {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+                </Button>
+            </div>
+
+            {/* Overlay Mobile */}
+            {!isDesktop && sidebarOpen && (
+                <div 
+                    className="fixed inset-0 top-16 bg-black/50 backdrop-blur-sm z-40"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
+
             {/* Sidebar */}
             <aside
-                className={`${sidebarOpen ? "w-64" : "w-16"
-                    } transition-all duration-300 bg-slate-900 border-r border-slate-800 flex flex-col flex-shrink-0`}
+                className={`fixed md:relative top-16 md:top-0 h-[calc(100vh-4rem)] md:h-screen bg-card border-r border-border flex flex-col flex-shrink-0 z-50 transition-all duration-300
+                    ${isDesktop ? (sidebarOpen ? "w-64" : "w-20") : (sidebarOpen ? "w-64 left-0" : "w-64 -left-full")}
+                `}
             >
-                {/* Logo */}
-                <div className="p-4 border-b border-slate-800 flex items-center justify-between h-16">
+                {/* Logo Desktop */}
+                <div className="hidden md:flex p-4 border-b border-border items-center justify-between h-16">
                     {sidebarOpen && (
-                        <span className="font-bold text-lg flex items-center gap-2 text-white">
-                            <Shield className="text-blue-400 flex-shrink-0" size={20} />
+                        <span className="font-bold text-lg flex items-center gap-2">
+                            <Shield className="text-primary flex-shrink-0" size={20} />
                             SaaS Admin
                         </span>
                     )}
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="text-slate-400 hover:text-white hover:bg-slate-800 ml-auto"
+                        className="text-muted-foreground hover:text-foreground hover:bg-accent ml-auto"
                         onClick={() => setSidebarOpen(!sidebarOpen)}
                     >
-                        {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
+                        <Menu size={18} />
                     </Button>
                 </div>
 
                 {/* Nav */}
-                <nav className="flex-1 p-3 space-y-1">
+                <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
                     {navItems.map(({ href, label, icon: Icon }) => {
                         const isActive = pathname === href || pathname.startsWith(href + "/");
                         return (
-                            <Link key={href} href={href}>
+                            <Link key={href} href={href} onClick={() => !isDesktop && setSidebarOpen(false)}>
                                 <Button
                                     variant="ghost"
-                                    className={`w-full justify-start gap-3 h-10 ${isActive
-                                            ? "bg-blue-600 text-white hover:bg-blue-700"
-                                            : "text-slate-400 hover:text-white hover:bg-slate-800"
-                                        } ${!sidebarOpen ? "justify-center px-2" : ""}`}
+                                    className={`w-full justify-start gap-3 h-11 mb-1 rounded-xl transition-all ${
+                                        isActive
+                                            ? "bg-primary/10 text-primary font-medium"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                                    } ${(!sidebarOpen && isDesktop) ? "justify-center px-2" : "px-4"}`}
                                 >
-                                    <Icon size={18} className="flex-shrink-0" />
-                                    {sidebarOpen && <span>{label}</span>}
+                                    <Icon size={20} className="flex-shrink-0" />
+                                    {(sidebarOpen || !isDesktop) && <span>{label}</span>}
                                 </Button>
                             </Link>
                         );
@@ -101,21 +135,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </nav>
 
                 {/* Logout */}
-                <div className="p-3 border-t border-slate-800">
+                <div className="p-4 border-t border-border">
                     <Button
                         variant="ghost"
                         onClick={handleLogout}
-                        className={`w-full justify-start gap-3 text-slate-400 hover:text-red-400 hover:bg-slate-800 h-10 ${!sidebarOpen ? "justify-center px-2" : ""
-                            }`}
+                        className={`w-full justify-start gap-3 h-11 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl transition-colors ${
+                            (!sidebarOpen && isDesktop) ? "justify-center px-2" : "px-4"
+                        }`}
                     >
-                        <LogOut size={18} className="flex-shrink-0" />
-                        {sidebarOpen && <span>Cerrar Sesión</span>}
+                        <LogOut size={20} className="flex-shrink-0" />
+                        {(sidebarOpen || !isDesktop) && <span>Cerrar Sesión</span>}
                     </Button>
                 </div>
             </aside>
 
             {/* Main */}
-            <main className="flex-1 overflow-auto bg-slate-950">{children}</main>
+            <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background pt-16 md:pt-0 w-full max-w-[100vw] relative">
+                {children}
+            </main>
         </div>
     );
 }

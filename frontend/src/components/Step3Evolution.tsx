@@ -64,15 +64,40 @@ export const Step3Evolution: React.FC<Step3Props> = ({
             Evolución Clínica del Caso
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <textarea
-            className="w-full rounded-2xl bg-muted/50 border border-border min-h-[180px] p-5 text-sm focus:ring-2 focus:ring-primary/50 outline-none transition-all placeholder:text-muted-foreground"
-            placeholder="Escribe aquí los detalles clínicos, evolución observada y notas internas..."
-            value={formData.medical_description}
-            onChange={(e) =>
-              setFormData({ ...formData, medical_description: e.target.value })
-            }
-          />
+        <CardContent className="space-y-4">
+          {entries.map((entry, index) => (
+            <div key={index} className="space-y-2 relative group animate-in slide-in-from-top-2 duration-300">
+              <div className="flex justify-between items-center text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">
+                <span>Sesión / Evolución #{index + 1}</span>
+                {entries.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeEntry(index)}
+                    className="text-destructive hover:bg-destructive/10 p-1 rounded-md transition-colors"
+                    title="Eliminar sesión"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
+              </div>
+              <textarea
+                className="w-full rounded-xl bg-muted/50 border border-border min-h-[100px] p-4 text-sm focus:ring-2 focus:ring-primary/50 outline-none transition-all placeholder:text-muted-foreground resize-none"
+                placeholder="Detalles de esta sesión..."
+                value={entry}
+                onChange={(e) => handleEntryChange(index, e.target.value)}
+              />
+            </div>
+          ))}
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full border-dashed border-primary/30 text-primary hover:bg-primary/5 gap-2 h-11"
+            onClick={addEntry}
+          >
+            <Plus size={16} />
+            Añadir Nueva Evolución
+          </Button>
         </CardContent>
       </Card>
 

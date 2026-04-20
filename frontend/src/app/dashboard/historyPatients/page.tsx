@@ -14,6 +14,7 @@ import {
   Clock,
   ShieldCheck,
   Edit3,
+  Stethoscope,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { tenantApi, Patient, TreatmentCatalogItem } from "@/lib/api";
@@ -601,17 +602,24 @@ export default function HistoryPatientsPage() {
                           Resumen de Evolución
                         </h4>
 
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                           {(history.description || "Múltiples tratamientos realizados.")
                             .split("\n\n---\n\n")
                             .map((entry: string, idx: number) => (
-                              <p 
+                              <div 
                                 key={idx} 
-                                className="leading-relaxed bg-muted/30 p-4 rounded-xl border border-border/50 text-sm relative"
+                                className="group relative bg-muted/30 p-4 rounded-xl border border-border/50 shadow-sm transition-all hover:bg-muted/50"
                               >
-                                <span className="absolute -left-2 top-4 w-1 h-8 bg-primary rounded-full opacity-50"></span>
-                                {entry}
-                              </p>
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-[10px] font-black uppercase tracking-widest text-primary/70 bg-primary/5 px-2 py-0.5 rounded">
+                                    Sesión #{idx + 1}
+                                  </span>
+                                  <Stethoscope size={14} className="text-muted-foreground opacity-30" />
+                                </div>
+                                <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap">
+                                  {entry}
+                                </p>
+                              </div>
                             ))
                           }
                         </div>

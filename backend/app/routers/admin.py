@@ -178,6 +178,64 @@ def create_plan(data: PlanCreate, current_user: UserGlobal = Depends(get_current
         session.refresh(new_plan)
         return new_plan
 
+class PlanUpdate(BaseModel):
+    name: Optional[str] = None
+    price: Optional[float] = None
+    billing_cycle: Optional[str] = None
+    max_users: Optional[int] = None
+
+@router.put("/plans/{plan_id}")
+def update_plan(plan_id: str, data: PlanUpdate, current_user: UserGlobal = Depends(get_current_superadmin)):
+    """Edita un plan existente."""
+    with Session(engine) as session:
+        try:
+            plan_uuid = uuid.UUID(plan_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="ID de plan inválido")
+            
+        plan = session.exec(select(Plan).where(Plan.id == plan_uuid)).first()
+        if not plan:
+            raise HTTPException(status_code=404, detail="Plan no encontrado")
+            
+        # Revisar si se cambia el nombre a uno ya existente
+        if data.name and data.name != plan.name:
+            if session.exec(select(Plan).where(Plan.name == data.name)).first():
+                raise HTTPException(status_code=400, detail="Ya existe un plan con ese nombre")
+
+        update_data = data.dict(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(plan, key, value)
+
+        session.add(plan)
+        session.commit()
+        session.refresh(plan)
+        return plan
+
+@router.delete("/plans/{plan_id}")
+def delete_plan(plan_id: str, current_user: UserGlobal = Depends(get_current_superadmin)):
+    """Elimina un plan existente, siempre que no tenga tenants asignados."""
+    with Session(engine) as session:
+        try:
+            plan_uuid = uuid.UUID(plan_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="ID de plan inválido")
+            
+        plan = session.exec(select(Plan).where(Plan.id == plan_uuid)).first()
+        if not plan:
+            raise HTTPException(status_code=404, detail="Plan no encontrado")
+            
+        # Comprobar si hay tenants usándolo
+        tenants_using = len(session.exec(select(Tenant).where(Tenant.plan_id == plan_uuid)).all())
+        if tenants_using > 0:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"No se puede eliminar el plan porque hay {tenants_using} clínicas con este plan activo."
+            )
+
+        session.delete(plan)
+        session.commit()
+        return {"message": "Plan eliminado exitosamente"}
+
 class SubscriptionUpdate(BaseModel):
     status: Optional[str] = None
     plan_id: Optional[str] = None

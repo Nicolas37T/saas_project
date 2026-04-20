@@ -175,14 +175,10 @@ export default function CalendarView({
     switch (status.toLowerCase()) {
       case "scheduled":
         return "bg-blue-500";
-      case "confirmed":
-        return "bg-green-500";
-      case "pending":
-        return "bg-yellow-500";
       case "completed":
-        return "bg-gray-400";
+        return "bg-emerald-500";
       case "cancelled":
-        return "bg-red-500";
+        return "bg-rose-500";
       default:
         return "bg-gray-400";
     }
@@ -321,10 +317,8 @@ export default function CalendarView({
           <span className="font-medium mr-1">Estados:</span>
           {[
             { key: "scheduled", label: "Programada", color: "bg-blue-500" },
-            { key: "confirmed", label: "Confirmada", color: "bg-green-500" },
-            { key: "pending", label: "Pendiente", color: "bg-yellow-500" },
-            { key: "completed", label: "Completada", color: "bg-gray-400" },
-            { key: "cancelled", label: "Cancelada", color: "bg-red-500" },
+            { key: "completed", label: "Completada", color: "bg-emerald-500" },
+            { key: "cancelled", label: "Cancelada", color: "bg-rose-500" },
           ].map((s) => (
             <span key={s.key} className="flex items-center gap-1.5">
               <span className={`w-2 h-2 rounded-full ${s.color}`} />
@@ -403,7 +397,7 @@ export default function CalendarView({
                         </div>
                         <div className="flex items-center gap-1">
                           <span
-                            className={`px-2 py-0.5 text-[10px] font-semibold rounded-full border uppercase tracking-wider ${getStatusStyle(apt.appointment_status)}`}
+                            className={`px-2 py-0.5 text-[10px] font-bold rounded-full border uppercase tracking-wider ${getStatusStyle(apt.appointment_status)}`}
                           >
                             {statusLabels[apt.appointment_status.toLowerCase()] ||
                               apt.appointment_status}

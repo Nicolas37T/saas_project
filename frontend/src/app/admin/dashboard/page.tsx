@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { adminApi, AdminStats } from "@/lib/api";
 import { Building2, Users, CreditCard, TrendingUp, Activity, AlertTriangle } from "lucide-react";
+import Link from "next/link";
+import { Card, CardContent } from "@/components/ui/card";
 
 function StatCard({
     label,
@@ -18,26 +20,28 @@ function StatCard({
     subtitle?: string;
 }) {
     const colors = {
-        blue: "text-blue-400 bg-blue-400/10",
-        green: "text-emerald-400 bg-emerald-400/10",
-        yellow: "text-yellow-400 bg-yellow-400/10",
-        purple: "text-purple-400 bg-purple-400/10",
-        red: "text-red-400 bg-red-400/10",
+        blue: "text-blue-500 bg-blue-500/10",
+        green: "text-emerald-500 bg-emerald-500/10",
+        yellow: "text-yellow-500 bg-yellow-500/10",
+        purple: "text-purple-500 bg-purple-500/10",
+        red: "text-destructive bg-destructive/10",
     };
 
     return (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 hover:border-slate-600 transition-colors">
-            <div className="flex items-start justify-between">
-                <div>
-                    <p className="text-sm text-slate-400 uppercase tracking-wider font-medium">{label}</p>
-                    <p className="text-3xl font-bold text-white mt-2">{value}</p>
-                    {subtitle && <p className="text-xs text-slate-500 mt-1">{subtitle}</p>}
+        <Card className="hover:border-primary/50 transition-colors shadow-sm">
+            <CardContent className="p-6">
+                <div className="flex items-start justify-between">
+                    <div>
+                        <p className="text-sm text-muted-foreground uppercase tracking-wider font-medium">{label}</p>
+                        <p className="text-3xl font-bold text-foreground mt-2">{value}</p>
+                        {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
+                    </div>
+                    <div className={`p-3 rounded-lg ${colors[color]}`}>
+                        <Icon size={22} />
+                    </div>
                 </div>
-                <div className={`p-3 rounded-lg ${colors[color]}`}>
-                    <Icon size={22} />
-                </div>
-            </div>
-        </div>
+            </CardContent>
+        </Card>
     );
 }
 
@@ -55,25 +59,25 @@ export default function AdminDashboardPage() {
     }, []);
 
     return (
-        <div className="p-8">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-white">Panel Global</h1>
-                <p className="text-slate-400 mt-1">Vista general de la plataforma SaaS</p>
+        <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
+            <div className="mb-6 border-b border-border pb-4">
+                <h1 className="text-3xl font-bold tracking-tight text-foreground">Panel Global</h1>
+                <p className="text-muted-foreground mt-1">Vista general de la plataforma SaaS</p>
             </div>
 
             {error && (
-                <div className="mb-6 flex items-center gap-2 text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg p-4">
+                <div className="mb-6 flex items-center gap-2 text-destructive bg-destructive/10 border border-destructive/20 rounded-xl p-4">
                     <AlertTriangle size={18} />
-                    <span>{error}</span>
+                    <span className="font-medium text-sm">{error}</span>
                 </div>
             )}
 
             {loading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {Array.from({ length: 6 }).map((_, i) => (
-                        <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-6 animate-pulse">
-                            <div className="h-4 bg-slate-800 rounded w-1/2 mb-4" />
-                            <div className="h-8 bg-slate-800 rounded w-1/3" />
+                        <div key={i} className="bg-card border border-border rounded-xl p-6 animate-pulse shadow-sm">
+                            <div className="h-4 bg-muted rounded w-1/2 mb-4" />
+                            <div className="h-8 bg-muted rounded w-1/3" />
                         </div>
                     ))}
                 </div>
@@ -122,21 +126,21 @@ export default function AdminDashboardPage() {
 
             {/* Quick Links */}
             <div className="mt-10">
-                <h2 className="text-lg font-semibold text-slate-300 mb-4">Acceso Rápido</h2>
+                <h2 className="text-lg font-semibold text-foreground mb-4">Acceso Rápido</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {[
                         { href: "/admin/tenants", label: "Ver todos los Tenants", icon: Building2 },
                         { href: "/admin/users", label: "Gestionar Usuarios", icon: Users },
                         { href: "/admin/plans", label: "Administrar Planes", icon: CreditCard },
                     ].map(({ href, label, icon: Icon }) => (
-                        <a
+                        <Link
                             key={href}
                             href={href}
-                            className="flex items-center gap-3 bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-xl p-4 text-slate-300 hover:text-white transition-all group"
+                            className="flex items-center gap-3 bg-card border border-border hover:border-primary/50 hover:bg-accent/30 rounded-xl p-4 text-muted-foreground hover:text-foreground transition-all group shadow-sm"
                         >
-                            <Icon size={20} className="text-blue-400 group-hover:scale-110 transition-transform" />
+                            <Icon size={20} className="text-primary group-hover:scale-110 transition-transform" />
                             <span className="font-medium text-sm">{label}</span>
-                        </a>
+                        </Link>
                     ))}
                 </div>
             </div>

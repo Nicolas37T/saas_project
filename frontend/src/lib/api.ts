@@ -72,9 +72,7 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 
   const data = await res.json();
   if (!res.ok) {
-    console.error("❌ API Error URL:", `${API_BASE}${path}`);
-    console.error("❌ API Error Status:", res.status);
-    console.error("❌ API Error Data:", data);
+    // Evitamos console.error para no disparar el popup de error visual de Next.js
     throw new Error(
       typeof data.detail === "string"
         ? data.detail
@@ -169,6 +167,18 @@ export const adminApi = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+  updatePlan: (id: string, data: Partial<{
+    name: string;
+    price: number;
+    billing_cycle: string;
+    max_users: number;
+  }>) =>
+    apiFetch<Plan>(`/admin/plans/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  deletePlan: (id: string) =>
+    apiFetch<{ message: string }>(`/admin/plans/${id}`, { method: "DELETE" }),
   getSubscriptions: () => apiFetch<Subscription[]>("/admin/subscriptions"),
   updateSubscription: (
     subId: string,
