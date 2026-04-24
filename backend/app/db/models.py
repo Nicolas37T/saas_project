@@ -62,9 +62,15 @@ class Tenant(SQLModel, table=True):
 
     users: List["UserGlobal"] = Relationship(
         back_populates="tenant",
-        sa_relationship_kwargs={"foreign_keys": "[UserGlobal.tenant_id]"}
+        sa_relationship_kwargs={
+            "foreign_keys": "[UserGlobal.tenant_id]",
+            "cascade": "all, delete-orphan"
+        }
     )
-    subscriptions: List["Subscription"] = Relationship(back_populates="tenant")
+    subscriptions: List["Subscription"] = Relationship(
+        back_populates="tenant",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    )
 
 
 # ─── USUARIOS GLOBALES ────────────────────────────────────────────────────────

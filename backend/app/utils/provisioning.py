@@ -35,6 +35,39 @@ def create_tenant_db(db_name: str) -> bool:
             conn.close()
 
 
+def delete_tenant_db(db_name: str) -> bool:
+    """
+    Elimina físicamente una base de datos en PostgreSQL.
+    """
+    print(f"--- Intentando ELIMINAR DB física: {db_name} ---")
+    base_url = settings.DATABASE_URL.rsplit('/', 1)[0] + '/postgres'
+
+    conn = None
+    try:
+        conn = psycopg2.connect(base_url)
+        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+        cur = conn.cursor()
+        
+        # Terminamos todas las conexiones activas a esa DB para poder borrarla
+        cur.execute(f"""
+            SELECT pg_terminate_backend(pg_stat_activity.pid)
+            FROM pg_stat_activity
+            WHERE pg_stat_activity.datname = '{db_name}'
+              AND pid <> pg_backend_pid();
+        """)
+        
+        cur.execute(f'DROP DATABASE IF EXISTS "{db_name}"')
+        cur.close()
+        print(f"✅ DB '{db_name}' eliminada con éxito.")
+        return True
+    except Exception as e:
+        print(f"❌ Error al eliminar DB: {e}")
+        return False
+    finally:
+        if conn:
+            conn.close()
+
+
 def create_tenant_schema(schema_name: str) -> bool:
     """
     Crea un esquema (schema) dentro de la base de datos maestra para el tenant.
@@ -74,6 +107,29 @@ def create_tenant_schema(schema_name: str) -> bool:
         return True
     except Exception as e:
         print(f"❌ Error al crear Schema: {e}")
+        return False
+    finally:
+        if conn:
+            conn.close()
+
+
+def delete_tenant_schema(schema_name: str) -> bool:
+    """
+    Elimina un esquema (schema) y todo su contenido (CASCADE) dentro de la base de datos maestra.
+    """
+    print(f"--- Eliminando SCHEMA: {schema_name} ---")
+    
+    conn = None
+    try:
+        conn = psycopg2.connect(settings.DATABASE_URL)
+        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+        cur = conn.cursor()
+        cur.execute(f'DROP SCHEMA IF EXISTS "{schema_name}" CASCADE')
+        cur.close()
+        print(f"✅ Schema '{schema_name}' eliminado con éxito.")
+        return True
+    except Exception as e:
+        print(f"❌ Error al eliminar Schema: {e}")
         return False
     finally:
         if conn:

@@ -260,8 +260,8 @@ export default function HistoryPatientsPage() {
       allergies: "",
       medications: "",
       medical_description: "",
-      uses_toothbrush: true,
-      uses_dentifrice: true,
+      uses_toothbrush: false,
+      uses_dentifrice: false,
       brushing_frequency: "",
       brushing_technique: "",
       uses_floss: false,
@@ -269,6 +269,7 @@ export default function HistoryPatientsPage() {
     });
     setOdontogramItems([]);
     setNewTooth({ ...DEFAULT_NEW_TOOTH });
+    setCurrentStep(1);
   };
 
   const filteredPatients = patients.filter((p) =>
@@ -302,7 +303,10 @@ export default function HistoryPatientsPage() {
               </p>
             </div>
             <Button
-              onClick={() => setView("form")}
+              onClick={() => {
+                resetForm();
+                setView("form");
+              }}
               className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 h-10 sm:h-11 px-4 sm:px-6 shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all transform hover:-translate-y-0.5 w-full sm:w-auto flex-shrink-0"
             >
               <Plus size={18} />

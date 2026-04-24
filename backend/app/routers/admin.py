@@ -6,6 +6,7 @@ import uuid
 from app.db.session import engine
 from app.db.models import Tenant, UserGlobal, Plan, Subscription, UserRole
 from app.core.deps import get_current_superadmin
+from app.utils.provisioning import delete_tenant_db, delete_tenant_schema
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -81,6 +82,14 @@ def update_tenant_status(tenant_id: str, data: dict, current_user: UserGlobal = 
             raise HTTPException(status_code=400, detail="Especifique un estado válido (active/suspended)")
             
         t.status = new_status
+        
+        # Sincronizar con la(s) suscripción(es) del tenant
+        for sub in t.subscriptions:
+            # Si el tenant se activa, la suscripción se activa. 
+            # Si se suspende, la suscripción se suspende.
+            sub.status = new_status
+            session.add(sub)
+
         session.add(t)
         session.commit()
         session.refresh(t)
@@ -112,9 +121,27 @@ def delete_tenant(tenant_id: str, current_user: UserGlobal = Depends(get_current
         if not t:
             raise HTTPException(status_code=404, detail="Tenant no encontrado")
             
+        # APROVISIONAMIENTO: Eliminar BD o Schema según la estrategia
+        success = False
+        if t.strategy == "database":
+            success = delete_tenant_db(t.db_name)
+        else:
+            # En estrategia de esquema, el nombre del esquema suele ser el subdominio
+            success = delete_tenant_schema(t.subdomain)
+            
+        if not success:
+            # Podríamos lanzar error o simplemente loguear y seguir. 
+            # El usuario pidió que lo haga, así que si falla lanzamos error para no borrar el registro sin borrar la BD.
+            raise HTTPException(status_code=500, detail="Error al eliminar los recursos físicos (DB/Schema) del tenant")
+
+        # Evitar problemas de FK circular antes de borrar
+        t.created_by = None
+        session.add(t)
+        session.flush()
+
         session.delete(t)
         session.commit()
-        return {"message": f"Tenant {tenant_id} eliminado exitosamente"}
+        return {"message": f"Tenant {t.subdomain} y sus datos han sido eliminados exitosamente"}
 
 
 @router.get("/users")

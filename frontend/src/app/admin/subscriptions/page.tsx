@@ -7,15 +7,16 @@ import { Button } from "@/components/ui/button";
 
 function StatusBadge({ status }: { status: string }) {
     const map: Record<string, { color: string; icon: React.ElementType; label: string }> = {
-        active: { color: "text-emerald-400 bg-emerald-400/10", icon: CheckCircle, label: "Activa" },
-        canceled: { color: "text-red-400 bg-red-400/10", icon: XCircle, label: "Cancelada" },
-        trialing: { color: "text-yellow-400 bg-yellow-400/10", icon: Clock, label: "Trial" },
+        active: { color: "text-emerald-500 bg-emerald-500/10", icon: CheckCircle, label: "Activa" },
+        suspended: { color: "text-destructive bg-destructive/10", icon: XCircle, label: "Suspendida" },
+        trialing: { color: "text-amber-500 bg-amber-500/10", icon: Clock, label: "Trial" },
+        past_due: { color: "text-orange-500 bg-orange-500/10", icon: AlertTriangle, label: "Vencida" },
     };
-    const s = map[status] ?? { color: "text-slate-400 bg-slate-700", icon: Clock, label: status };
+    const s = map[status] ?? { color: "text-muted-foreground bg-muted", icon: Clock, label: status };
     const Icon = s.icon;
     return (
-        <span className={`flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-full w-fit ${s.color}`}>
-            <Icon size={12} /> {s.label}
+        <span className={`flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full w-fit uppercase tracking-wider ${s.color}`}>
+            <Icon size={10} /> {s.label}
         </span>
     );
 }
@@ -66,92 +67,101 @@ export default function SubscriptionsPage() {
     }
 
     return (
-        <div className="p-8">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                    <FileText className="text-blue-400" />
-                    Suscripciones
-                </h1>
-                <p className="text-slate-400 mt-1">
-                    {subs.length} suscripción{subs.length !== 1 ? "es" : ""} en total
-                </p>
+        <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-500 bg-background min-h-screen">
+            <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
+                        <FileText className="text-primary" />
+                        Suscripciones
+                    </h1>
+                    <p className="text-muted-foreground mt-1">
+                        {subs.length} suscripción{subs.length !== 1 ? "es" : ""} en total
+                    </p>
+                </div>
             </div>
 
             {error && (
-                <div className="mb-6 flex items-center gap-2 text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg p-4">
+                <div className="mb-6 flex items-center gap-2 text-destructive bg-destructive/10 border border-destructive/20 rounded-xl p-4">
                     <AlertTriangle size={18} /> <span>{error}</span>
                 </div>
             )}
 
-            <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-                <table className="w-full text-sm">
-                    <thead>
-                        <tr className="border-b border-slate-800 text-slate-400 uppercase text-xs tracking-wider">
-                            <th className="text-left px-6 py-4">ID</th>
-                            <th className="text-left px-6 py-4">Negocio</th>
-                            <th className="text-left px-6 py-4">Plan</th>
-                            <th className="text-left px-6 py-4">Estado</th>
-                            <th className="text-left px-6 py-4">Inicio</th>
-                            <th className="text-left px-6 py-4">Vencimiento</th>
-                            <th className="text-right px-6 py-4">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {loading
-                            ? Array.from({ length: 4 }).map((_, i) => (
-                                <tr key={i} className="border-b border-slate-800/50 animate-pulse">
-                                    {Array.from({ length: 5 }).map((_, j) => (
-                                        <td key={j} className="px-6 py-4">
-                                            <div className="h-4 bg-slate-800 rounded w-24" />
+            <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                        <thead>
+                            <tr className="border-b border-border bg-muted/30 text-muted-foreground uppercase text-[10px] font-bold tracking-widest">
+                                <th className="text-left px-6 py-4">ID</th>
+                                <th className="text-left px-6 py-4">Negocio</th>
+                                <th className="text-left px-6 py-4">Plan</th>
+                                <th className="text-left px-6 py-4">Estado</th>
+                                <th className="text-left px-6 py-4">Inicio</th>
+                                <th className="text-left px-6 py-4">Vencimiento</th>
+                                <th className="text-right px-6 py-4">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                            {loading
+                                ? Array.from({ length: 4 }).map((_, i) => (
+                                    <tr key={i} className="animate-pulse">
+                                        <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-16" /></td>
+                                        <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-32" /></td>
+                                        <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-24" /></td>
+                                        <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-20" /></td>
+                                        <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-24" /></td>
+                                        <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-24" /></td>
+                                        <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-16" /></td>
+                                    </tr>
+                                ))
+                                : subs.map((s) => (
+                                    <tr key={s.id} className="hover:bg-muted/30 transition-colors text-card-foreground">
+                                        <td className="px-6 py-4 font-mono text-[10px] text-muted-foreground" title={s.id}>
+                                            {s.id.slice(0, 8)}…
                                         </td>
-                                    ))}
-                                </tr>
-                            ))
-                            : subs.map((s) => (
-                                <tr key={s.id} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
-                                    <td className="px-6 py-4 font-mono text-xs text-slate-400" title={s.id}>{s.id.slice(0, 8)}…</td>
-                                    <td className="px-6 py-4 text-white font-medium">{s.tenant_name}</td>
-                                    <td className="px-6 py-4">
-                                        <select
-                                            className="bg-slate-800 text-indigo-300 text-xs rounded border border-indigo-500/30 p-1 font-semibold outline-none"
-                                            value={s.plan_id}
-                                            onChange={(e) => updateSub(s.id, "plan_id", e.target.value)}
-                                            disabled={actionLoading === s.id}
-                                        >
-                                            <option value="" disabled>Selecciona un plan</option>
-                                            {plans.map(p => (
-                                                <option key={p.id} value={p.id}>{p.name}</option>
-                                            ))}
-                                        </select>
-                                    </td>
-                                    <td className="px-6 py-4"><StatusBadge status={s.status} /></td>
-                                    <td className="px-6 py-4 text-slate-300">{formatDate(s.start_date)}</td>
-                                    <td className="px-6 py-4 text-slate-300">{formatDate(s.end_date)}</td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center justify-end gap-2">
+                                        <td className="px-6 py-4">
+                                            <div className="font-semibold">{s.tenant_name}</div>
+                                        </td>
+                                        <td className="px-6 py-4">
                                             <select
-                                                className="bg-slate-800 text-slate-300 text-xs rounded border border-slate-700 p-1 outline-none"
-                                                value={s.status}
-                                                onChange={(e) => updateSub(s.id, "status", e.target.value)}
+                                                className="bg-background text-primary text-[11px] rounded-lg border border-primary/20 px-2 py-1 font-bold outline-none hover:border-primary/50 transition-all cursor-pointer"
+                                                value={s.plan_id}
+                                                onChange={(e) => updateSub(s.id, "plan_id", e.target.value)}
                                                 disabled={actionLoading === s.id}
                                             >
-                                                <option value="active">Activa</option>
-                                                <option value="suspended">Suspendida</option>
-                                                <option value="canceled">Cancelada</option>
-                                                <option value="trialing">Trial</option>
-                                                <option value="past_due">Vencida (Past Due)</option>
+                                                <option value="" disabled>Plan...</option>
+                                                {plans.map(p => (
+                                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                                ))}
                                             </select>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                    </tbody>
-                </table>
+                                        </td>
+                                        <td className="px-6 py-4"><StatusBadge status={s.status} /></td>
+                                        <td className="px-6 py-4 text-muted-foreground text-xs">{formatDate(s.start_date)}</td>
+                                        <td className="px-6 py-4 text-muted-foreground text-xs">{formatDate(s.end_date)}</td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <select
+                                                    className="bg-muted text-foreground text-[11px] rounded-lg border border-border px-2 py-1 font-medium outline-none focus:ring-1 focus:ring-primary/30 transition-all cursor-pointer"
+                                                    value={s.status}
+                                                    onChange={(e) => updateSub(s.id, "status", e.target.value)}
+                                                    disabled={actionLoading === s.id}
+                                                >
+                                                    <option value="active">Activa</option>
+                                                    <option value="suspended">Suspendida</option>
+                                                    <option value="trialing">Trial</option>
+                                                    <option value="past_due">Vencida</option>
+                                                </select>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                        </tbody>
+                    </table>
+                </div>
 
                 {!loading && subs.length === 0 && (
-                    <div className="text-center py-16 text-slate-500">
-                        <FileText size={40} className="mx-auto mb-3 opacity-30" />
-                        <p>No hay suscripciones registradas aún</p>
+                    <div className="text-center py-20 text-muted-foreground">
+                        <FileText size={48} className="mx-auto mb-4 opacity-10" />
+                        <p className="text-lg font-medium">No hay suscripciones registradas</p>
                     </div>
                 )}
             </div>

@@ -15,6 +15,7 @@ import {
     Menu,
     X,
 } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const navItems = [
     { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -75,9 +76,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <Shield className="text-primary" size={24} />
                     SaaS Admin
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
-                    {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
-                </Button>
+                <div className="flex items-center gap-2">
+                    <ThemeToggle />
+                    <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
+                        {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+                    </Button>
+                </div>
             </div>
 
             {/* Overlay Mobile */}
@@ -151,7 +155,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
             {/* Main */}
             <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background pt-16 md:pt-0 w-full max-w-[100vw] relative">
-                {children}
+                {/* Desktop Header */}
+                <header className="hidden md:flex h-16 border-b border-border bg-card/50 backdrop-blur-md sticky top-0 z-30 items-center justify-between px-8">
+                    <h2 className="text-xl font-semibold text-foreground">
+                        {navItems.find(i => pathname === i.href || pathname.startsWith(i.href + "/"))?.label || "Panel de Control"}
+                    </h2>
+                    <ThemeToggle />
+                </header>
+                <div className="p-0 relative">
+                    {children}
+                </div>
             </main>
         </div>
     );
