@@ -38,16 +38,16 @@ export default function RegisterForm() {
             return false
         }
         
-        // Validación adicional: solo letras minúsculas, números y guiones
-        const subdomainRegex = /^[a-z0-9-]+$/
+        // Validación adicional: solo letras minúsculas, números y guiones bajos
+        const subdomainRegex = /^[a-z0-9_]+$/
         if (!subdomainRegex.test(subdomain)) {
-            setSubdomainError("Solo se permiten letras minúsculas, números y guiones")
+            setSubdomainError("Solo se permiten letras minúsculas, números y guiones bajos")
             return false
         }
         
-        // Validación: no puede empezar o terminar con guión
-        if (subdomain.startsWith("-") || subdomain.endsWith("-")) {
-            setSubdomainError("El subdominio no puede empezar o terminar con guión")
+        // Validación: no puede empezar o terminar con guion bajo
+        if (subdomain.startsWith("_") || subdomain.endsWith("_")) {
+            setSubdomainError("El subdominio no puede empezar o terminar con guion bajo")
             return false
         }
         
@@ -56,7 +56,7 @@ export default function RegisterForm() {
     }
 
     const handleSubdomainChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')
+        const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '')
         e.target.value = value
         validateSubdomain(value)
     }
@@ -149,9 +149,9 @@ export default function RegisterForm() {
                                 const slug = e.target.value
                                     .toLowerCase()
                                     .trim()
-                                    .replace(/[^\w\s-]/g, "")
-                                    .replace(/[\s_-]+/g, "-")
-                                    .replace(/^-+|-+$/g, "");
+                                    .replace(/[^\w\s]/g, "")
+                                    .replace(/[\s-]+/g, "_")
+                                    .replace(/^_+|_+$/g, "");
                                 const subdomainInput = document.getElementById("subdomain") as HTMLInputElement;
                                 if (subdomainInput) {
                                     subdomainInput.value = slug;

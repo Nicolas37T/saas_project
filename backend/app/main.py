@@ -132,8 +132,8 @@ def get_public_plans():
 async def register_tenant(data: TenantCreate):
     """Registra un nuevo negocio y crea su base de datos aislada vacía."""
     import re
-    if not re.match(r"^[a-z0-9-]+$", data.subdomain):
-        raise HTTPException(status_code=400, detail="El subdominio solo puede contener letras minúsculas, números y guiones")
+    if not re.match(r"^[a-z0-9_]+$", data.subdomain):
+        raise HTTPException(status_code=400, detail="El subdominio solo puede contener letras minúsculas, números y guiones bajos")
 
     print(f"Solicitud de registro: {data.business_name} ({data.subdomain})")
     db_name = f"db_{data.subdomain}"
