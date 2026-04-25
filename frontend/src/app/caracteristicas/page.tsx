@@ -3,9 +3,9 @@ import { Button } from "@/components/ui/button";
 import { LandingHeader } from "@/components/LandingHeader";
 
 export const metadata = {
-  title: "Características | SaaSManager",
+  title: "Características | TRZ Corp. Dental",
   description:
-    "Descubrí todo lo que SaaSManager puede hacer por tu consultorio: gestión de pacientes, citas, tratamientos, pagos y mucho más.",
+    "Descubrí todo lo que TRZ Corp. Dental puede hacer por tu consultorio: gestión de pacientes, citas, tratamientos, pagos y mucho más.",
 };
 
 const features = [
@@ -293,7 +293,7 @@ export default function CaracteristicasPage() {
       {/* Footer */}
       <footer className="w-full py-6 bg-white border-t dark:bg-background dark:border-border">
         <div className="container px-4 md:px-6 mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-gray-500 dark:text-gray-400">© 2024 SaaSManager Inc. Todos los derechos reservados.</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">© 2026 TRZ Corp. Dental. Todos los derechos reservados.</p>
           <nav className="flex gap-4 sm:gap-6">
             <Link href="#" className="text-xs text-gray-500 dark:text-gray-400 hover:underline underline-offset-4">
               Términos de servicio
