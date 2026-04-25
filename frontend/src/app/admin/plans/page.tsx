@@ -157,7 +157,7 @@ export default function PlansPage() {
                                     <span>{p.name}</span>
                                 </CardTitle>
                                 <p className="text-4xl font-extrabold text-primary mt-2">
-                                    ${p.price}
+                                    Bs.{p.price}
                                     <span className="text-base text-muted-foreground font-medium ml-1">
                                         /{p.billing_cycle === "monthly" ? "mes" : "año"}
                                     </span>
@@ -223,7 +223,7 @@ export default function PlansPage() {
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label>Precio (USD)</Label>
+                        <Label>Precio (Bs.)</Label>
                         <Input
                             required
                             type="number"
