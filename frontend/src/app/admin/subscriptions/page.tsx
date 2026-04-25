@@ -86,7 +86,8 @@ export default function SubscriptionsPage() {
                 </div>
             )}
 
-            <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
+            {/* Desktop View */}
+            <div className="hidden md:block bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                         <thead>
@@ -162,6 +163,81 @@ export default function SubscriptionsPage() {
                     <div className="text-center py-20 text-muted-foreground">
                         <FileText size={48} className="mx-auto mb-4 opacity-10" />
                         <p className="text-lg font-medium">No hay suscripciones registradas</p>
+                    </div>
+                )}
+            </div>
+
+            {/* Mobile View */}
+            <div className="md:hidden space-y-4">
+                {loading ? (
+                    Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className="bg-card border border-border rounded-xl p-4 animate-pulse space-y-3">
+                            <div className="flex justify-between">
+                                <div className="h-4 bg-muted rounded w-1/3" />
+                                <div className="h-4 bg-muted rounded w-1/4" />
+                            </div>
+                            <div className="h-4 bg-muted rounded w-1/2" />
+                            <div className="h-8 bg-muted rounded w-full mt-2" />
+                        </div>
+                    ))
+                ) : subs.map(s => (
+                    <div key={s.id} className="bg-card border border-border rounded-xl p-4 space-y-4 shadow-sm">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <div className="font-semibold text-foreground">{s.tenant_name}</div>
+                                <div className="font-mono text-[10px] text-muted-foreground mt-1">ID: {s.id.slice(0, 8)}…</div>
+                            </div>
+                            <StatusBadge status={s.status} />
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                                <div className="text-muted-foreground mb-1">Inicio</div>
+                                <div className="font-medium">{formatDate(s.start_date)}</div>
+                            </div>
+                            <div>
+                                <div className="text-muted-foreground mb-1">Vencimiento</div>
+                                <div className="font-medium">{formatDate(s.end_date)}</div>
+                            </div>
+                        </div>
+                        
+                        <div className="flex flex-col gap-3 pt-3 border-t border-border/50">
+                            <div className="flex justify-between items-center">
+                                <span className="text-xs text-muted-foreground font-medium">Plan</span>
+                                <select
+                                    className="bg-background text-primary text-[11px] rounded-lg border border-primary/20 px-2 py-1.5 font-bold outline-none hover:border-primary/50 transition-all cursor-pointer"
+                                    value={s.plan_id}
+                                    onChange={(e) => updateSub(s.id, "plan_id", e.target.value)}
+                                    disabled={actionLoading === s.id}
+                                >
+                                    <option value="" disabled>Plan...</option>
+                                    {plans.map(p => (
+                                        <option key={p.id} value={p.id}>{p.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-xs text-muted-foreground font-medium">Estado</span>
+                                <select
+                                    className="bg-muted text-foreground text-[11px] rounded-lg border border-border px-2 py-1.5 font-medium outline-none focus:ring-1 focus:ring-primary/30 transition-all cursor-pointer"
+                                    value={s.status}
+                                    onChange={(e) => updateSub(s.id, "status", e.target.value)}
+                                    disabled={actionLoading === s.id}
+                                >
+                                    <option value="active">Activa</option>
+                                    <option value="suspended">Suspendida</option>
+                                    <option value="trialing">Trial</option>
+                                    <option value="past_due">Vencida</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+                
+                {!loading && subs.length === 0 && (
+                    <div className="text-center py-10 text-muted-foreground bg-card border border-border rounded-xl">
+                        <FileText size={32} className="mx-auto mb-2 opacity-10" />
+                        <p className="text-sm font-medium">No hay suscripciones registradas</p>
                     </div>
                 )}
             </div>

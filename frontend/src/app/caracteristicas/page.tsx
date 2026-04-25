@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { LandingHeader } from "@/components/LandingHeader";
 
 export const metadata = {
   title: "Características | SaaSManager",
@@ -121,25 +121,7 @@ export default function CaracteristicasPage() {
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-background">
       {/* Header */}
-      <header className="px-4 lg:px-6 h-16 flex items-center bg-white border-b sticky top-0 z-50 dark:bg-slate-950 dark:border-slate-800">
-        <Link href="/" className="flex items-center justify-center">
-          <span className="font-bold text-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent bg-clip-text">
-            SaaSManager
-          </span>
-        </Link>
-        <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
-          <Link href="/caracteristicas" className="text-sm font-medium text-blue-600 dark:text-blue-400 underline underline-offset-4">
-            Características
-          </Link>
-          <Link href="/#pricing" className="text-sm font-medium hover:underline underline-offset-4">
-            Precios
-          </Link>
-          <Link href="/login" className="text-sm font-medium hover:underline underline-offset-4">
-            Iniciar sesión
-          </Link>
-          <ThemeToggle />
-        </nav>
-      </header>
+      <LandingHeader />
 
       <main className="flex-1">
         {/* Hero */}

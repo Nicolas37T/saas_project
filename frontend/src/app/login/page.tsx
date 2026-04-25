@@ -12,7 +12,7 @@ export default function LoginPage() {
                         SaaSManager
                     </span>
                 </Link>
-                <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
+                <nav className="ml-auto hidden sm:flex gap-4 sm:gap-6 items-center">
                     <Link href="/" className="text-sm font-medium hover:underline underline-offset-4">
                         Inicio
                     </Link>
