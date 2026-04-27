@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Search, UserPlus, Mail, Shield, User, Loader2, X, Check, Trash2, Edit2, AlertCircle } from "lucide-react";
+import { Plus, Search, UserPlus, Mail, Shield, User, Loader2, X, Check, Trash2, Edit2, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { tenantApi, Employee, Role } from "@/lib/api";
 import { CustomModal, ConfirmModal, SuccessModal } from "@/components/ui/custom-modal";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ export default function EmployeesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [formData, setFormData] = useState({
     username: "",
@@ -314,7 +315,6 @@ export default function EmployeesPage() {
         title={editingEmployee ? "Editar Empleado" : "Nuevo Empleado"}
       >
             <form onSubmit={handleSave} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                     <label className="text-sm font-medium ml-1">Nombre Completo</label>
                     <input
@@ -326,7 +326,7 @@ export default function EmployeesPage() {
                         onChange={(e) => setFormData({...formData, full_name: e.target.value})}
                     />
                 </div>
-                <div className="space-y-1.5">
+                {/* <div className="space-y-1.5">
                     <label className="text-sm font-medium ml-1">Nombre de Usuario</label>
                     <input
                         required
@@ -336,8 +336,7 @@ export default function EmployeesPage() {
                         value={formData.username}
                         onChange={(e) => setFormData({...formData, username: e.target.value.toLowerCase().replace(/\s/g, '')})}
                     />
-                </div>
-              </div>
+                </div> */}
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium ml-1">Correo Electrónico</label>
@@ -362,12 +361,20 @@ export default function EmployeesPage() {
                     <Shield className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                     <input
                         required={!editingEmployee}
-                        type="password"
-                        className="w-full bg-muted border border-border rounded-xl py-2.5 pl-10 pr-4 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        type={showPassword ? "text" : "password"}
+                        className="w-full bg-muted border border-border rounded-xl py-2.5 pl-10 pr-12 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                         placeholder={editingEmployee ? "Dejar en blanco para no cambiar" : "••••••••"}
                         value={formData.password}
                         onChange={(e) => setFormData({...formData, password: e.target.value})}
                     />
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        tabIndex={-1}
+                    >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
                 </div>
               </div>
 

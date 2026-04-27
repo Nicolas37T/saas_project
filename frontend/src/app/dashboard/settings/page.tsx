@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Building2, User, Key, Save, AlertCircle } from "lucide-react";
+import { Building2, User, Key, Save, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -62,6 +62,9 @@ export default function SettingsPage() {
     password: "",
     confirmPassword: "",
   });
+  
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Modals
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
@@ -317,7 +320,6 @@ export default function SettingsPage() {
                     className="bg-muted/50 border-border focus-visible:ring-primary/50"
                   />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Correo Electrónico</label>
                     <Input
@@ -329,7 +331,7 @@ export default function SettingsPage() {
                       className="bg-muted/50 border-border focus-visible:ring-primary/50"
                     />
                   </div>
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <label className="text-sm font-medium">Nombre de Usuario</label>
                     <Input
                       name="username"
@@ -338,8 +340,7 @@ export default function SettingsPage() {
                       onChange={(e) => setCuentaData(prev => ({...prev, username: e.target.value.toLowerCase().replace(/\s/g, '')}))}
                       className="bg-muted/50 border-border focus-visible:ring-primary/50 lowercase"
                     />
-                  </div>
-                </div>
+                  </div> */}
               </CardContent>
             </Card>
           )}
@@ -355,25 +356,45 @@ export default function SettingsPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Nueva Contraseña</label>
-                  <Input
-                    name="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={seguridadData.password}
-                    onChange={handleSeguridadChange}
-                    className="bg-muted/50 border-border focus-visible:ring-primary/50"
-                  />
+                  <div className="relative">
+                      <Input
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={seguridadData.password}
+                        onChange={handleSeguridadChange}
+                        className="bg-muted/50 border-border focus-visible:ring-primary/50 pr-10"
+                      />
+                      <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          tabIndex={-1}
+                      >
+                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Confirmar Nueva Contraseña</label>
-                  <Input
-                    name="confirmPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    value={seguridadData.confirmPassword}
-                    onChange={handleSeguridadChange}
-                    className="bg-muted/50 border-border focus-visible:ring-primary/50"
-                  />
+                  <div className="relative">
+                      <Input
+                        name="confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={seguridadData.confirmPassword}
+                        onChange={handleSeguridadChange}
+                        className="bg-muted/50 border-border focus-visible:ring-primary/50 pr-10"
+                      />
+                      <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          tabIndex={-1}
+                      >
+                          {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
