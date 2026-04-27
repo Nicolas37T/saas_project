@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import {
     Shield,
     LayoutDashboard,
@@ -73,8 +74,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {/* Mobile Header & Overlay */}
             <div className="md:hidden fixed top-0 left-0 right-0 h-16 border-b border-border bg-card/80 backdrop-blur-md z-30 flex items-center justify-between px-4">
                 <div className="flex items-center gap-2 font-bold text-lg text-foreground">
-                    <Shield className="text-primary" size={24} />
-                    SaaS Admin
+                    <Image src="/logo.png" alt="TRZ Corp. Dental" width={120} height={32} className="h-8 w-auto object-contain" />
                 </div>
                 <div className="flex items-center gap-2">
                     <ThemeToggle />
@@ -102,8 +102,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="hidden md:flex p-4 border-b border-border items-center justify-between h-16">
                     {sidebarOpen && (
                         <span className="font-bold text-lg flex items-center gap-2">
-                            <Shield className="text-primary flex-shrink-0" size={20} />
-                            SaaS Admin
+                            <Image src="/logo.png" alt="TRZ Corp. Dental" width={120} height={32} className="h-8 w-auto object-contain" />
                         </span>
                     )}
                     <Button

@@ -328,6 +328,20 @@ export interface PatientShare {
   doctor_name?: string;
 }
 
+export interface DashboardData {
+  summary: {
+    total_patients: number;
+    total_treatments: number;
+    total_appointments: number;
+  };
+  chart_data: {
+    date: string;
+    patients: number;
+    treatments: number;
+    appointments: number;
+  }[];
+}
+
 export const tenantApi = {
   // Config / Settings
   getTenantConfig: async (): Promise<SettingData> => {
@@ -551,4 +565,7 @@ export const tenantApi = {
     apiFetch<{ ok: boolean }>(`/api/tenant/treatment-catalog/${id}`, {
       method: "DELETE",
     }),
+
+  // Dashboard Stats
+  getDashboardStats: (days: number = 7) => apiFetch<DashboardData>(`/api/tenant/stats/dashboard?days=${days}`),
 };
