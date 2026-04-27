@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -149,7 +150,7 @@ export default function LoginForm() {
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <Label htmlFor="password">Contraseña</Label>
-                            <a href="#" className="text-xs text-blue-600 dark:text-primary hover:underline">¿Olvidaste tu contraseña?</a>
+                            <Link href="/forgot-password" className="text-xs text-blue-600 dark:text-primary hover:underline">¿Olvidaste tu contraseña?</Link>
                         </div>
                         <div className="relative">
                             <Input

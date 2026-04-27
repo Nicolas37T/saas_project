@@ -11,3 +11,11 @@ class Token(BaseModel):
     subdomain: Optional[str] = None
     role: str
     is_employee: Optional[bool] = False
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+    tenant_subdomain: Optional[str] = None  # Si es empleado, necesita el subdomain
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
