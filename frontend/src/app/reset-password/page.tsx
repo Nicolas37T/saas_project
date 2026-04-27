@@ -182,10 +182,10 @@ function ResetPasswordForm() {
                             </p>
                         )}
                     </CardContent>
-                    <CardFooter className="flex flex-col gap-3">
+                    <CardFooter className="flex flex-col gap-3 mt-4">
                         <Button 
                             type="submit" 
-                            className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-primary dark:hover:bg-primary/90 mt-4" 
+                            className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-primary dark:hover:bg-primary/90 " 
                             disabled={loading}
                         >
                             {loading ? (
