@@ -320,13 +320,28 @@ export default function TenantDashboard() {
                 />
                 <Tooltip 
                   cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--card))', 
-                    borderColor: 'hsl(var(--border))',
-                    borderRadius: '12px',
-                    color: 'hsl(var(--foreground))'
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-card border border-border p-3 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.2)]">
+                          <p className="text-muted-foreground font-bold mb-2 text-sm">
+                            {groupBy === "month" ? `Mes: ${formatXAxis(String(label))}` : `Fecha: ${String(label)}`}
+                          </p>
+                          {payload.map((entry: any, index: number) => (
+                            <div key={index} className="flex items-center justify-between gap-4 mb-1">
+                              <span style={{ color: entry.color }} className="font-medium text-sm">
+                                {entry.name}
+                              </span>
+                              <span className="text-foreground font-bold text-sm">
+                                {entry.value}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    }
+                    return null;
                   }}
-                  labelFormatter={(label) => groupBy === "month" ? `Mes: ${formatXAxis(String(label))}` : `Fecha: ${String(label)}`}
                 />
                 <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
                 {visibleSeries.patients && <Bar dataKey="patients" name="Pacientes" fill="#3b82f6" radius={[4, 4, 0, 0]} />}
