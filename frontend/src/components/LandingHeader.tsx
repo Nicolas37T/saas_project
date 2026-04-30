@@ -20,7 +20,7 @@ export function LandingHeader() {
 
       {/* Desktop Navigation */}
       <nav className="ml-auto hidden md:flex gap-4 sm:gap-6 items-center">
-        <Link href="/caracteristicas" className="text-sm font-medium hover:underline underline-offset-4">
+        <Link href="/#features" className="text-sm font-medium hover:underline underline-offset-4">
           Características
         </Link>
         <Link href="/#pricing" className="text-sm font-medium hover:underline underline-offset-4">
@@ -44,7 +44,7 @@ export function LandingHeader() {
       {isMobileMenuOpen && (
         <div className="absolute top-16 left-0 right-0 bg-white dark:bg-slate-950 border-b dark:border-slate-800 shadow-lg p-4 flex flex-col gap-4 md:hidden">
           <Link 
-            href="/caracteristicas" 
+            href="/#features" 
             className="text-sm font-medium p-2 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-md"
             onClick={() => setIsMobileMenuOpen(false)}
           >
