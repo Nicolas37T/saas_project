@@ -186,7 +186,7 @@ export default function RegisterForm() {
                             <option value="">{loadingPlans ? "Cargando planes..." : "Selecciona un plan"}</option>
                             {plans.map(p => (
                                 <option key={p.id} value={p.id}>
-                                    {p.name} - ${p.price}/{p.billing_cycle === 'monthly' ? 'mes' : 'año'}
+                                    {p.name} - Bs. {p.price}/{p.billing_cycle === 'monthly' ? 'mes' : 'año'}
                                 </option>
                             ))}
                         </select>
