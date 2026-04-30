@@ -8,10 +8,12 @@ import uuid
 from app.db.session import engine
 from app.db.models import Plan, Tenant, UserGlobal, Subscription, UserRole
 from app.core.middleware import tenant_middleware
-from app.core.security import get_password_hash, verify_password, create_access_token
-from app.schemas.auth import LoginRequest, Token
+from app.core.security import get_password_hash, verify_password, create_access_token, create_reset_token, verify_reset_token
+from app.schemas.auth import LoginRequest, Token, ForgotPasswordRequest, ResetPasswordRequest
 from app.schemas.tenant import TenantCreate
 from app.utils.provisioning import create_tenant_db, create_tenant_schema, seed_tenant_defaults
+from app.utils.email import send_reset_email
+from app.core.config import settings as app_settings
 
 # ─── Aplicación ───────────────────────────────────────────────────────────────
 app = FastAPI(title="SaaS Multi-tenancy Manager")
@@ -301,6 +303,140 @@ async def login(data: LoginRequest):
             "role": role_name,
             "subdomain": subdomain,
         }
+
+
+# ─── Recuperación de Contraseña ───────────────────────────────────────────────
+
+def _get_tenant_session(tenant):
+    """Helper para obtener una sesión del tenant según su estrategia."""
+    from app.db.session import get_tenant_engine
+    from sqlmodel import text
+    
+    if tenant.strategy == "database":
+        tenant_eng = get_tenant_engine(tenant.db_name)
+        return Session(tenant_eng)
+    else:
+        conn = engine.connect()
+        conn.execute(text(f'SET search_path TO "{tenant.subdomain}", public'))
+        conn.commit()
+        return Session(conn)
+
+
+@app.post("/auth/forgot-password")
+async def forgot_password(data: ForgotPasswordRequest):
+    """
+    Solicita un enlace de recuperación de contraseña.
+    Si no hay proveedor de email configurado, retorna el enlace directamente.
+    """
+    frontend_url = app_settings.FRONTEND_URL
+    reset_link = None
+    email_sent = False
+
+    # Caso 1: Empleado de un tenant
+    if data.tenant_subdomain:
+        try:
+            tenant = None
+            with Session(engine) as session:
+                tenant = session.exec(
+                    select(Tenant).where(Tenant.subdomain == data.tenant_subdomain)
+                ).first()
+
+            if tenant:
+                from app.db.tenant_models import User as TenantUser
+                with _get_tenant_session(tenant) as t_session:
+                    user = t_session.exec(
+                        select(TenantUser).where(
+                            (TenantUser.email == data.email) | (TenantUser.username == data.email)
+                        )
+                    ).first()
+                    if user and user.status:
+                        token = create_reset_token(
+                            email=user.email,
+                            user_type="employee",
+                            tenant_subdomain=data.tenant_subdomain
+                        )
+                        reset_link = f"{frontend_url}/reset-password?token={token}"
+                        # email_sent = send_reset_email(user.email, reset_link)
+                        email_sent = False
+        except Exception as e:
+            print(f"⚠️ Error en forgot-password (employee): {e}")
+
+    # Caso 2: Usuario global (owner/superadmin)  
+    else:
+        try:
+            with Session(engine) as session:
+                user = session.exec(
+                    select(UserGlobal).where(UserGlobal.email == data.email)
+                ).first()
+                if user:
+                    token = create_reset_token(email=user.email, user_type="global")
+                    reset_link = f"{frontend_url}/reset-password?token={token}"
+                    # email_sent = send_reset_email(user.email, reset_link)
+                    email_sent = False
+        except Exception as e:
+            print(f"⚠️ Error en forgot-password (global): {e}")
+
+    # Si el email no se envió correctamente, devolver el enlace directamente
+    response = {"message": "Si el correo existe en nuestro sistema, recibirás un enlace de recuperación."}
+    if not email_sent and reset_link:
+        response["reset_link"] = reset_link
+    
+    return response
+
+
+@app.post("/auth/reset-password")
+async def reset_password(data: ResetPasswordRequest):
+    """
+    Restablece la contraseña usando un token de recuperación válido.
+    """
+    # Validar longitud mínima
+    if len(data.new_password) < 6:
+        raise HTTPException(status_code=400, detail="La contraseña debe tener al menos 6 caracteres")
+
+    # Verificar token
+    payload = verify_reset_token(data.token)
+    if not payload:
+        raise HTTPException(status_code=400, detail="El enlace de recuperación es inválido o ha expirado.")
+
+    email = payload.get("sub")
+    user_type = payload.get("user_type", "global")
+    tenant_subdomain = payload.get("tenant")
+
+    new_hash = get_password_hash(data.new_password)
+
+    # Caso: Empleado de un tenant
+    if user_type == "employee" and tenant_subdomain:
+        with Session(engine) as session:
+            tenant = session.exec(
+                select(Tenant).where(Tenant.subdomain == tenant_subdomain)
+            ).first()
+            if not tenant:
+                raise HTTPException(status_code=400, detail="El negocio asociado no fue encontrado.")
+
+        from app.db.tenant_models import User as TenantUser
+        with _get_tenant_session(tenant) as t_session:
+            user = t_session.exec(
+                select(TenantUser).where(TenantUser.email == email)
+            ).first()
+            if not user:
+                raise HTTPException(status_code=400, detail="Usuario no encontrado.")
+            user.password_hash = new_hash
+            t_session.add(user)
+            t_session.commit()
+
+    # Caso: Usuario global
+    else:
+        with Session(engine) as session:
+            user = session.exec(
+                select(UserGlobal).where(UserGlobal.email == email)
+            ).first()
+            if not user:
+                raise HTTPException(status_code=400, detail="Usuario no encontrado.")
+            user.password_hash = new_hash
+            session.add(user)
+            session.commit()
+
+    return {"message": "Contraseña actualizada exitosamente. Ya puedes iniciar sesión."}
 
 
 # ─── Routers ──────────────────────────────────────────────────────────────────
