@@ -146,25 +146,99 @@ export default async function LandingPage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-white dark:bg-background">
-          <div className="container px-4 md:px-6 mx-auto">
-            <div className="flex flex-col items-center space-y-4 text-center">
-              <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
-                  Gestiona tu negocio como un <span className="text-blue-600 dark:text-blue-400">profesional</span>
+        <section className="relative w-full py-16 md:py-24 lg:py-32 overflow-hidden bg-slate-50 dark:bg-background">
+          {/* Background decorative elements */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-to-b from-blue-100/50 to-transparent dark:from-blue-900/20 -z-10 rounded-b-[100%] blur-3xl"></div>
+          
+          <div className="container px-4 md:px-6 mx-auto relative z-10">
+            <div className="flex flex-col items-center space-y-8 text-center animate-in fade-in slide-in-from-bottom-8 duration-1000">
+              
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-100/50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-semibold border border-blue-200 dark:border-blue-800/50 shadow-sm backdrop-blur-sm">
+                <span className="flex h-2 w-2 rounded-full bg-blue-600 animate-pulse"></span>
+                El software dental preferido por especialistas
+              </div>
+
+              {/* Titulo */}
+              <div className="space-y-4 max-w-4xl">
+                <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+                  Moderniza tu clínica y <br className="hidden md:block"/> atiende como un <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">profesional</span>
                 </h1>
-                <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
-                  La plataforma más sencilla y potente para pequeños negocios. Facturación, inventario y más bajo tu propio subdominio.
+                <p className="mx-auto max-w-[700px] text-gray-600 md:text-xl dark:text-gray-300 leading-relaxed font-medium mt-6">
+                  Lleva la gestión de pacientes, historiales médicos, odontogramas y cobros desde un solo lugar. Simple, seguro y desde cualquier dispositivo.
                 </p>
               </div>
-              <div className="space-x-4">
-                <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700 dark:bg-primary dark:hover:bg-primary/90">
-                  <Link href="/register">Comenzar Gratis</Link>
+
+              {/* Botones */}
+              <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mt-8">
+                <Button asChild size="lg" className="h-14 px-8 text-base bg-blue-600 hover:bg-blue-700 dark:bg-primary dark:hover:bg-primary/90 shadow-xl shadow-blue-500/20 transition-all hover:scale-105 rounded-xl">
+                  <Link href="/register">Comenzar prueba gratis</Link>
                 </Button>
-                <Button asChild variant="outline" size="lg">
-                  <Link href="/#features">Saber más</Link>
+                <Button asChild variant="outline" size="lg" className="h-14 px-8 text-base bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl shadow-sm">
+                  <Link href="/#features">Ver características</Link>
                 </Button>
               </div>
+
+              {/* Social Proof */}
+              <div className="pt-10 flex flex-col items-center gap-4">
+                <div className="flex -space-x-4">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="w-12 h-12 rounded-full border-4 border-slate-50 dark:border-background bg-slate-200 overflow-hidden shadow-sm">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={`https://i.pravatar.cc/100?img=${i+10}`} alt="Doctor" className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+                <div className="flex flex-col sm:flex-row items-center gap-2 text-sm text-slate-600 dark:text-slate-400 font-medium">
+                  <div className="flex text-yellow-400">
+                    {Array.from({length: 5}).map((_,i) => (
+                      <svg key={i} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                        <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z" clipRule="evenodd" />
+                      </svg>
+                    ))}
+                  </div>
+                  <span>Más de <strong>500 especialistas</strong> confían en nosotros.</span>
+                </div>
+              </div>
+
+              {/* CSS UI Mockup */}
+              <div className="mt-20 w-full max-w-5xl mx-auto rounded-t-2xl border border-slate-200 dark:border-slate-800 shadow-[0_0_50px_rgba(37,_99,_235,_0.1)] dark:shadow-[0_0_50px_rgba(0,_0,_0,_0.5)] overflow-hidden bg-white dark:bg-slate-950 relative">
+                <div className="h-12 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center px-6 gap-2">
+                  <div className="w-3.5 h-3.5 rounded-full bg-red-400/90"></div>
+                  <div className="w-3.5 h-3.5 rounded-full bg-amber-400/90"></div>
+                  <div className="w-3.5 h-3.5 rounded-full bg-green-400/90"></div>
+                </div>
+                <div className="p-4 sm:p-8 grid grid-cols-1 md:grid-cols-3 gap-6 relative h-[300px] overflow-hidden">
+                  {/* Gradient Fade overlay to cut off the bottom smoothly */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-white via-white/40 to-transparent dark:from-slate-950 dark:via-slate-950/40 z-10 pointer-events-none"></div>
+                  
+                  <div className="col-span-2 space-y-6">
+                    <div className="flex justify-between items-center">
+                      <div className="h-8 w-1/3 bg-slate-100 dark:bg-slate-800 rounded-lg"></div>
+                      <div className="h-8 w-24 bg-blue-100 dark:bg-blue-900/30 rounded-lg"></div>
+                    </div>
+                    <div className="h-48 w-full bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30 flex items-end p-6 gap-3">
+                       <div className="w-full h-[40%] bg-blue-500 rounded-t-md opacity-80"></div>
+                       <div className="w-full h-[60%] bg-blue-500 rounded-t-md opacity-90"></div>
+                       <div className="w-full h-[45%] bg-blue-500 rounded-t-md opacity-80"></div>
+                       <div className="w-full h-[80%] bg-blue-500 rounded-t-md opacity-100"></div>
+                       <div className="w-full h-[100%] bg-blue-500 rounded-t-md opacity-100"></div>
+                       <div className="w-full h-[70%] bg-blue-500 rounded-t-md opacity-90"></div>
+                    </div>
+                  </div>
+                  <div className="space-y-6">
+                    <div className="h-28 w-full bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 p-4 flex flex-col justify-between">
+                      <div className="h-4 w-1/2 bg-slate-200 dark:bg-slate-800 rounded"></div>
+                      <div className="h-8 w-3/4 bg-slate-200 dark:bg-slate-800 rounded"></div>
+                    </div>
+                    <div className="h-28 w-full bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 p-4 flex flex-col justify-between">
+                      <div className="h-4 w-1/2 bg-slate-200 dark:bg-slate-800 rounded"></div>
+                      <div className="h-8 w-2/3 bg-emerald-100 dark:bg-emerald-900/30 rounded"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
         </section>
@@ -287,11 +361,11 @@ export default async function LandingPage() {
                   return (
                     <Card
                       key={plan.id}
-                      className={`relative flex flex-col ${isPopular ? "border-blue-500 shadow-xl scale-105" : ""} dark:bg-card dark:border-border`}
+                      className={`relative flex flex-col transition-all duration-300 rounded-2xl ${isPopular ? "border-blue-500 shadow-[0_0_40px_rgba(59,130,246,0.2)] dark:shadow-[0_0_40px_rgba(59,130,246,0.1)] scale-105 z-10 ring-1 ring-blue-500 bg-white dark:bg-slate-900" : "border-slate-200 hover:border-blue-200 dark:hover:border-blue-800 hover:shadow-lg bg-slate-50 dark:bg-card"} dark:border-border`}
                     >
                       {isPopular && (
-                        <Badge className="absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2 bg-blue-600">
-                          Más Popular
+                        <Badge className="absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-none shadow-md px-4 py-1 text-xs uppercase tracking-wider font-bold">
+                          Recomendado
                         </Badge>
                       )}
                       <CardHeader>
@@ -367,6 +441,36 @@ export default async function LandingPage() {
                 })}
               </div>
             )}
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="w-full py-16 md:py-24 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 dark:from-blue-900 dark:via-blue-800 dark:to-indigo-900 relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+          <div className="container px-4 md:px-6 mx-auto text-center relative z-10">
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-white mb-6">
+              ¿Listo para modernizar tu clínica?
+            </h2>
+            <p className="text-blue-100 md:text-xl max-w-[600px] mx-auto mb-10 leading-relaxed">
+              Empieza a organizar tus pacientes y optimizar tu tiempo hoy mismo. Sin tarjeta de crédito, sin compromisos. Solo resultados.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button
+                asChild
+                size="lg"
+                className="h-14 px-8 text-base bg-white text-blue-700 hover:bg-blue-50 font-bold w-full sm:w-auto shadow-xl rounded-xl hover:scale-105 transition-transform"
+              >
+                <Link href="/register">Comenzar gratis ahora</Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="h-14 px-8 text-base bg-transparent border-white/50 text-white hover:bg-white/10 hover:text-white w-full sm:w-auto rounded-xl backdrop-blur-sm"
+              >
+                <Link href="/#pricing">Ver planes</Link>
+              </Button>
+            </div>
           </div>
         </section>
       </main>
