@@ -567,5 +567,9 @@ export const tenantApi = {
     }),
 
   // Dashboard Stats
-  getDashboardStats: (days: number = 7) => apiFetch<DashboardData>(`/api/tenant/stats/dashboard?days=${days}`),
+  getDashboardStats: (days: number = 7, doctorId?: string) => {
+    const params = new URLSearchParams({ days: String(days) });
+    if (doctorId) params.set("doctor_id", doctorId);
+    return apiFetch<DashboardData>(`/api/tenant/stats/dashboard?${params}`);
+  },
 };

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Activity, Settings, ArrowRight, Stethoscope, Users, Calendar, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { tenantApi, DashboardData } from "@/lib/api";
+import { tenantApi, DashboardData, Employee } from "@/lib/api";
 import {
   Select,
   SelectContent,
@@ -41,20 +41,84 @@ function decodeJWT(token: string): { email?: string; full_name?: string; sub?: s
 export default function TenantDashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [timeRange, setTimeRange] = useState("7");
+  const [timeRange, setTimeRange] = useState("90");
+  const [groupBy, setGroupBy] = useState<"day" | "month">("day");
   const [visibleSeries, setVisibleSeries] = useState({
     patients: true,
     treatments: true,
     appointments: true,
   });
 
+  // --- Doctor filtering ---
+  const [doctors, setDoctors] = useState<Employee[]>([]);
+  const [selectedDoctor, setSelectedDoctor] = useState<string>("all");
+
+  const role = typeof window !== "undefined" ? localStorage.getItem("user_role") : "empleado";
+  const isPrivileged = role === "owner" || role === "admin" || role === "superadmin" || role === "administrador";
+  const isReceptionist = role === "recepcionista";
+  const doctorRoles = ["odontólogo", "odontologo", "doctor", "dentist", "dentista"];
+  const isDoctor = doctorRoles.includes(role?.toLowerCase() ?? "");
+
+  const MONTH_NAMES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+
+  // Genera exactamente 12 buckets mensuales (últimos 12 meses), con 0 para meses sin datos
+  const groupChartData = (
+    rawData: DashboardData["chart_data"],
+    mode: "day" | "month"
+  ) => {
+    if (mode === "day") return rawData;
+
+    // Construir el mapa de los datos reales
+    const rawMap = new Map<string, { patients: number; treatments: number; appointments: number }>();
+    for (const row of rawData) {
+      const key = row.date.slice(0, 7);
+      const existing = rawMap.get(key);
+      if (existing) {
+        existing.patients += row.patients;
+        existing.treatments += row.treatments;
+        existing.appointments += row.appointments;
+      } else {
+        rawMap.set(key, { patients: row.patients, treatments: row.treatments, appointments: row.appointments });
+      }
+    }
+
+    // Generar los 12 meses fijos (mes actual y los 11 anteriores)
+    const today = new Date();
+    return Array.from({ length: 12 }, (_, i) => {
+      const d = new Date(today.getFullYear(), today.getMonth() - 11 + i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const found = rawMap.get(key);
+      return {
+        date: key,
+        patients: found?.patients ?? 0,
+        treatments: found?.treatments ?? 0,
+        appointments: found?.appointments ?? 0,
+      };
+    });
+  };
+
+  const formatXAxis = (value: string) => {
+    if (groupBy === "month") {
+      const [, m] = value.split("-");
+      return MONTH_NAMES[parseInt(m, 10) - 1] ?? value;
+    }
+    return value;
+  };
+
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
   const user = token ? decodeJWT(token) : null;
+
+  // Determinar el doctor_id efectivo para el API
+  const getEffectiveDoctorId = (): string | undefined => {
+    if (isDoctor && user?.sub) return user.sub;
+    if ((isPrivileged || isReceptionist) && selectedDoctor !== "all") return selectedDoctor;
+    return undefined;
+  };
 
   const fetchStats = async (days: number) => {
     setLoading(true);
     try {
-      const response = await tenantApi.getDashboardStats(days);
+      const response = await tenantApi.getDashboardStats(days, getEffectiveDoctorId());
       setData(response);
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
@@ -63,9 +127,17 @@ export default function TenantDashboard() {
     }
   };
 
+  // Cargar lista de doctores para admin/owner/recepcionista
   useEffect(() => {
-    fetchStats(parseInt(timeRange));
-  }, [timeRange]);
+    if (isPrivileged || isReceptionist) {
+      tenantApi.getDoctors().then(setDoctors).catch(() => setDoctors([]));
+    }
+  }, []);
+
+  // En modo mensual siempre traemos 365 días para tener todos los meses
+  useEffect(() => {
+    fetchStats(groupBy === "month" ? 365 : parseInt(timeRange));
+  }, [timeRange, groupBy, selectedDoctor]);
 
   const toggleSeries = (series: keyof typeof visibleSeries) => {
     setVisibleSeries(prev => ({
@@ -137,10 +209,17 @@ export default function TenantDashboard() {
               <TrendingUp className="text-primary" size={20} />
               Actividad Reciente
             </h3>
-            <p className="text-muted-foreground text-sm">Visualización de nuevos registros</p>
+            <p className="text-muted-foreground text-sm">
+              {isDoctor
+                ? "Tus registros personales"
+                : selectedDoctor !== "all"
+                  ? `Filtrado por: ${doctors.find(d => d.id === selectedDoctor)?.full_name ?? "Doctor"}`
+                  : "Visualización de nuevos registros (todos los doctores)"
+              }
+            </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-6">
+          <div className="flex flex-wrap items-center gap-4">
             {/* Series Toggles */}
             <div className="flex items-center gap-4 px-4 py-2 rounded-xl bg-muted/30 border border-border/50">
               <div className="flex items-center gap-2">
@@ -169,18 +248,47 @@ export default function TenantDashboard() {
               </div>
             </div>
 
-            {/* Time Range Selector */}
-            <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-[140px] bg-card border-border">
-                <SelectValue placeholder="Periodo" />
+            {/* Granularity Selector */}
+            <Select value={groupBy} onValueChange={(v) => setGroupBy(v as "day" | "month")}>
+              <SelectTrigger className="w-[110px] bg-card border-border">
+                <SelectValue placeholder="Agrupar" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="7">Últimos 7 días</SelectItem>
-                <SelectItem value="15">Últimos 15 días</SelectItem>
-                <SelectItem value="30">Últimos 30 días</SelectItem>
-                <SelectItem value="90">Últimos 90 días</SelectItem>
+                <SelectItem value="day">Por días</SelectItem>
+                <SelectItem value="month">Por meses</SelectItem>
               </SelectContent>
             </Select>
+
+            {/* Time Range Selector — solo visible en modo días */}
+            {groupBy === "day" && (
+              <Select value={timeRange} onValueChange={setTimeRange}>
+                <SelectTrigger className="w-[150px] bg-card border-border">
+                  <SelectValue placeholder="Periodo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">Últimos 7 días</SelectItem>
+                  <SelectItem value="30">Últimos 30 días</SelectItem>
+                  <SelectItem value="90">Últimos 90 días</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+
+            {/* Doctor Filter — solo para admin/owner/recepcionista */}
+            {(isPrivileged || isReceptionist) && doctors.length > 0 && (
+              <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
+                <SelectTrigger className="w-[180px] bg-card border-border">
+                  <SelectValue placeholder="Filtrar por doctor" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los doctores</SelectItem>
+                  {doctors.map((doc) => (
+                    <SelectItem key={doc.id} value={doc.id}>
+                      {doc.full_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
         </div>
         
@@ -191,15 +299,19 @@ export default function TenantDashboard() {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data?.chart_data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <BarChart
+                data={groupChartData(data?.chart_data ?? [], groupBy)}
+                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
                 <XAxis 
                   dataKey="date" 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
                   dy={10}
-                  interval={parseInt(timeRange) > 15 ? (parseInt(timeRange) > 30 ? 6 : 2) : 0}
+                  tickFormatter={formatXAxis}
+                  interval={groupBy === "month" ? 0 : (parseInt(timeRange) > 30 ? 6 : parseInt(timeRange) > 15 ? 2 : 0)}
                 />
                 <YAxis 
                   axisLine={false} 
@@ -214,6 +326,7 @@ export default function TenantDashboard() {
                     borderRadius: '12px',
                     color: 'hsl(var(--foreground))'
                   }}
+                  labelFormatter={(label) => groupBy === "month" ? `Mes: ${formatXAxis(String(label))}` : `Fecha: ${String(label)}`}
                 />
                 <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
                 {visibleSeries.patients && <Bar dataKey="patients" name="Pacientes" fill="#3b82f6" radius={[4, 4, 0, 0]} />}
