@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
-from typing import List
+from datetime import datetime, timedelta
+from typing import List, Optional
 import uuid
 
 from app.db.session import engine
@@ -270,6 +271,7 @@ def delete_plan(plan_id: str, current_user: UserGlobal = Depends(get_current_sup
 class SubscriptionUpdate(BaseModel):
     status: Optional[str] = None
     plan_id: Optional[str] = None
+    end_date: Optional[datetime] = None
 
 @router.get("/subscriptions")
 def list_subscriptions(current_user: UserGlobal = Depends(get_current_superadmin)):
@@ -333,6 +335,12 @@ def update_subscription(sub_id: str, data: SubscriptionUpdate, current_user: Use
                 
             sub.plan_id = plan_uuid
             tenant.plan_id = plan_uuid
+            # Si el admin cambia el plan, reiniciamos el ciclo por defecto
+            sub.end_date = datetime.utcnow() + timedelta(days=plan.trial_days)
+
+        # 3. Cambio manual de fecha
+        if data.end_date:
+            sub.end_date = data.end_date
 
         session.add(sub)
         session.add(tenant)
