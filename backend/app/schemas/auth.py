@@ -11,6 +11,7 @@ class Token(BaseModel):
     subdomain: Optional[str] = None
     role: str
     is_employee: Optional[bool] = False
+    tenant_status: Optional[str] = None
 
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr

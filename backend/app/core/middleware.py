@@ -1,7 +1,8 @@
 from fastapi import Request, HTTPException
 from app.db.session import Session, engine
-from app.db.models import Tenant
+from app.db.models import Tenant, Subscription
 from sqlmodel import select
+from datetime import datetime
 
 async def tenant_middleware(request: Request, call_next):
     # 0. Ignorar peticiones OPTIONS (CORS preflight)
@@ -59,6 +60,28 @@ async def tenant_middleware(request: Request, call_next):
                 # Si hay un subdominio pero no existe en la DB, error 404
                 raise HTTPException(status_code=404, detail=f"Negocio '{subdomain}' no encontrado")
             
+            # 3.1 Verificación de vencimiento de suscripción (si no está ya suspendido)
+            if tenant.status != "suspended":
+                active_sub = session.exec(
+                    select(Subscription)
+                    .where(Subscription.tenant_id == tenant.id)
+                    .order_by(Subscription.end_date.desc())
+                ).first()
+
+                if active_sub and active_sub.end_date and active_sub.end_date < datetime.utcnow():
+                    tenant.status = "suspended"
+                    session.add(tenant)
+                    session.commit()
+            
+            # 3.2 Verificación de estado del tenant
+            if tenant.status == "suspended":
+                # Permitir solo si es una ruta de facturación/renovación
+                if not path.startswith("/api/tenant/billing"):
+                    raise HTTPException(
+                        status_code=403, 
+                        detail="La suscripción de este negocio ha expirado o se encuentra suspendida. Por favor contacte al administrador o renueve su plan."
+                    )
+
             # Guardamos el objeto tenant en el estado de la petición
             request.state.tenant = tenant
 

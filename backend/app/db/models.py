@@ -30,6 +30,7 @@ class Plan(SQLModel, table=True):
     price: float
     billing_cycle: str          # "monthly" | "yearly"
     max_users: int
+    trial_days: int = Field(default=30) # Días de duración inicial / prueba
     strategy: str = Field(default="schema") # "schema" | "database"
     created_at: datetime = Field(default_factory=datetime.utcnow)
 

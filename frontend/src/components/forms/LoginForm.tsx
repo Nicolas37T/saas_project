@@ -76,6 +76,16 @@ export default function LoginForm() {
             } else if (result.role === "superadmin") {
                 if (loginType !== "admin") throw new Error("Debes usar la pestaña Plataforma")
                 router.push("/admin/dashboard")
+            } else if (result.role === "owner") {
+                if (loginType !== "admin") throw new Error("Debes usar la pestaña Plataforma")
+                localStorage.setItem("tenant_subdomain", result.subdomain)
+                
+                // Si la cuenta está suspendida, redirigir a facturación
+                if (result.tenant_status === "suspended") {
+                    router.push("/dashboard/billing")
+                } else {
+                    router.push("/dashboard")
+                }
             } else {
                 throw new Error("Rol no reconocido o acceso denegado.")
             }

@@ -204,23 +204,32 @@ async def register_tenant(data: TenantCreate):
             session.add(new_user)
             
             # --- CREAR SUSCRIPCIÓN ---
-            from datetime import datetime
+            from datetime import datetime, timedelta
             from dateutil.relativedelta import relativedelta
             
-            # Por defecto da 1 mes de servicio desde hoy
+            # Definir duración según la configuración del plan (trial_days)
             start_date = datetime.utcnow()
-            end_date = start_date + relativedelta(months=1)
+            duration_days = getattr(plan, "trial_days", 30)
+            end_date = start_date + timedelta(days=duration_days)
+            print(f"Plan {plan.name}: Duración de {duration_days} días (vence: {end_date})")
             
+            # Determinar estado inicial: Planes gratuitos o de prueba corta (<= 5 días) comienzan activos.
+            # Planes de pago o mayor duración comienzan suspendidos hasta confirmar pago.
+            initial_status = "active" if (plan.price == 0 or plan.trial_days <= 5) else "suspended"
+            print(f"Estado inicial para {plan.name}: {initial_status}")
+
             new_sub = Subscription(
                 tenant_id=new_tenant.id,
                 plan_id=plan.id,
-                status="suspended",
+                status=initial_status,
                 start_date=start_date,
                 end_date=end_date,
                 external_id=None
             )
             session.add(new_sub)
-            # -------------------------
+            
+            new_tenant.status = initial_status
+            session.add(new_tenant)
 
             session.commit()
 
@@ -282,12 +291,28 @@ async def login(data: LoginRequest):
 
         # Obtener subdominio y validar estado si es owner
         subdomain = None
+        tenant_status = None
         if role_name == "owner" and user.tenant_id:
             tenant = session.get(Tenant, user.tenant_id)
             if tenant:
-                if tenant.status == "suspended":
-                    raise HTTPException(status_code=403, detail="Su cuenta de negocio se encuentra suspendida o inactiva.")
+                # Verificación de vencimiento de suscripción
+                from datetime import datetime
+                active_sub = session.exec(
+                    select(Subscription)
+                    .where(Subscription.tenant_id == tenant.id)
+                    .order_by(Subscription.end_date.desc())
+                ).first()
+
+                if active_sub and active_sub.end_date and active_sub.end_date < datetime.utcnow():
+                    # Si ha vencido, actualizamos estados
+                    if tenant.status != "suspended":
+                        tenant.status = "suspended"
+                        session.add(tenant)
+                        session.commit()
+                        session.refresh(tenant)
+
                 subdomain = tenant.subdomain
+                tenant_status = tenant.status
 
         token_data = {
             "sub": str(user.id),
@@ -302,6 +327,7 @@ async def login(data: LoginRequest):
             "token_type": "bearer",
             "role": role_name,
             "subdomain": subdomain,
+            "tenant_status": tenant_status,
         }
 
 
@@ -441,7 +467,7 @@ async def reset_password(data: ResetPasswordRequest):
 
 # ─── Routers ──────────────────────────────────────────────────────────────────
 from app.routers import admin as admin_router
-from app.routers import patients, treatments, appointments, payments, odontograms, settings, employees, medicines, treatment_catalog, stats
+from app.routers import patients, treatments, appointments, payments, odontograms, settings, employees, medicines, treatment_catalog, stats, billing
 
 app.include_router(admin_router.router)
 app.include_router(patients.router, prefix="/api/tenant", tags=["Tenant - Patients"])
@@ -455,3 +481,4 @@ app.include_router(employees.router, prefix="/api/tenant", tags=["Tenant - Emplo
 app.include_router(medicines.router, prefix="/api/tenant", tags=["Tenant - Medicines"])
 app.include_router(treatment_catalog.router, prefix="/api/tenant", tags=["Tenant - Treatment Catalog"])
 app.include_router(stats.router, prefix="/api/tenant", tags=["Tenant - Stats"])
+app.include_router(billing.router, prefix="/api/tenant", tags=["Tenant - Billing"])

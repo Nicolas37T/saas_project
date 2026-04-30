@@ -99,6 +99,7 @@ export interface Plan {
   price: number;
   billing_cycle: string;
   max_users: number;
+  trial_days: number;
 }
 
 export interface Tenant {
@@ -162,6 +163,7 @@ export const adminApi = {
     price: number;
     billing_cycle: string;
     max_users: number;
+    trial_days: number;
   }) =>
     apiFetch<Plan>("/admin/plans", {
       method: "POST",
@@ -172,6 +174,7 @@ export const adminApi = {
     price: number;
     billing_cycle: string;
     max_users: number;
+    trial_days: number;
   }>) =>
     apiFetch<Plan>(`/admin/plans/${id}`, {
       method: "PUT",

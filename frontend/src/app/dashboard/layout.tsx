@@ -141,6 +141,10 @@ export default function DashboardLayout({
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const role = typeof window !== 'undefined' ? localStorage.getItem("user_role") : "empleado";
+  const isPrivileged = role === "owner" || role === "admin" || role === "superadmin" || role === "administrador";
+  const isReceptionist = role === "recepcionista";
+
   useEffect(() => {
     async function loadTenantData() {
       const token = localStorage.getItem("token");
@@ -168,8 +172,14 @@ export default function DashboardLayout({
             setTenantName(config.business_name || sub);
             setTenantLogo(config.logo_url || "");
         }
-      } catch (e) {
+      } catch (e: any) {
         setTenantName(sub);
+        // Si es 403 y es owner, probablemente está suspendido
+        if (e.message.includes("expirado") || e.message.includes("suspendida")) {
+            if (isPrivileged && pathname !== "/dashboard/billing") {
+                router.push("/dashboard/billing");
+            }
+        }
       }
 
       setLoading(false);
@@ -177,9 +187,7 @@ export default function DashboardLayout({
     loadTenantData();
   }, [router]);
 
-  const role = typeof window !== 'undefined' ? localStorage.getItem("user_role") : "empleado";
-  const isPrivileged = role === "owner" || role === "admin" || role === "superadmin" || role === "administrador";
-  const isReceptionist = role === "recepcionista";
+
 
   // Protection: Redirect if receptionist tries to access restricted routes
   useEffect(() => {
@@ -255,6 +263,11 @@ export default function DashboardLayout({
         name: "Configuración",
         href: "/dashboard/settings",
         icon: <SettingsIcon size={20} />,
+      },
+      {
+        name: "Facturación",
+        href: "/dashboard/billing",
+        icon: <CreditCard size={20} />,
       }
     ] : []),
   ];

@@ -420,7 +420,7 @@ export default async function LandingPage() {
                               <svg className="mr-2 h-4 w-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                               </svg>
-                              Prueba por 7 dias 
+                              Prueba por 5 dias 
                             </li>
                           )}
                         </ul>

@@ -174,6 +174,7 @@ def list_plans(current_user: UserGlobal = Depends(get_current_superadmin)):
                 "price": p.price,
                 "billing_cycle": p.billing_cycle,
                 "max_users": p.max_users,
+                "trial_days": p.trial_days,
             }
             for p in plans
         ]
@@ -186,6 +187,7 @@ class PlanCreate(BaseModel):
     price: float
     billing_cycle: str
     max_users: int
+    trial_days: Optional[int] = 30
 
 @router.post("/plans")
 def create_plan(data: PlanCreate, current_user: UserGlobal = Depends(get_current_superadmin)):
@@ -198,7 +200,8 @@ def create_plan(data: PlanCreate, current_user: UserGlobal = Depends(get_current
             name=data.name,
             price=data.price,
             billing_cycle=data.billing_cycle,
-            max_users=data.max_users
+            max_users=data.max_users,
+            trial_days=data.trial_days or 30
         )
         session.add(new_plan)
         session.commit()
@@ -210,6 +213,7 @@ class PlanUpdate(BaseModel):
     price: Optional[float] = None
     billing_cycle: Optional[str] = None
     max_users: Optional[int] = None
+    trial_days: Optional[int] = None
 
 @router.put("/plans/{plan_id}")
 def update_plan(plan_id: str, data: PlanUpdate, current_user: UserGlobal = Depends(get_current_superadmin)):
