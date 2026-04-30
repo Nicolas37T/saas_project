@@ -15,9 +15,11 @@ import {
   ShieldCheck,
   Edit3,
   Stethoscope,
+  Printer,
+  FileText,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
-import { tenantApi, Patient, TreatmentCatalogItem } from "@/lib/api";
+import { tenantApi, Patient, TreatmentCatalogItem, SettingData } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -43,6 +45,19 @@ import { FormNavigation } from "../../../components/FormNavigation";
 
 type ViewState = "list" | "form" | "detail";
 
+// Helper function to decode JWT and get user info
+function decodeJWT(token: string): { email?: string; full_name?: string; sub?: string } | null {
+  try {
+    const base64Url = token.split('.')[1];
+    if (!base64Url) return null;
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
+
 export default function HistoryPatientsPage() {
   const router = useRouter();
   const [view, setView] = useState<ViewState>("list");
@@ -54,6 +69,10 @@ export default function HistoryPatientsPage() {
   const [searchPatient, setSearchPatient] = useState("");
   const [searchHistory, setSearchHistory] = useState("");
   const [isPatientMenuOpen, setIsPatientMenuOpen] = useState(false);
+
+  const [settings, setSettings] = useState<SettingData | null>(null);
+  const [doctorName, setDoctorName] = useState("");
+  const [currentDate] = useState(new Date().toLocaleDateString());
 
   // Modal State
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
@@ -107,6 +126,26 @@ export default function HistoryPatientsPage() {
         window.history.replaceState(null, "", window.location.pathname);
       }
     }
+    
+    // Cargar configuracion y usuario para el PDF
+    const loadSettingsAndUser = async () => {
+      try {
+        const settingsRes = await tenantApi.getTenantConfig();
+        setSettings(settingsRes);
+      } catch (e) {
+        console.error("Error loading settings", e);
+      }
+      const token = localStorage.getItem("token");
+      if (token) {
+        const decoded = decodeJWT(token);
+        if (decoded?.full_name) {
+          setDoctorName(decoded.full_name);
+        } else if (decoded?.email) {
+          setDoctorName(decoded.email.split('@')[0]);
+        }
+      }
+    };
+    loadSettingsAndUser();
   }, []); // Run only once on mount
 
   useEffect(() => {
@@ -173,6 +212,10 @@ export default function HistoryPatientsPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   const handleAddTooth = () => {
@@ -289,8 +332,9 @@ export default function HistoryPatientsPage() {
 
   // --- RENDERING ---
   return (
-    <div className="space-y-6 pb-12">
-      {view === "list" && (
+    <>
+      <div className="space-y-6 pb-12 print:hidden">
+        {view === "list" && (
         <div className="space-y-4 sm:space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-card p-4 sm:p-6 rounded-2xl border border-border backdrop-blur-md">
             <div className="w-full sm:w-auto">
@@ -427,6 +471,13 @@ export default function HistoryPatientsPage() {
               </span>
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
+              <Button
+                onClick={handlePrint}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 flex-1 sm:flex-initial shadow-lg"
+              >
+                <Printer size={16} />
+                <span className="hidden sm:inline">Imprimir / PDF</span>
+              </Button>
               <Button
                 variant="outline"
                 onClick={() =>
@@ -796,6 +847,182 @@ export default function HistoryPatientsPage() {
         </div>
       )}
 
+      </div>
+
+      {/* Printable History View (Hidden until printed) */}
+      {view === "detail" && selectedHistory && (() => {
+        const { history, patient, odontograms } = selectedHistory;
+        const totalPrice = odontograms?.reduce((sum: number, o: any) => sum + (o.treatments?.reduce((tSum: number, t: any) => tSum + t.price, 0) || 0), 0) || 0;
+        
+        return (
+          <div id="history-print" className="hidden print:block bg-white text-black text-sm w-full">
+            <div className="p-8 max-w-4xl mx-auto space-y-6">
+              
+              {/* Header */}
+              <div className="flex justify-between items-start border-b-2 pb-6 border-slate-200">
+                <div className="flex items-center gap-4">
+                  {settings?.logo_url && (
+                    <img src={settings.logo_url} alt="Logo" className="h-16 w-16 object-contain" />
+                  )}
+                  <div>
+                    <h2 className="text-2xl font-bold text-emerald-800 uppercase leading-none mb-2">
+                      {settings?.business_name || "Nombre Clínica"}
+                    </h2>
+                    <div className="text-[10px] text-slate-500 space-y-0.5 font-medium">
+                      {settings?.address && <p>{settings.address}</p>}
+                      {settings?.phone && <p>Tel: {settings.phone}</p>}
+                      {settings?.cellphone && <p>Cel: {settings.cellphone}</p>}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Historia Clínica</p>
+                  <p className="text-sm font-bold text-slate-700">{history.history_number ? `#${history.history_number}` : "---"}</p>
+                  <p className="text-xs text-slate-500 mt-1">Fecha de impresión: {currentDate}</p>
+                </div>
+              </div>
+
+              {/* Patient Data */}
+              <div className="bg-slate-50 p-4 rounded-lg flex justify-between border border-slate-100">
+                <div>
+                  <p className="text-[9px] uppercase font-bold text-slate-400 mb-0.5">Paciente</p>
+                  <p className="text-sm font-bold text-slate-800">{patient.first_name} {patient.last_name}</p>
+                  {patient.phone && <p className="text-xs text-slate-500 mt-0.5">Tel: {patient.phone}</p>}
+                </div>
+                <div className="text-right">
+                  <p className="text-[9px] uppercase font-bold text-slate-400 mb-0.5">Atendido por (Doctor)</p>
+                  <p className="text-sm font-bold text-slate-800">{doctorName || "---"}</p>
+                </div>
+              </div>
+
+              {/* Health Summary */}
+              <div className="grid grid-cols-3 gap-4 border-b border-slate-200 pb-4">
+                <div className="col-span-1 border-r border-slate-200 pr-4">
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-emerald-700 mb-2">Condiciones</h4>
+                  <p className="text-xs text-slate-700">{history.conditions || "Ninguna registrada"}</p>
+                </div>
+                <div className="col-span-1 border-r border-slate-200 px-4">
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-emerald-700 mb-2">Alergias</h4>
+                  <p className="text-xs text-slate-700">{history.allergies || "Ninguna registrada"}</p>
+                </div>
+                <div className="col-span-1 pl-4">
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-emerald-700 mb-2">Medicaciones</h4>
+                  <p className="text-xs text-slate-700">{history.medications || "Ninguna registrada"}</p>
+                </div>
+              </div>
+
+              {/* Evolution */}
+              <div className="pt-2">
+                <h4 className="text-[11px] font-bold uppercase tracking-widest text-slate-500 border-b border-slate-200 pb-1 mb-3 flex items-center gap-2">
+                  <Stethoscope size={14} className="text-slate-400" /> Registro de Seguimiento y Evolución
+                </h4>
+                <div className="space-y-4">
+                  {(history.description || "Múltiples tratamientos realizados.")
+                    .split("\n\n---\n\n")
+                    .map((entry: string, idx: number) => (
+                      <div key={idx} className="bg-slate-50 p-3 rounded border border-slate-100">
+                        <span className="text-[9px] font-bold uppercase text-emerald-600 mb-1 block">Sesión #{idx + 1}</span>
+                        <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">{entry}</p>
+                      </div>
+                    ))
+                  }
+                </div>
+              </div>
+
+              {/* Treatments Table */}
+              <div className="pt-4">
+                <h4 className="text-[11px] font-bold uppercase tracking-widest text-slate-500 border-b border-slate-200 pb-1 mb-3 flex items-center gap-2">
+                  <Activity size={14} className="text-slate-400" /> Detalles de Procedimientos y Tratamientos
+                </h4>
+                
+                {odontograms?.length === 0 ? (
+                  <p className="text-xs text-slate-400 italic py-4">No hay tratamientos registrados.</p>
+                ) : (
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead className="bg-slate-100 text-slate-500 uppercase tracking-tighter font-bold text-[9px]">
+                      <tr>
+                        <th className="px-3 py-2 border-b border-slate-200">Pieza</th>
+                        <th className="px-3 py-2 border-b border-slate-200">Procedimiento</th>
+                        <th className="px-3 py-2 border-b border-slate-200">Estado</th>
+                        <th className="px-3 py-2 border-b border-slate-200">Fecha</th>
+                        <th className="px-3 py-2 border-b border-slate-200 text-right">Precio</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {odontograms?.flatMap((item: any) =>
+                        item.treatments?.map((t: any, idx: number) => (
+                          <tr key={`${item.id}-${idx}`}>
+                            <td className="px-3 py-2 text-slate-700 font-bold">#{item.tooth_number}</td>
+                            <td className="px-3 py-2 text-slate-800 font-medium">{t.description}</td>
+                            <td className="px-3 py-2 text-slate-500 text-[10px] uppercase">{t.procedure_status}</td>
+                            <td className="px-3 py-2 text-slate-500">{t.treatment_date ? new Date(t.treatment_date).toLocaleDateString() : "--"}</td>
+                            <td className="px-3 py-2 text-right text-emerald-700 font-bold">
+                              {t.price === 0 ? "Privado" : `Bs. ${t.price.toFixed(2)}`}
+                            </td>
+                          </tr>
+                        )) || []
+                      )}
+                    </tbody>
+                  </table>
+                )}
+
+                {/* Total Cost */}
+                {odontograms?.length > 0 && (
+                  <div className="mt-4 pt-2 border-t-2 border-slate-200 flex justify-end">
+                    <div className="text-right">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Costo Total Tratamientos</span>
+                      <span className="text-lg font-black text-emerald-800">Bs. {totalPrice.toFixed(2)}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Footer Signature */}
+              <div className="pt-20 pb-4">
+                <div className="flex justify-end">
+                  <div className="w-48 text-center">
+                    <div className="border-b border-slate-400 w-full mb-2"></div>
+                    <p className="text-xs font-bold text-slate-800 uppercase leading-none mb-1">{doctorName || "Doctor Tratante"}</p>
+                    <p className="text-[9px] font-bold uppercase text-slate-500">Firma y Sello</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
+
+      <style jsx global>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #history-print, #history-print * {
+            visibility: visible;
+          }
+          #history-print {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: auto;
+            margin: 0;
+            padding: 0;
+            background-color: white !important;
+            color: black !important;
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+          }
+          @page {
+            margin: 1cm;
+          }
+          .print\\:hidden, nav, header, aside {
+            display: none !important;
+          }
+        }
+      `}</style>
+
       {/* Modals Section */}
       <SuccessModal
         isOpen={isSuccessModalOpen}
@@ -839,6 +1066,6 @@ export default function HistoryPatientsPage() {
           </Button>
         </div>
       </CustomModal>
-    </div>
+    </>
   );
 }
