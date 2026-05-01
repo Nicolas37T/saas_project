@@ -70,6 +70,8 @@ async def tenant_middleware(request: Request, call_next):
 
                 if active_sub and active_sub.end_date and active_sub.end_date < datetime.utcnow():
                     tenant.status = "suspended"
+                    active_sub.status = "suspended"
+                    session.add(active_sub)
                     session.add(tenant)
                     session.commit()
             

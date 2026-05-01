@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle2, Clock, CreditCard, Loader2, Plus, MessageCircle } from "lucide-react";
 import { API_BASE } from "@/lib/api";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 
 
 const WHATSAPP_NUMBER = "59175934045";
@@ -123,7 +124,7 @@ export default function BillingPage() {
                                         className="w-full bg-green-600 hover:bg-green-700 text-white gap-2"
                                         onClick={() => handleWhatsAppPlan(currentPlan, "renovar")}
                                     >
-                                        <MessageCircle size={18} />
+                                        <WhatsAppIcon size={18} />
                                         Contactar Soporte para Renovar
                                     </Button>
                                 )}
@@ -155,7 +156,7 @@ export default function BillingPage() {
                                         variant="default"
                                         onClick={() => handleWhatsAppPlan(currentPlan, "renovar")}
                                     >
-                                        <MessageCircle size={18} />
+                                        <WhatsAppIcon size={18} />
                                         Renovar por WhatsApp
                                     </Button>
                                 )}
@@ -167,7 +168,7 @@ export default function BillingPage() {
                     <Card className="border-dashed">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-base flex items-center gap-2">
-                                <MessageCircle className="w-4 h-4 text-green-600" />
+                                <WhatsAppIcon className="w-4 h-4 text-green-600" />
                                 ¿Cómo pagar?
                             </CardTitle>
                         </CardHeader>
@@ -280,7 +281,7 @@ export default function BillingPage() {
                                                     className="w-full h-11 rounded-xl bg-green-600 hover:bg-green-700 text-white gap-2"
                                                     onClick={() => handleWhatsAppPlan(plan, "cambio")}
                                                 >
-                                                    <MessageCircle size={16} />
+                                                    <WhatsAppIcon size={16} />
                                                     Solicitar por WhatsApp
                                                 </Button>
                                             )}

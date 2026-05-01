@@ -114,6 +114,9 @@ export interface Tenant {
     price: number;
     billing_cycle: string;
   } | null;
+  created_at?: string;
+  subscription_end_date?: string | null;
+  subscription_status?: string | null;
 }
 
 export interface User {
@@ -127,8 +130,10 @@ export interface Subscription {
   id: string;
   tenant_id: string;
   tenant_name: string;
+  tenant_status: string;
   plan_id: string;
   plan_name: string;
+  plan_price: number;
   status: string;
   start_date: string;
   end_date: string;
@@ -185,15 +190,27 @@ export const adminApi = {
   getSubscriptions: () => apiFetch<Subscription[]>("/admin/subscriptions"),
   updateSubscription: (
     subId: string,
-    data: { status?: string; plan_id?: string },
+    data: { status?: string; plan_id?: string; end_date?: string },
   ) =>
-    apiFetch<{ message: string; status: string; plan_id: string }>(
+    apiFetch<{ message: string; status: string; plan_id: string; end_date?: string; tenant_status?: string }>(
       `/admin/subscriptions/${subId}`,
       {
         method: "PATCH",
         body: JSON.stringify(data),
       },
     ),
+  renewSubscription: (subId: string) =>
+    apiFetch<{
+      message: string;
+      id: string;
+      status: string;
+      start_date: string;
+      end_date: string;
+      tenant_status: string;
+      tenant_name: string;
+      plan_id: string;
+      plan_name: string;
+    }>(`/admin/subscriptions/${subId}/renew`, { method: "POST" }),
 };
 
 // ─── TENANT DENTAL API ────────────────────────────────────────────────────────
