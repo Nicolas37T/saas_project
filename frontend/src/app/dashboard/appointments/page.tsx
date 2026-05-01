@@ -10,6 +10,7 @@ import {
   Edit2,
   Trash2,
   List,
+  MessageCircle,
 } from "lucide-react";
 import { tenantApi, Appointment, Patient, Employee } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [clinicName, setClinicName] = useState("la Clínica");
   const [loading, setLoading] = useState(true);
 
   // Modal state for adding appointment
@@ -119,10 +121,11 @@ export default function AppointmentsPage() {
         }
       }
 
-      const [appData, patData, empData] = await Promise.all([
+      const [appData, patData, empData, configData] = await Promise.all([
         tenantApi.getAppointments(range),
         tenantApi.getPatients(),
         tenantApi.getDoctors().catch(() => []),
+        tenantApi.getTenantConfig().catch(() => ({ business_name: "la Clínica" })),
       ]);
       // Sort appointments by date
       const sorted = appData.sort(
@@ -133,6 +136,7 @@ export default function AppointmentsPage() {
       setAppointments(sorted);
       setPatients(patData);
       setEmployees(empData.filter((e: Employee) => e.status));
+      setClinicName(configData?.business_name || "la Clínica");
       
       // Auto-select first doctor for new appointment form
       const activeEmployees = empData.filter((e: Employee) => e.status);
@@ -379,6 +383,33 @@ export default function AppointmentsPage() {
     { key: "all", label: "Todas" },
   ];
 
+  const handleWhatsAppClick = (apt: Appointment) => {
+    const patient = patients.find((p) => p.id === apt.patient_id);
+    if (!patient || !patient.phone) {
+      alert("El paciente no tiene un número de teléfono registrado.");
+      return;
+    }
+
+    const d = new Date(apt.appointment_date);
+    const dateStr = d.toLocaleDateString([], {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    });
+    const timeStr = d.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const doctorName = getDoctorName(apt.assigned_doctor_id);
+
+    const message = `Hola ${patient.first_name} ${patient.last_name}!,\n\nTe escribo de la Clínica Dental ${clinicName} para confirmar tu cita programada:\n\nFecha: ${dateStr}\nHora:  ${timeStr}\nDr.(a): ${doctorName}\n\n¿Confirmas tu asistencia?\n\nQuedo atento a tu respuesta.\n¡Que tengas un excelente día!`;
+
+    const encodedMessage = encodeURIComponent(message);
+    const phoneStr = patient.phone.replace(/\D/g, "");
+
+    window.open(`https://wa.me/${phoneStr}?text=${encodedMessage}`, "_blank");
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -462,36 +493,136 @@ export default function AppointmentsPage() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="flex flex-col gap-3">
                 {filteredAppointments.map((apt) => {
                   const d = new Date(apt.appointment_date);
                   return (
                     <Card
                       key={apt.id}
-                      className="bg-card border-border backdrop-blur-sm hover:border-muted-foreground/50 hover:shadow-lg transition-all"
+                      className={`bg-card border-border backdrop-blur-sm hover:border-muted-foreground/50 hover:shadow-lg transition-all flex flex-col md:flex-row items-start md:items-center p-0 relative ${
+                        openDropdownId === apt.id ? "z-50" : "z-10"
+                      }`}
                     >
-                      <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between border-b border-border/50">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-lg">
-                            {d.toLocaleDateString([], {
-                              weekday: "short",
-                              day: "2-digit",
-                              month: "short",
-                            })}
-                          </span>
-                          <span className="text-primary font-semibold flex items-center gap-1">
-                            <Clock size={14} />{" "}
-                            {d.toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
+                      {/* Date & Time Section */}
+                      <div className="p-4 bg-muted/20 w-full md:w-48 shrink-0 flex md:flex-col justify-between md:justify-center items-center md:items-start h-full border-b md:border-b-0 md:border-r border-border/50 rounded-t-xl md:rounded-l-xl md:rounded-tr-none">
+                        <span className="font-bold text-base md:text-lg">
+                          {d.toLocaleDateString([], {
+                            weekday: "short",
+                            day: "2-digit",
+                            month: "short",
+                          })}
+                        </span>
+                        <span className="text-primary font-semibold flex items-center gap-1 text-sm md:text-base">
+                          <Clock size={14} />{" "}
+                          {d.toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+
+                      {/* Info Section */}
+                      <div className="p-4 flex-1 flex flex-col xl:flex-row items-start xl:items-center gap-4 xl:gap-8 w-full">
+                        {/* Patient */}
+                        <div className="flex items-center gap-3 xl:min-w-[200px]">
+                          <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+                            <User size={18} />
+                          </div>
+                          <div className="truncate">
+                            <p className="text-xs font-medium text-muted-foreground mb-0.5">
+                              Paciente
+                            </p>
+                            <p className="font-semibold truncate leading-none text-sm md:text-base">
+                              {getPatientName(apt.patient_id)}
+                            </p>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1">
+
+                        {/* Doctor */}
+                        {apt.assigned_doctor_id && (
+                          <div className="flex items-center gap-2 text-sm text-primary xl:min-w-[160px]">
+                            <span>👨‍⚕️</span>
+                            <span className="font-medium truncate">Dr. {getDoctorName(apt.assigned_doctor_id)}</span>
+                          </div>
+                        )}
+
+                        {/* Notes */}
+                        {apt.notes ? (
+                          <div className="text-xs md:text-sm flex items-start gap-2 text-muted-foreground flex-1">
+                            <FileText
+                              size={16}
+                              className="shrink-0 mt-0.5 opacity-70"
+                            />
+                            <p className="line-clamp-2 xl:line-clamp-1" title={apt.notes}>{apt.notes}</p>
+                          </div>
+                        ) : (
+                          <div className="flex-1"></div>
+                        )}
+                      </div>
+
+                      {/* Actions Section */}
+                      <div className="p-4 flex items-center gap-3 shrink-0 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 border-border/50 bg-muted/5 md:bg-transparent">
+                        <div className="relative">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenDropdownId(openDropdownId === apt.id ? null : apt.id);
+                            }}
+                            className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-full border transition-all flex items-center gap-2 shadow-sm ${getStatusColorClass(apt.appointment_status)}`}
+                          >
+                            {statusLabels[apt.appointment_status.toLowerCase()]}
+                            <Plus size={10} className={`transition-transform duration-300 ${openDropdownId === apt.id ? "rotate-45" : ""}`} />
+                          </button>
+
+                          {openDropdownId === apt.id && (
+                            <>
+                              <div 
+                                className="fixed inset-0 z-10" 
+                                onClick={() => setOpenDropdownId(null)}
+                              />
+                              <div className="absolute bottom-full right-0 md:bottom-auto md:top-full md:mt-2 mb-2 w-40 bg-card/95 backdrop-blur-xl border border-border/50 rounded-xl shadow-2xl p-1.5 z-20 animate-in fade-in slide-in-from-bottom-2 zoom-in-95 duration-200">
+                                {Object.entries(statusLabels).map(([val, label]) => (
+                                  <button
+                                    key={val}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleQuickStatusUpdate(apt.id, val);
+                                      setOpenDropdownId(null);
+                                    }}
+                                    className={`w-full text-left px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors flex items-center justify-between group/item ${
+                                      apt.appointment_status === val 
+                                        ? "bg-primary/20 text-primary" 
+                                        : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                                    }`}
+                                  >
+                                    {label}
+                                    {apt.appointment_status === val && (
+                                      <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                    )}
+                                  </button>
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center gap-1 border-l border-border/50 pl-3">
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 hover:bg-accent text-muted-foreground group-hover:text-foreground transition-colors"
+                            className="h-8 w-8 text-emerald-500/70 hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleWhatsAppClick(apt);
+                            }}
+                            title="Confirmar por WhatsApp"
+                          >
+                            <MessageCircle size={16} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
                             onClick={(e) => { e.stopPropagation(); openEditModal(apt); }}
                             title="Editar"
                           >
@@ -507,86 +638,7 @@ export default function AppointmentsPage() {
                             <Trash2 size={16} />
                           </Button>
                         </div>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-4">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
-                            <User size={18} />
-                          </div>
-                          <div className="truncate">
-                            <p className="text-sm font-medium text-muted-foreground mb-1">
-                              Paciente
-                            </p>
-                            <p className="font-semibold truncate leading-none">
-                              {getPatientName(apt.patient_id)}
-                            </p>
-                          </div>
-                        </div>
-
-                        {apt.assigned_doctor_id && (
-                          <div className="flex items-center gap-2 mb-4 text-sm text-primary">
-                            <span>👨‍⚕️</span>
-                            <span className="font-medium">Dr. {getDoctorName(apt.assigned_doctor_id)}</span>
-                          </div>
-                        )}
-
-                        {apt.notes && (
-                          <div className="mt-4 p-3 rounded-lg bg-muted border border-border/50 text-sm flex items-start gap-2">
-                            <FileText
-                              size={16}
-                              className="text-muted-foreground mt-0.5 shrink-0"
-                            />
-                            <p className="line-clamp-2">{apt.notes}</p>
-                          </div>
-                        )}
-
-                        {/* Status Dropdown - Moved to bottom */}
-                        <div className="mt-6 flex justify-end">
-                          <div className="relative">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setOpenDropdownId(openDropdownId === apt.id ? null : apt.id);
-                              }}
-                              className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-full border transition-all flex items-center gap-2 shadow-sm ${getStatusColorClass(apt.appointment_status)}`}
-                            >
-                              {statusLabels[apt.appointment_status.toLowerCase()]}
-                              <Plus size={10} className={`transition-transform duration-300 ${openDropdownId === apt.id ? "rotate-45" : ""}`} />
-                            </button>
-
-                            {openDropdownId === apt.id && (
-                              <>
-                                <div 
-                                  className="fixed inset-0 z-10" 
-                                  onClick={() => setOpenDropdownId(null)}
-                                />
-                                <div className="absolute bottom-full right-0 mb-2 w-40 bg-card/95 backdrop-blur-xl border border-border/50 rounded-xl shadow-2xl p-1.5 z-20 animate-in fade-in slide-in-from-bottom-2 zoom-in-95 duration-200">
-                                  {Object.entries(statusLabels).map(([val, label]) => (
-                                    <button
-                                      key={val}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleQuickStatusUpdate(apt.id, val);
-                                        setOpenDropdownId(null);
-                                      }}
-                                      className={`w-full text-left px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors flex items-center justify-between group/item ${
-                                        apt.appointment_status === val 
-                                          ? "bg-primary/20 text-primary" 
-                                          : "hover:bg-muted text-muted-foreground hover:text-foreground"
-                                      }`}
-                                    >
-                                      {label}
-                                      {apt.appointment_status === val && (
-                                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                                      )}
-                                    </button>
-                                  ))}
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
+                      </div>
                     </Card>
                   );
                 })}
