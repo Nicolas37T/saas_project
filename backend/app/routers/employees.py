@@ -32,7 +32,7 @@ class EmployeeRead(BaseModel):
     created_at: datetime
 
 class EmployeeCreate(BaseModel):
-    username: str
+    username: Optional[str] = None
     email: EmailStr
     full_name: str
     password: str
@@ -157,17 +157,54 @@ def create_employee(
 
     # 2. Verificar si ya existe
     existing_user = session.exec(select(User).where((User.email == data.email) | (User.username == data.username))).first()
+    
     if existing_user:
-        raise HTTPException(status_code=400, detail="El email o nombre de usuario ya está registrado en este negocio")
+        if existing_user.status:
+            raise HTTPException(status_code=400, detail="El email o nombre de usuario ya está registrado y activo en este negocio")
+        
+        # SI EL USUARIO EXISTE PERO ESTÁ DESACTIVADO -> RE-ACTIVARLO
+        # 3. Validar Rol existe
+        role = session.get(Role, data.role_id)
+        if not role:
+            raise HTTPException(status_code=404, detail="El rol seleccionado no existe")
+            
+        existing_user.full_name = data.full_name
+        existing_user.email = data.email
+        # Si se envió un nuevo username (no vacío), usarlo. Si no, dejar el que tenía o generarlo si era vacío.
+        if data.username:
+            existing_user.username = data.username
+        
+        existing_user.password_hash = get_password_hash(data.password)
+        existing_user.role_id = data.role_id
+        existing_user.status = True
+        existing_user.updated_at = datetime.utcnow()
+        
+        session.add(existing_user)
+        session.commit()
+        session.refresh(existing_user)
+        return existing_user
 
     # 3. Validar Rol existe
     role = session.get(Role, data.role_id)
     if not role:
         raise HTTPException(status_code=404, detail="El rol seleccionado no existe")
 
-    # 4. Crear usuario
+    # 4. Procesar Username si es nulo o vacío
+    username = data.username
+    if not username:
+        # Generar base del username desde el email
+        base_username = data.email.split("@")[0].lower()
+        username = base_username
+        
+        # Asegurar unicidad (en caso de que el prefijo del email ya exista)
+        counter = 1
+        while session.exec(select(User).where(User.username == username)).first():
+            username = f"{base_username}{counter}"
+            counter += 1
+
+    # 5. Crear usuario
     db_user = User(
-        username=data.username,
+        username=username,
         email=data.email,
         full_name=data.full_name,
         password_hash=get_password_hash(data.password),

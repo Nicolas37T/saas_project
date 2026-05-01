@@ -37,6 +37,14 @@ export default function EmployeesPage() {
     fetchData();
   }, []);
 
+  // Auto-sugerir username basado en email si está vacío y estamos creando
+  useEffect(() => {
+    if (!editingEmployee && formData.email && !formData.username) {
+      const suggested = formData.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+      setFormData(prev => ({ ...prev, username: suggested }));
+    }
+  }, [formData.email, editingEmployee]);
+
   const fetchData = async () => {
     try {
       const [empData, rolesData] = await Promise.all([
@@ -326,7 +334,7 @@ export default function EmployeesPage() {
                         onChange={(e) => setFormData({...formData, full_name: e.target.value})}
                     />
                 </div>
-                {/* <div className="space-y-1.5">
+                <div className="space-y-1.5">
                     <label className="text-sm font-medium ml-1">Nombre de Usuario</label>
                     <input
                         required
@@ -336,7 +344,7 @@ export default function EmployeesPage() {
                         value={formData.username}
                         onChange={(e) => setFormData({...formData, username: e.target.value.toLowerCase().replace(/\s/g, '')})}
                     />
-                </div> */}
+                </div>
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium ml-1">Correo Electrónico</label>
