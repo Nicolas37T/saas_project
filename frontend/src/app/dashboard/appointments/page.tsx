@@ -348,7 +348,7 @@ export default function AppointmentsPage() {
       case "scheduled":
         return "bg-blue-500/20 text-blue-500 border-blue-500/30";
       case "confirmed":
-        return "bg-cyan-500/20 text-cyan-500 border-cyan-500/30";
+        return "bg-indigo-500/20 text-indigo-500 border-indigo-500/30";
       case "completed":
         return "bg-emerald-500/20 text-emerald-500 border-emerald-500/30";
       case "cancelled":
@@ -369,7 +369,7 @@ export default function AppointmentsPage() {
   const getStatusColorClass = (status: string) => {
     switch (status.toLowerCase()) {
       case "scheduled": return "text-blue-500 bg-blue-500/10 border-blue-500/20 hover:bg-blue-500/20";
-      case "confirmed": return "text-cyan-500 bg-cyan-500/10 border-cyan-500/20 hover:bg-cyan-500/20";
+      case "confirmed": return "text-indigo-500 bg-indigo-500/10 border-indigo-500/20 hover:bg-indigo-500/20";
       case "completed": return "text-emerald-500 bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20";
       case "cancelled": return "text-rose-500 bg-rose-500/10 border-rose-500/20 hover:bg-rose-500/20";
       default: return "text-muted-foreground bg-muted/20 border-border";
