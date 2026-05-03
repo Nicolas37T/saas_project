@@ -1045,7 +1045,7 @@ export default function HistoryPatientsPage() {
         title="Error en el Sistema"
       >
         <div className="space-y-4">
-          <p className="text-slate-300">{errorModal.message}</p>
+          <p className="text-slate-300 whitespace-pre-line text-sm leading-relaxed">{errorModal.message}</p>
           <Button
             onClick={() => setErrorModal({ ...errorModal, isOpen: false })}
             className="w-full bg-slate-800 hover:bg-slate-700"

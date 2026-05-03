@@ -286,7 +286,7 @@ export default function EditHistoryPatientPage() {
         title="Error en el Sistema"
       >
         <div className="space-y-4">
-          <p className="text-slate-300 text-sm leading-relaxed">
+          <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-line">
             {errorModal.message}
           </p>
           <div className="flex justify-end pt-4">

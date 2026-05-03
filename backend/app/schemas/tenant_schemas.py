@@ -1,5 +1,5 @@
 from typing import Optional, List
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from datetime import datetime
 import uuid
 
@@ -126,9 +126,9 @@ class PatientShareRead(PatientShareBase):
 
 # --- Treatment ---
 class TreatmentBase(BaseModel):
-    description: str
-    price: float = 0.0
-    procedure_status: str = "pendiente"
+    description: str = Field(..., max_length=1000)
+    price: float = Field(0.0, ge=0.0)
+    procedure_status: str = Field("pendiente", pattern="^(?i)(pendiente|en_progreso|completado|cancelado)$")
     treatment_date: Optional[datetime] = None
     status: bool = True
     odontogram_id: Optional[uuid.UUID] = None
@@ -153,16 +153,16 @@ class TreatmentRead(TreatmentBase):
 
 # --- Medical History ---
 class MedicalHistoryBase(BaseModel):
-    conditions: Optional[str] = None
-    allergies: Optional[str] = None
-    medications: Optional[str] = None
-    description: Optional[str] = None
+    conditions: Optional[str] = Field(None, max_length=1000)
+    allergies: Optional[str] = Field(None, max_length=1000)
+    medications: Optional[str] = Field(None, max_length=1000)
+    description: Optional[str] = Field(None, max_length=1000)
     
     # Dental Hygiene
     uses_toothbrush: bool = True
     uses_dentifrice: bool = True
-    brushing_frequency: Optional[str] = None
-    brushing_technique: Optional[str] = None
+    brushing_frequency: Optional[str] = Field(None, max_length=100)
+    brushing_technique: Optional[str] = Field(None, max_length=100)
     uses_floss: bool = False
     
     status: bool = True
@@ -242,10 +242,19 @@ class PaymentRead(PaymentBase):
 # --- Odontogram ---
 class OdontogramBase(BaseModel):
     tooth_number: int
-    tooth_type: str
-    notes: Optional[str] = None
+    tooth_type: str = Field(..., pattern="^(?i)(Permanente|Temporal)$")
+    notes: Optional[str] = Field(None, max_length=1000)
     status: bool = True
     patient_id: uuid.UUID
+
+    @field_validator('tooth_number')
+    @classmethod
+    def validate_tooth_number(cls, v: int) -> int:
+        valid_permanents = list(range(11, 19)) + list(range(21, 29)) + list(range(31, 39)) + list(range(41, 49))
+        valid_temporals = list(range(51, 56)) + list(range(61, 66)) + list(range(71, 76)) + list(range(81, 86))
+        if v not in valid_permanents and v not in valid_temporals:
+            raise ValueError(f"Número de diente inválido (FDI): {v}")
+        return v
 
 class OdontogramCreate(OdontogramBase):
     pass
@@ -274,29 +283,38 @@ class OdontogramReadWithPatient(OdontogramRead):
 class FullOdontogramItem(BaseModel):
     """A single tooth record to add to the odontogram"""
     tooth_number: int
-    tooth_type: str
-    notes: Optional[str] = None
+    tooth_type: str = Field(..., pattern="^(?i)(Permanente|Temporal)$")
+    notes: Optional[str] = Field(None, max_length=1000)
+
+    @field_validator('tooth_number')
+    @classmethod
+    def validate_tooth_number(cls, v: int) -> int:
+        valid_permanents = list(range(11, 19)) + list(range(21, 29)) + list(range(31, 39)) + list(range(41, 49))
+        valid_temporals = list(range(51, 56)) + list(range(61, 66)) + list(range(71, 76)) + list(range(81, 86))
+        if v not in valid_permanents and v not in valid_temporals:
+            raise ValueError(f"Número de diente inválido (FDI): {v}")
+        return v
 
 class FullTreatmentItem(BaseModel):
     """A single procedure applied to a tooth"""
     id: Optional[uuid.UUID] = None
-    description: str
-    price: float = 0.0
+    description: str = Field(..., max_length=1000)
+    price: float = Field(0.0, ge=0.0)
     treatment_date: Optional[datetime] = None
-    procedure_status: str = "pendiente"
+    procedure_status: str = Field("pendiente", pattern="^(?i)(pendiente|en_progreso|completado|cancelado)$")
 
 class FullMedicalHistoryCreate(BaseModel):
     # Medical History data
-    conditions: Optional[str] = None
-    allergies: Optional[str] = None
-    medications: Optional[str] = None
-    medical_description: Optional[str] = None
+    conditions: Optional[str] = Field(None, max_length=1000)
+    allergies: Optional[str] = Field(None, max_length=1000)
+    medications: Optional[str] = Field(None, max_length=1000)
+    medical_description: Optional[str] = Field(None, max_length=1000)
     
     # Dental Hygiene
     uses_toothbrush: bool = True
     uses_dentifrice: bool = True
-    brushing_frequency: Optional[str] = None
-    brushing_technique: Optional[str] = None
+    brushing_frequency: Optional[str] = Field(None, max_length=100)
+    brushing_technique: Optional[str] = Field(None, max_length=100)
     uses_floss: bool = False
     
     # Odontogram items: each tooth with its treatments
@@ -305,22 +323,31 @@ class FullMedicalHistoryCreate(BaseModel):
 class OdontogramWithTreatments(BaseModel):
     """A tooth entry for the composite history form"""
     tooth_number: int
-    tooth_type: str
-    notes: Optional[str] = None
+    tooth_type: str = Field(..., pattern="^(?i)(Permanente|Temporal)$")
+    notes: Optional[str] = Field(None, max_length=1000)
     treatments: List[FullTreatmentItem] = []
+
+    @field_validator('tooth_number')
+    @classmethod
+    def validate_tooth_number(cls, v: int) -> int:
+        valid_permanents = list(range(11, 19)) + list(range(21, 29)) + list(range(31, 39)) + list(range(41, 49))
+        valid_temporals = list(range(51, 56)) + list(range(61, 66)) + list(range(71, 76)) + list(range(81, 86))
+        if v not in valid_permanents and v not in valid_temporals:
+            raise ValueError(f"Número de diente inválido (FDI): {v}")
+        return v
 
 class FullMedicalHistoryUpdate(BaseModel):
     # Medical History data
-    conditions: Optional[str] = None
-    allergies: Optional[str] = None
-    medications: Optional[str] = None
-    medical_description: Optional[str] = None
+    conditions: Optional[str] = Field(None, max_length=1000)
+    allergies: Optional[str] = Field(None, max_length=1000)
+    medications: Optional[str] = Field(None, max_length=1000)
+    medical_description: Optional[str] = Field(None, max_length=1000)
     
     # Dental Hygiene
     uses_toothbrush: bool = True
     uses_dentifrice: bool = True
-    brushing_frequency: Optional[str] = None
-    brushing_technique: Optional[str] = None
+    brushing_frequency: Optional[str] = Field(None, max_length=100)
+    brushing_technique: Optional[str] = Field(None, max_length=100)
     uses_floss: bool = False
     
     # Odontogram items: each tooth with its treatments

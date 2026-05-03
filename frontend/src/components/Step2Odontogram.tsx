@@ -193,6 +193,21 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
   // All teeth expanded by default — collapsed set tracks which ones user manually collapsed
   const [collapsedTeeth, setCollapsedTeeth] = React.useState<Set<number>>(new Set());
 
+  const getToothError = (num: number | null | undefined): string | null => {
+    if (!num) return null;
+    const permanents = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18, 21,22,23,24,25,26,27,28, 31,32,33,34,35,36,37,38, 41,42,43,44,45,46,47,48];
+    const temporals = [1,2,3,4,5,6,7,8,9,10,51,52,53,54,55, 61,62,63,64,65, 71,72,73,74,75, 81,82,83,84,85];
+    if (!permanents.includes(num) && !temporals.includes(num)) {
+      return "N° inválido (1-48 o 51-85)";
+    }
+    return null;
+  };
+
+  const getPriceError = (price: number | null | undefined): string | null => {
+    if (price !== null && price !== undefined && price < 0) return "No puede ser negativo";
+    return null;
+  };
+
   const totalPrice = odontogramItems.reduce(
     (acc, tooth) => acc + tooth.treatments.reduce((ta, t) => ta + t.price, 0),
     0
@@ -238,7 +253,9 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
     setOdontogramItems(updated);
   };
 
-  const canAddTooth = newTooth.tooth_number > 0 && newTooth.first_treatment_description.trim() !== "";
+  const toothError = getToothError(newTooth.tooth_number);
+  const priceError = getPriceError(newTooth.first_treatment_price);
+  const canAddTooth = newTooth.tooth_number > 0 && newTooth.first_treatment_description.trim() !== "" && !toothError && !priceError;
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-5xl mx-auto space-y-4 sm:space-y-6">
@@ -303,8 +320,8 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                 </label>
                 <Input
                   type="number"
-                  placeholder="1-32"
-                  className="bg-muted/50 border-gray-500 dark:border-white/50 focus:border-primary"
+                  placeholder="Ej: 11"
+                  className={`bg-muted/50 border-gray-500 dark:border-white/50 focus:border-primary ${newTooth.tooth_number > 0 && toothError ? 'border-rose-500 focus:border-rose-500' : ''}`}
                   value={newTooth.tooth_number || ""}
                   onChange={(e) =>
                     setNewTooth({
@@ -313,6 +330,9 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                     })
                   }
                 />
+                {newTooth.tooth_number > 0 && toothError && (
+                  <p className="text-rose-500 text-[10px] font-medium leading-none m-0">{toothError}</p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <label className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">
@@ -390,7 +410,7 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                 <Input
                   type="number"
                   placeholder="0"
-                  className="bg-muted/50 border-gray-500 dark:border-white/50 text-amber-500 font-bold focus:border-amber-500 text-xs sm:text-sm"
+                  className={`bg-muted/50 border-gray-500 dark:border-white/50 text-amber-500 font-bold text-xs sm:text-sm ${priceError ? 'border-rose-500 focus:border-rose-500' : 'focus:border-amber-500'}`}
                   value={newTooth.first_treatment_price || ""}
                   onChange={(e) =>
                     setNewTooth({
@@ -399,6 +419,9 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                     })
                   }
                 />
+                {priceError && (
+                  <p className="text-rose-500 text-[10px] font-medium leading-none m-0">{priceError}</p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <label className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">
@@ -406,6 +429,7 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                 </label>
                 <Input
                   type="date"
+                  max={new Date().toISOString().split("T")[0]}
                   className="bg-muted/50 border-gray-500 dark:border-white/50 focus:border-primary text-xs sm:text-sm"
                   value={newTooth.first_treatment_date}
                   onChange={(e) =>
@@ -608,7 +632,7 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                                 type="number"
                                 placeholder="0"
                                 className={`bg-muted/50 border-gray-500 dark:border-gray-500/50 h-8 text-xs ${
-                                  isReadonly ? "opacity-60 cursor-not-allowed text-muted-foreground" : "text-amber-500 font-bold"
+                                  isReadonly ? "opacity-60 cursor-not-allowed text-muted-foreground" : getPriceError(treatment.price) ? "border-rose-500 text-rose-500" : "text-amber-500 font-bold"
                                 }`}
                                 value={treatment.price || ""}
                                 disabled={isReadonly}
@@ -621,6 +645,9 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                                   )
                                 }
                               />
+                              {!isReadonly && getPriceError(treatment.price) && (
+                                <p className="text-rose-500 text-[9px] font-medium leading-none m-0 pt-0.5">{getPriceError(treatment.price)}</p>
+                              )}
                             </div>
                             <div className="space-y-1">
                               <label className={`text-[10px] uppercase tracking-widest ${
@@ -630,6 +657,7 @@ export const Step2Odontogram: React.FC<Step2Props> = ({
                               </label>
                               <Input
                                 type="date"
+                                max={new Date().toISOString().split("T")[0]}
                                 className={`bg-muted/50 border-gray-500 dark:border-gray-500/50 h-8 text-xs ${
                                   isReadonly ? "opacity-60 cursor-not-allowed text-muted-foreground" : ""
                                 }`}

@@ -73,11 +73,18 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const data = await res.json();
   if (!res.ok) {
     // Evitamos console.error para no disparar el popup de error visual de Next.js
-    throw new Error(
-      typeof data.detail === "string"
-        ? data.detail
-        : JSON.stringify(data.detail) || "Error en la petición",
-    );
+    let errorMessage = "Error en la petición";
+    if (typeof data.detail === "string") {
+      errorMessage = data.detail;
+    } else if (Array.isArray(data.detail)) {
+      errorMessage = data.detail.map((err: any) => {
+        const field = err.loc ? err.loc[err.loc.length - 1] : "Campo";
+        return `• ${field}: ${err.msg}`;
+      }).join("\n");
+    } else if (data.detail) {
+      errorMessage = JSON.stringify(data.detail);
+    }
+    throw new Error(errorMessage);
   }
   return data as T;
 }
