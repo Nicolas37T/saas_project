@@ -175,6 +175,7 @@ export default function EditHistoryPatientPage() {
       setErrorModal({
         isOpen: true,
         message:
+          (error as Error).message ||
           "Error al actualizar el historial. Verifica los datos e intenta de nuevo.",
       });
     } finally {

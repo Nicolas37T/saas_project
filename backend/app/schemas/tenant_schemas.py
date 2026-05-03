@@ -242,7 +242,7 @@ class PaymentRead(PaymentBase):
 # --- Odontogram ---
 class OdontogramBase(BaseModel):
     tooth_number: int
-    tooth_type: str = Field(..., pattern="^(?i)(Permanente|Temporal)$")
+    tooth_type: str = Field(..., pattern="^(?i)(Permanente|Temporal|adult|child)$")
     notes: Optional[str] = Field(None, max_length=1000)
     status: bool = True
     patient_id: uuid.UUID
@@ -250,8 +250,8 @@ class OdontogramBase(BaseModel):
     @field_validator('tooth_number')
     @classmethod
     def validate_tooth_number(cls, v: int) -> int:
-        valid_permanents = list(range(11, 19)) + list(range(21, 29)) + list(range(31, 39)) + list(range(41, 49))
-        valid_temporals = list(range(51, 56)) + list(range(61, 66)) + list(range(71, 76)) + list(range(81, 86))
+        valid_permanents = [1] + list(range(11, 19)) + list(range(21, 29)) + list(range(31, 39)) + list(range(41, 49))
+        valid_temporals = [1] + list(range(51, 56)) + list(range(61, 66)) + list(range(71, 76)) + list(range(81, 86))
         if v not in valid_permanents and v not in valid_temporals:
             raise ValueError(f"Número de diente inválido (FDI): {v}")
         return v
@@ -283,14 +283,14 @@ class OdontogramReadWithPatient(OdontogramRead):
 class FullOdontogramItem(BaseModel):
     """A single tooth record to add to the odontogram"""
     tooth_number: int
-    tooth_type: str = Field(..., pattern="^(?i)(Permanente|Temporal)$")
+    tooth_type: str = Field(..., pattern="^(?i)(Permanente|Temporal|adult|child)$")
     notes: Optional[str] = Field(None, max_length=1000)
 
     @field_validator('tooth_number')
     @classmethod
     def validate_tooth_number(cls, v: int) -> int:
-        valid_permanents = list(range(11, 19)) + list(range(21, 29)) + list(range(31, 39)) + list(range(41, 49))
-        valid_temporals = list(range(51, 56)) + list(range(61, 66)) + list(range(71, 76)) + list(range(81, 86))
+        valid_permanents = [1] + list(range(11, 19)) + list(range(21, 29)) + list(range(31, 39)) + list(range(41, 49))
+        valid_temporals = [1] + list(range(51, 56)) + list(range(61, 66)) + list(range(71, 76)) + list(range(81, 86))
         if v not in valid_permanents and v not in valid_temporals:
             raise ValueError(f"Número de diente inválido (FDI): {v}")
         return v
@@ -323,15 +323,15 @@ class FullMedicalHistoryCreate(BaseModel):
 class OdontogramWithTreatments(BaseModel):
     """A tooth entry for the composite history form"""
     tooth_number: int
-    tooth_type: str = Field(..., pattern="^(?i)(Permanente|Temporal)$")
+    tooth_type: str = Field(..., pattern="^(?i)(Permanente|Temporal|adult|child)$")
     notes: Optional[str] = Field(None, max_length=1000)
     treatments: List[FullTreatmentItem] = []
 
     @field_validator('tooth_number')
     @classmethod
     def validate_tooth_number(cls, v: int) -> int:
-        valid_permanents = list(range(11, 19)) + list(range(21, 29)) + list(range(31, 39)) + list(range(41, 49))
-        valid_temporals = list(range(51, 56)) + list(range(61, 66)) + list(range(71, 76)) + list(range(81, 86))
+        valid_permanents = [1] + list(range(11, 19)) + list(range(21, 29)) + list(range(31, 39)) + list(range(41, 49))
+        valid_temporals = [1] + list(range(51, 56)) + list(range(61, 66)) + list(range(71, 76)) + list(range(81, 86))
         if v not in valid_permanents and v not in valid_temporals:
             raise ValueError(f"Número de diente inválido (FDI): {v}")
         return v
