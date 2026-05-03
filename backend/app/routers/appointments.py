@@ -168,8 +168,6 @@ def delete_appointment(
     if not db_appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
 
-    # Soft delete: set status to False instead of deleting from DB
-    db_appointment.status = False
-    session.add(db_appointment)
+    session.delete(db_appointment)
     session.commit()
     return {"ok": True}
