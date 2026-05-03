@@ -124,6 +124,8 @@ export interface User {
   email: string;
   rol_global: string;
   is_verified: boolean;
+  reset_requested?: boolean;
+  reset_approved?: boolean;
 }
 
 export interface Subscription {
@@ -162,6 +164,8 @@ export const adminApi = {
   deleteTenant: (id: string) =>
     apiFetch<{ message: string }>(`/admin/tenants/${id}`, { method: "DELETE" }),
   getUsers: () => apiFetch<User[]>("/admin/users"),
+  approvePasswordReset: (userId: string) =>
+    apiFetch<{ message: string }>(`/admin/users/${userId}/approve-reset`, { method: "POST" }),
   getPlans: () => apiFetch<Plan[]>("/admin/plans"),
   createPlan: (data: {
     name: string;
@@ -329,6 +333,8 @@ export interface Employee {
   full_name: string;
   role?: Role;
   status: boolean;
+  reset_requested?: boolean;
+  reset_approved?: boolean;
   created_at: string;
 }
 
@@ -404,6 +410,11 @@ export const tenantApi = {
   deleteEmployee: async (id: string): Promise<{ ok: boolean }> => {
     return apiFetch(`/api/tenant/employees/${id}`, {
       method: "DELETE",
+    });
+  },
+  approveEmployeePasswordReset: async (id: string): Promise<{ message: string }> => {
+    return apiFetch(`/api/tenant/employees/${id}/approve-reset`, {
+      method: "POST",
     });
   },
 

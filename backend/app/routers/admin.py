@@ -188,11 +188,35 @@ def list_users(current_user: UserGlobal = Depends(get_current_superadmin)):
                 "email": u.email,
                 "full_name": u.full_name,
                 "is_verified": u.is_verified,
+                "reset_requested": u.reset_requested,
+                "reset_approved": u.reset_approved,
                 "created_at": u.created_at.isoformat() if u.created_at else None,
                 "role_id": str(u.role_id),
             }
             for u in users
         ]
+
+
+@router.post("/users/{user_id}/approve-reset")
+def approve_password_reset(user_id: str, current_user: UserGlobal = Depends(get_current_superadmin)):
+    """Aprueba la solicitud de cambio de contraseña de un usuario."""
+    with Session(engine) as session:
+        try:
+            user_uuid = uuid.UUID(user_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="ID de usuario inválido")
+            
+        user = session.exec(select(UserGlobal).where(UserGlobal.id == user_uuid)).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+            
+        if not user.reset_requested:
+            raise HTTPException(status_code=400, detail="Este usuario no ha solicitado recuperación de contraseña")
+            
+        user.reset_approved = True
+        session.add(user)
+        session.commit()
+        return {"message": "Solicitud de recuperación aprobada exitosamente"}
 
 
 @router.get("/plans")

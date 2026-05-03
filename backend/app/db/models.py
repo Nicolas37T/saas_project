@@ -84,6 +84,8 @@ class UserGlobal(SQLModel, table=True):
     password_hash: str
     is_verified: bool = Field(default=False)
     last_login: Optional[datetime] = None
+    reset_requested: bool = Field(default=False)
+    reset_approved: bool = Field(default=False)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     # FK al rol (reemplaza el campo rol_global string)

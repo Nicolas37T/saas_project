@@ -27,6 +27,8 @@ class User(SQLModel, table=True):
     full_name: Optional[str] = None
     status: bool = Field(default=True)
     last_login: Optional[datetime] = None
+    reset_requested: bool = Field(default=False)
+    reset_approved: bool = Field(default=False)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 

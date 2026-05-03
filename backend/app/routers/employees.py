@@ -291,3 +291,26 @@ def delete_employee(
     session.add(db_user)
     session.commit()
     return {"ok": True, "message": "Empleado eliminado correctamente"}
+
+@router.post("/{employee_id}/approve-reset")
+def approve_employee_reset(
+    employee_id: uuid.UUID,
+    session: Session = Depends(get_session_for_tenant),
+    current_user = Depends(get_current_tenant_user)
+):
+    """Aprueba el reseteo de contraseña de un empleado."""
+    if getattr(current_user, "computed_role", "") not in ["admin", "superadmin", "owner"]:
+        raise HTTPException(status_code=403, detail="No tienes permiso para aprobar el reseteo de contraseñas")
+
+    db_user = session.get(User, employee_id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="Empleado no encontrado")
+
+    if not db_user.reset_requested:
+        raise HTTPException(status_code=400, detail="Este empleado no ha solicitado recuperación de contraseña")
+
+    db_user.reset_approved = True
+    session.add(db_user)
+    session.commit()
+    return {"message": "Reseteo aprobado exitosamente"}
+

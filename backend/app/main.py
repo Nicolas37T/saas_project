@@ -358,8 +358,29 @@ async def forgot_password(data: ForgotPasswordRequest):
     reset_link = None
     email_sent = False
 
-    # Caso 1: Empleado de un tenant
-    if data.tenant_subdomain:
+    # Verificar si es un usuario global primero (Dueños y Superadmins)
+    is_global_user = False
+    with Session(engine) as session:
+        global_user = session.exec(
+            select(UserGlobal).where(UserGlobal.email == data.email)
+        ).first()
+        if global_user:
+            is_global_user = True
+            try:
+                if not global_user.reset_approved:
+                    global_user.reset_requested = True
+                    session.add(global_user)
+                    session.commit()
+                    return {"message": "Solicitud de recuperación enviada. Por favor espera a que el Equipo de TRZ CORP apruebe tu solicitud y se comunique con su persona."}
+                else:
+                    token = create_reset_token(email=global_user.email, user_type="global")
+                    reset_link = f"{frontend_url}/reset-password?token={token}"
+                    email_sent = False
+            except Exception as e:
+                print(f"⚠️ Error en forgot-password (global): {e}")
+
+    # Si no es un usuario global, entonces es un empleado regular de un tenant
+    if not is_global_user and data.tenant_subdomain:
         try:
             tenant = None
             with Session(engine) as session:
@@ -376,31 +397,21 @@ async def forgot_password(data: ForgotPasswordRequest):
                         )
                     ).first()
                     if user and user.status:
-                        token = create_reset_token(
-                            email=user.email,
-                            user_type="employee",
-                            tenant_subdomain=data.tenant_subdomain
-                        )
-                        reset_link = f"{frontend_url}/reset-password?token={token}"
-                        # email_sent = send_reset_email(user.email, reset_link)
-                        email_sent = False
+                        if not user.reset_approved:
+                            user.reset_requested = True
+                            t_session.add(user)
+                            t_session.commit()
+                            return {"message": "Solicitud de recuperación enviada. Por favor espera a que el Administrador de la clínica la apruebe."}
+                        else:
+                            token = create_reset_token(
+                                email=user.email,
+                                user_type="employee",
+                                tenant_subdomain=data.tenant_subdomain
+                            )
+                            reset_link = f"{frontend_url}/reset-password?token={token}"
+                            email_sent = False
         except Exception as e:
             print(f"⚠️ Error en forgot-password (employee): {e}")
-
-    # Caso 2: Usuario global (owner/superadmin)  
-    else:
-        try:
-            with Session(engine) as session:
-                user = session.exec(
-                    select(UserGlobal).where(UserGlobal.email == data.email)
-                ).first()
-                if user:
-                    token = create_reset_token(email=user.email, user_type="global")
-                    reset_link = f"{frontend_url}/reset-password?token={token}"
-                    # email_sent = send_reset_email(user.email, reset_link)
-                    email_sent = False
-        except Exception as e:
-            print(f"⚠️ Error en forgot-password (global): {e}")
 
     # Si el email no se envió correctamente, devolver el enlace directamente
     response = {"message": "Si el correo existe en nuestro sistema, recibirás un enlace de recuperación."}
@@ -447,6 +458,8 @@ async def reset_password(data: ResetPasswordRequest):
             if not user:
                 raise HTTPException(status_code=400, detail="Usuario no encontrado.")
             user.password_hash = new_hash
+            user.reset_requested = False
+            user.reset_approved = False
             t_session.add(user)
             t_session.commit()
 
@@ -459,8 +472,37 @@ async def reset_password(data: ResetPasswordRequest):
             if not user:
                 raise HTTPException(status_code=400, detail="Usuario no encontrado.")
             user.password_hash = new_hash
+            user.reset_requested = False
+            user.reset_approved = False
             session.add(user)
+            
+            tenants = session.exec(
+                select(Tenant).where(Tenant.created_by == user.id)
+            ).all()
+            
+            if user.tenant_id and not any(t.id == user.tenant_id for t in tenants):
+                t_dir = session.get(Tenant, user.tenant_id)
+                if t_dir:
+                    tenants.append(t_dir)
+            
             session.commit()
+            
+            # Sync passwords to tenant databases while the tenants are still bound
+            from app.db.tenant_models import User as TenantUser
+            for tenant in tenants:
+                try:
+                    with _get_tenant_session(tenant) as t_session:
+                        t_user = t_session.exec(
+                            select(TenantUser).where(TenantUser.email == email)
+                        ).first()
+                        if t_user:
+                            t_user.password_hash = new_hash
+                            t_user.reset_requested = False
+                            t_user.reset_approved = False
+                            t_session.add(t_user)
+                            t_session.commit()
+                except Exception as e:
+                    print(f"⚠️ Error syncing password to tenant {tenant.subdomain}: {e}")
 
     return {"message": "Contraseña actualizada exitosamente. Ya puedes iniciar sesión."}
 
