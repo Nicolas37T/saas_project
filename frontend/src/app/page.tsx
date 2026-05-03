@@ -17,7 +17,7 @@ async function getPlans(): Promise<Plan[]> {
       : "http://localhost:8000");
   try {
     const res = await fetch(`${baseUrl}/plans`, {
-      next: { revalidate: 60 },
+      cache: "no-store",
     });
     if (!res.ok) return [];
     return res.json();
@@ -354,7 +354,7 @@ export default async function LandingPage() {
             {plans.length === 0 ? (
               <p className="text-muted-foreground">No hay planes disponibles en este momento.</p>
             ) : (
-              <div className={`grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-6xl mx-auto items-stretch ${plans.length >= 3 ? "lg:grid-cols-3" : ""} ${plans.length >= 4 ? "lg:grid-cols-4" : ""}`}>
+              <div suppressHydrationWarning className={`grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-6xl mx-auto items-stretch ${plans.length >= 3 ? "lg:grid-cols-3" : ""} ${plans.length >= 4 ? "lg:grid-cols-4" : ""}`}>
                 {plans.map((plan) => {
                   const isPopular = plan.price === 100;
                   const isFreePlan = plan.price === 0;
