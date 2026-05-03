@@ -376,24 +376,6 @@ export default function TenantDashboard() {
           </Link>
         </div>
 
-        <div className="group p-6 rounded-2xl bg-gradient-to-br from-card to-card/50 border border-border hover:border-muted-foreground/50 transition-all duration-300">
-          <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-            <Settings className="text-muted-foreground" size={24} />
-          </div>
-          <h3 className="text-lg font-semibold mb-2">
-            Configuración de Clínica
-          </h3>
-          <p className="text-muted-foreground text-sm mb-6">
-            Completa el perfil de tu clínica y personaliza tus preferencias de facturación.
-          </p>
-          <Button
-            variant="outline"
-            className="w-full border-border hover:bg-accent"
-            disabled
-          >
-            Próximamente
-          </Button>
-        </div>
       </div>
     </div>
   );

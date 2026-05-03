@@ -945,7 +945,6 @@ export default function HistoryPatientsPage() {
                         <th className="px-3 py-2 border-b border-slate-200">Procedimiento</th>
                         <th className="px-3 py-2 border-b border-slate-200">Estado</th>
                         <th className="px-3 py-2 border-b border-slate-200">Fecha</th>
-                        <th className="px-3 py-2 border-b border-slate-200 text-right">Precio</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -956,9 +955,6 @@ export default function HistoryPatientsPage() {
                             <td className="px-3 py-2 text-slate-800 font-medium">{t.description}</td>
                             <td className="px-3 py-2 text-slate-500 text-[10px] uppercase">{t.procedure_status}</td>
                             <td className="px-3 py-2 text-slate-500">{t.treatment_date ? new Date(t.treatment_date).toLocaleDateString() : "--"}</td>
-                            <td className="px-3 py-2 text-right text-emerald-700 font-bold">
-                              {t.price === 0 ? "Privado" : `Bs. ${t.price.toFixed(2)}`}
-                            </td>
                           </tr>
                         )) || []
                       )}
@@ -966,15 +962,7 @@ export default function HistoryPatientsPage() {
                   </table>
                 )}
 
-                {/* Total Cost */}
-                {odontograms?.length > 0 && (
-                  <div className="mt-4 pt-2 border-t-2 border-slate-200 flex justify-end">
-                    <div className="text-right">
-                      <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Costo Total Tratamientos</span>
-                      <span className="text-lg font-black text-emerald-800">Bs. {totalPrice.toFixed(2)}</span>
-                    </div>
-                  </div>
-                )}
+                {/* Total Cost Removed for Print */}
               </div>
               
               {/* Footer Signature */}

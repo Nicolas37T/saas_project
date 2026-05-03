@@ -37,9 +37,11 @@ function StatusBadge({ status }: { status: string }) {
 /* ─── Expiration Badge ─── */
 function ExpirationBadge({ endDate }: { endDate: string }) {
     const end = new Date(endDate);
+    end.setHours(0, 0, 0, 0);
     const now = new Date();
+    now.setHours(0, 0, 0, 0);
     const diffMs = end.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
     if (diffDays < 0) {
         return (

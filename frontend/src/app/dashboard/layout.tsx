@@ -41,9 +41,14 @@ function decodeJWT(token: string): { email?: string; full_name?: string; sub?: s
 function BillingBadge({ subStatus }: { subStatus: any }) {
   if (!subStatus) return null;
 
-  const daysLeft = subStatus.end_date 
-    ? Math.max(0, Math.ceil((new Date(subStatus.end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))
-    : 0;
+  let daysLeft = 0;
+  if (subStatus && subStatus.end_date) {
+    const end = new Date(subStatus.end_date);
+    end.setHours(0, 0, 0, 0);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    daysLeft = Math.max(0, Math.round((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+  }
 
   const isLow = daysLeft <= 3;
 

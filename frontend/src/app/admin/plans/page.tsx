@@ -69,7 +69,7 @@ export default function PlansPage() {
         setError("");
         try {
             const trialDaysMap: Record<string, number> = {
-                "5_days": 5,
+                "5 dias": 5,
                 "monthly": 30,
                 "yearly": 365
             };
@@ -166,7 +166,7 @@ export default function PlansPage() {
                                 <p className="text-4xl font-extrabold text-primary mt-2">
                                     Bs.{p.price}
                                     <span className="text-base text-muted-foreground font-medium ml-1">
-                                        /{p.billing_cycle === "monthly" ? "mes" : p.billing_cycle === "5_days" ? "5 días" : "año"}
+                                        /{p.billing_cycle === "mensual" ? "mes" : p.billing_cycle === "5 dias" ? "5 dias" : "anual"}
                                     </span>
                                 </p>
                             </CardHeader>
@@ -254,7 +254,7 @@ export default function PlansPage() {
                                 onChange={(e) => setForm({ ...form, billing_cycle: e.target.value })}
                                 className="w-full flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                                <option value="5_days">5 Días (Prueba)</option>
+                                <option value="5 dias">5 Días (Prueba)</option>
                                 <option value="monthly">Mensual</option>
                                 <option value="yearly">Anual</option>
                             </select>
