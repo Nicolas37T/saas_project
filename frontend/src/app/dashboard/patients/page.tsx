@@ -568,23 +568,48 @@ export default function PatientsPage() {
               <label className="text-sm font-medium">
                 Doctor Asignado
               </label>
-              <select
-                required
-                value={newPatient.assigned_doctor_id}
-                onChange={(e) =>
-                  setNewPatient({
-                    ...newPatient,
-                    assigned_doctor_id: e.target.value,
-                  })
-                }
-                className="flex h-10 w-full rounded-md border border-border bg-muted/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                {employeesList.map((emp) => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.full_name || emp.username}
-                  </option>
-                ))}
-              </select>
+              {employeesList.length > 0 ? (
+                <select
+                  required
+                  value={newPatient.assigned_doctor_id}
+                  onChange={(e) =>
+                    setNewPatient({
+                      ...newPatient,
+                      assigned_doctor_id: e.target.value,
+                    })
+                  }
+                  className="flex h-10 w-full rounded-md border border-border bg-muted/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  {employeesList.map((emp) => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.full_name || emp.username}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className="text-sm text-amber-600 bg-amber-500/10 border border-amber-500/20 p-3 rounded-md leading-relaxed">
+                  No hay médicos registrados.{" "}
+                  {mounted && ["owner", "admin", "superadmin", "administrador"].includes(localStorage.getItem("user_role") || "") ? (
+                    <span>
+                      Ve a la sección de{" "}
+                      <button 
+                        type="button" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setIsAddModalOpen(false);
+                          router.push("/dashboard/employees");
+                        }} 
+                        className="font-bold underline text-amber-700 hover:text-amber-800 transition-colors"
+                      >
+                        Empleados
+                      </button>{" "}
+                      y crea uno con rol de médico para asignarle pacientes.
+                    </span>
+                  ) : (
+                    <span>Solicita al administrador que registre un médico.</span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 justify-end mt-8">
@@ -599,6 +624,7 @@ export default function PatientsPage() {
             <Button
               type="submit"
               className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              disabled={employeesList.length === 0}
             >
               Crear Paciente
             </Button>
@@ -700,23 +726,48 @@ export default function PatientsPage() {
                 <label className="text-sm font-medium">
                   Doctor Asignado
                 </label>
-                <select
-                  required
-                  value={editForm.assigned_doctor_id}
-                  onChange={(e) =>
-                    setEditForm({
-                      ...editForm,
-                      assigned_doctor_id: e.target.value,
-                    })
-                  }
-                  className="flex h-10 w-full rounded-md border border-border bg-muted/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                >
-                  {employeesList.map((emp) => (
-                    <option key={emp.id} value={emp.id}>
-                      {emp.full_name || emp.username}
-                    </option>
-                  ))}
-                </select>
+                {employeesList.length > 0 ? (
+                  <select
+                    required
+                    value={editForm.assigned_doctor_id}
+                    onChange={(e) =>
+                      setEditForm({
+                        ...editForm,
+                        assigned_doctor_id: e.target.value,
+                      })
+                    }
+                    className="flex h-10 w-full rounded-md border border-border bg-muted/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  >
+                    {employeesList.map((emp) => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.full_name || emp.username}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="text-sm text-amber-600 bg-amber-500/10 border border-amber-500/20 p-3 rounded-md leading-relaxed">
+                    No hay médicos registrados.{" "}
+                    {mounted && ["owner", "admin", "superadmin", "administrador"].includes(localStorage.getItem("user_role") || "") ? (
+                      <span>
+                        Ve a la sección de{" "}
+                        <button 
+                          type="button" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setIsEditModalOpen(false);
+                            router.push("/dashboard/employees");
+                          }} 
+                          className="font-bold underline text-amber-700 hover:text-amber-800 transition-colors"
+                        >
+                          Empleados
+                        </button>{" "}
+                        y crea uno con rol de médico para asignarle pacientes.
+                      </span>
+                    ) : (
+                      <span>Solicita al administrador que registre un médico.</span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 justify-end mt-8">
@@ -731,6 +782,7 @@ export default function PatientsPage() {
               <Button
                 type="submit"
                 className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                disabled={employeesList.length === 0}
               >
                 Guardar Cambios
               </Button>

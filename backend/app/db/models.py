@@ -1,4 +1,5 @@
 from datetime import datetime
+from app.core.timezone import now_bolivia
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship
 import uuid
@@ -15,7 +16,7 @@ class UserRole(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(unique=True, index=True)       # 'superadmin', 'owner'
     description: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=now_bolivia)
 
     users: List["UserGlobal"] = Relationship(back_populates="role")
 
@@ -30,8 +31,9 @@ class Plan(SQLModel, table=True):
     price: float
     billing_cycle: str          # "monthly" | "yearly"
     max_users: int
+    trial_days: int = Field(default=30) # Días de duración inicial / prueba
     strategy: str = Field(default="schema") # "schema" | "database"
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=now_bolivia)
 
     tenants: List["Tenant"] = Relationship(back_populates="plan")
     subscriptions: List["Subscription"] = Relationship(back_populates="plan")
@@ -51,8 +53,8 @@ class Tenant(SQLModel, table=True):
     strategy: str = Field(default="schema") # "schema" | "database"
     db_name: str
     db_host: str = Field(default="localhost")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=now_bolivia)
+    updated_at: datetime = Field(default_factory=now_bolivia)
 
     # Quién creó el tenant (dueño del negocio)
     created_by: Optional[uuid.UUID] = Field(default=None, foreign_key="users_global.id")
@@ -83,7 +85,9 @@ class UserGlobal(SQLModel, table=True):
     password_hash: str
     is_verified: bool = Field(default=False)
     last_login: Optional[datetime] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    reset_requested: bool = Field(default=False)
+    reset_approved: bool = Field(default=False)
+    created_at: datetime = Field(default_factory=now_bolivia)
 
     # FK al rol (reemplaza el campo rol_global string)
     role_id: uuid.UUID = Field(foreign_key="user_roles.id")
@@ -107,10 +111,10 @@ class Subscription(SQLModel, table=True):
     __tablename__ = "subscriptions"
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     external_id: Optional[str] = None          # Stripe subscription ID en producción
-    start_date: datetime = Field(default_factory=datetime.utcnow)
+    start_date: datetime = Field(default_factory=now_bolivia)
     end_date: Optional[datetime] = None
     status: str = Field(default="active")       # "active", "trialing", "canceled"
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=now_bolivia)
 
     tenant_id: uuid.UUID = Field(foreign_key="tenants.id")
     plan_id: uuid.UUID = Field(foreign_key="plans.id")

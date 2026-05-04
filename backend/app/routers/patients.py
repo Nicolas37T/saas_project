@@ -4,7 +4,7 @@ from sqlmodel import Session, select
 from typing import List
 from datetime import datetime
 import uuid
-from datetime import datetime
+from app.core.timezone import now_bolivia
 
 from app.db.session import get_session_for_tenant
 from app.db.tenant_models import Patient, MedicalHistory, Treatment, Odontogram, Payment, User, PatientShare, Appointment
@@ -161,7 +161,7 @@ def update_full_medical_history(
         db_history.brushing_frequency = update_data.brushing_frequency
         db_history.brushing_technique = update_data.brushing_technique
         db_history.uses_floss = update_data.uses_floss
-        db_history.updated_at = datetime.utcnow()
+        db_history.updated_at = now_bolivia()
         session.add(db_history)
 
         # 2. Upsert Odontogram + Treatments per tooth
@@ -182,7 +182,7 @@ def update_full_medical_history(
                 db_odontogram = existing_by_tooth[item.tooth_number]
                 db_odontogram.tooth_type = item.tooth_type
                 db_odontogram.notes = item.notes
-                db_odontogram.updated_at = datetime.utcnow()
+                db_odontogram.updated_at = now_bolivia()
                 session.add(db_odontogram)
             else:
                 db_odontogram = Odontogram(
@@ -261,7 +261,7 @@ def soft_delete_medical_history(
             raise HTTPException(status_code=404, detail="History not found")
         
         db_history.status = False
-        db_history.updated_at = datetime.utcnow()
+        db_history.updated_at = now_bolivia()
         session.add(db_history)
         session.commit()
         return {"ok": True, "message": "History soft-deleted successfully"}
@@ -490,7 +490,7 @@ def update_patient(
         raise HTTPException(status_code=404, detail="Patient not found")
     
     update_data = patient_update.model_dump(exclude_unset=True)
-    update_data["updated_at"] = datetime.utcnow()  # Siempre actualizar timestamp
+    update_data["updated_at"] = now_bolivia()  # Siempre actualizar timestamp
     db_patient.sqlmodel_update(update_data)
     
     session.add(db_patient)
@@ -509,7 +509,7 @@ def delete_patient(
         raise HTTPException(status_code=404, detail="Patient not found")
     
     db_patient.status = False
-    db_patient.updated_at = datetime.utcnow()
+    db_patient.updated_at = now_bolivia()
     session.add(db_patient)
     session.commit()
     return {"ok": True, "message": "Paciente desactivado correctamente"}

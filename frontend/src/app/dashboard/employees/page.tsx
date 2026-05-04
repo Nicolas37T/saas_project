@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Search, UserPlus, Mail, Shield, User, Loader2, X, Check, Trash2, Edit2, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { Plus, Search, UserPlus, Mail, Shield, User, Loader2, X, Check, Trash2, Edit2, AlertCircle, Eye, EyeOff, KeyRound } from "lucide-react";
 import { tenantApi, Employee, Role } from "@/lib/api";
 import { CustomModal, ConfirmModal, SuccessModal } from "@/components/ui/custom-modal";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,14 @@ export default function EmployeesPage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Auto-sugerir username basado en email si está vacío y estamos creando
+  useEffect(() => {
+    if (!editingEmployee && formData.email && !formData.username) {
+      const suggested = formData.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+      setFormData(prev => ({ ...prev, username: suggested }));
+    }
+  }, [formData.email, editingEmployee]);
 
   const fetchData = async () => {
     try {
@@ -122,6 +130,18 @@ export default function EmployeesPage() {
     }
   };
 
+  const handleApproveReset = async (id: string) => {
+    try {
+      await tenantApi.approveEmployeePasswordReset(id);
+      setEmployees(employees.map(e => e.id === id ? { ...e, reset_approved: true, reset_requested: false } : e));
+      setSuccessInfo({ title: "Reseteo Aprobado", message: "El empleado ahora puede restablecer su contraseña." });
+      setIsSuccessModalOpen(true);
+    } catch (error: any) {
+      setErrorText(error.message || "Error al aprobar reseteo");
+      setIsErrorModalOpen(true);
+    }
+  };
+
   const filteredEmployees = employees.filter(emp => 
     emp.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     emp.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -181,6 +201,7 @@ export default function EmployeesPage() {
                     <th className="px-6 py-4 text-muted-foreground font-medium text-sm border-b border-border">Usuario</th>
                     <th className="px-6 py-4 text-muted-foreground font-medium text-sm border-b border-border">Rol</th>
                     <th className="px-6 py-4 text-muted-foreground font-medium text-sm border-b border-border">Estado</th>
+                    <th className="px-6 py-4 text-muted-foreground font-medium text-sm border-b border-border">Seguridad</th>
                     <th className="px-6 py-4 text-muted-foreground font-medium text-sm border-b border-border text-right">Acciones</th>
                   </tr>
                 </thead>
@@ -217,6 +238,17 @@ export default function EmployeesPage() {
                             <span className="w-2 h-2 rounded-full bg-muted-foreground"></span>
                             Inactivo
                           </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        {emp.reset_requested ? (
+                          <Button size="sm" variant="destructive" onClick={() => handleApproveReset(emp.id)} className="h-7 text-xs flex gap-1.5 items-center">
+                              <KeyRound size={12} /> Aprobar Reseteo
+                          </Button>
+                        ) : emp.reset_approved ? (
+                            <span className="text-xs text-emerald-500 font-medium">Reseteo Habilitado</span>
+                        ) : (
+                            <span className="text-xs text-muted-foreground">-</span>
                         )}
                       </td>
                       <td className="px-6 py-4 text-right">
@@ -300,6 +332,15 @@ export default function EmployeesPage() {
                     <span className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 text-xs font-medium uppercase tracking-wider">
                       {emp.role?.name || "Sin Rol"}
                     </span>
+                    <div className="mt-2">
+                        {emp.reset_requested ? (
+                          <Button size="sm" variant="destructive" onClick={() => handleApproveReset(emp.id)} className="h-7 text-xs flex gap-1.5 items-center w-full justify-center">
+                              <KeyRound size={12} /> Aprobar Reseteo
+                          </Button>
+                        ) : emp.reset_approved ? (
+                            <span className="text-xs text-emerald-500 font-medium">Reseteo Habilitado</span>
+                        ) : null}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -326,7 +367,7 @@ export default function EmployeesPage() {
                         onChange={(e) => setFormData({...formData, full_name: e.target.value})}
                     />
                 </div>
-                {/* <div className="space-y-1.5">
+                <div className="space-y-1.5">
                     <label className="text-sm font-medium ml-1">Nombre de Usuario</label>
                     <input
                         required
@@ -336,7 +377,7 @@ export default function EmployeesPage() {
                         value={formData.username}
                         onChange={(e) => setFormData({...formData, username: e.target.value.toLowerCase().replace(/\s/g, '')})}
                     />
-                </div> */}
+                </div>
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium ml-1">Correo Electrónico</label>

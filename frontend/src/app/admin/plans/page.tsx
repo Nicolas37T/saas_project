@@ -53,7 +53,7 @@ export default function PlansPage() {
             name: plan.name, 
             price: plan.price.toString(), 
             billing_cycle: plan.billing_cycle, 
-            max_users: plan.max_users ? plan.max_users.toString() : "5" 
+            max_users: plan.max_users ? plan.max_users.toString() : "5"
         });
         setIsFormModalOpen(true);
     };
@@ -68,11 +68,18 @@ export default function PlansPage() {
         setIsSaving(true);
         setError("");
         try {
+            const trialDaysMap: Record<string, number> = {
+                "5 dias": 5,
+                "monthly": 30,
+                "yearly": 365
+            };
+
             const data = {
                 name: form.name,
                 price: parseFloat(form.price),
                 billing_cycle: form.billing_cycle,
                 max_users: parseInt(form.max_users),
+                trial_days: trialDaysMap[form.billing_cycle as keyof typeof trialDaysMap] || 30,
             };
 
             if (editingPlan) {
@@ -159,7 +166,7 @@ export default function PlansPage() {
                                 <p className="text-4xl font-extrabold text-primary mt-2">
                                     Bs.{p.price}
                                     <span className="text-base text-muted-foreground font-medium ml-1">
-                                        /{p.billing_cycle === "monthly" ? "mes" : "año"}
+                                        /{p.billing_cycle === "mensual" ? "mes" : p.billing_cycle === "5 dias" ? "5 dias" : "anual"}
                                     </span>
                                 </p>
                             </CardHeader>
@@ -168,6 +175,10 @@ export default function PlansPage() {
                                     <div className="flex items-center gap-2">
                                         <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                                         <p>Límite de {p.max_users} usuarios</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                        <p>Duración: {p.trial_days} días</p>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <div className="w-1.5 h-1.5 rounded-full bg-primary" />
@@ -210,62 +221,65 @@ export default function PlansPage() {
                 onClose={() => setIsFormModalOpen(false)}
                 title={editingPlan ? "Editar Plan" : "Crear Nuevo Plan"}
             >
-                <div className="text-sm text-muted-foreground">Ajusta los detalles de precios y límites del servicio.</div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-                    <div className="space-y-2">
-                        <Label>Nombre del Plan</Label>
-                        <Input
-                            required
-                            value={form.name}
-                            onChange={(e) => setForm({ ...form, name: e.target.value })}
-                            placeholder="Ej: Plan Pro"
-                            className="bg-background"
-                        />
+                <div className="space-y-4">
+                    <div className="text-sm text-muted-foreground">Ajusta los detalles de precios y límites del servicio.</div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+                        <div className="space-y-2">
+                            <Label>Nombre del Plan</Label>
+                            <Input
+                                required
+                                value={form.name}
+                                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                                placeholder="Ej: Plan Pro"
+                                className="bg-background"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Precio (Bs.)</Label>
+                            <Input
+                                required
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={form.price}
+                                onChange={(e) => setForm({ ...form, price: e.target.value })}
+                                placeholder="Ej: 29.99"
+                                className="bg-background"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Ciclo de Facturación</Label>
+                            <select
+                                value={form.billing_cycle}
+                                onChange={(e) => setForm({ ...form, billing_cycle: e.target.value })}
+                                className="w-full flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                <option value="5 dias">5 Días (Prueba)</option>
+                                <option value="monthly">Mensual</option>
+                                <option value="yearly">Anual</option>
+                            </select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Límite de Usuarios Activos</Label>
+                            <Input
+                                required
+                                type="number"
+                                min="1"
+                                value={form.max_users}
+                                onChange={(e) => setForm({ ...form, max_users: e.target.value })}
+                                placeholder="Ej: 5"
+                                className="bg-background"
+                            />
+                        </div>
                     </div>
-                    <div className="space-y-2">
-                        <Label>Precio (Bs.)</Label>
-                        <Input
-                            required
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={form.price}
-                            onChange={(e) => setForm({ ...form, price: e.target.value })}
-                            placeholder="Ej: 29.99"
-                            className="bg-background"
-                        />
+                    <div className="flex gap-3 justify-end mt-6 pt-4 border-t border-border/50">
+                        <Button variant="ghost" onClick={() => setIsFormModalOpen(false)} disabled={isSaving}>
+                            Cancelar
+                        </Button>
+                        <Button onClick={(e) => handleSave(e as any)} disabled={isSaving}>
+                            {isSaving ? "Guardando..." : "Guardar Plan"}
+                        </Button>
                     </div>
-                    <div className="space-y-2">
-                        <Label>Ciclo de Facturación</Label>
-                        <select
-                            value={form.billing_cycle}
-                            onChange={(e) => setForm({ ...form, billing_cycle: e.target.value })}
-                            className="w-full flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                            <option value="monthly">Mensual</option>
-                            <option value="yearly">Anual</option>
-                        </select>
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Límite de Usuarios Activos</Label>
-                        <Input
-                            required
-                            type="number"
-                            min="1"
-                            value={form.max_users}
-                            onChange={(e) => setForm({ ...form, max_users: e.target.value })}
-                            placeholder="Ej: 5"
-                            className="bg-background"
-                        />
-                    </div>
-                </div>
-                <div className="flex gap-3 justify-end mt-6 pt-4 border-t border-border/50">
-                    <Button variant="ghost" onClick={() => setIsFormModalOpen(false)} disabled={isSaving}>
-                        Cancelar
-                    </Button>
-                    <Button onClick={(e) => handleSave(e as any)} disabled={isSaving}>
-                        {isSaving ? "Guardando..." : "Guardar Plan"}
-                    </Button>
                 </div>
             </CustomModal>
 

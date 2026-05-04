@@ -320,13 +320,28 @@ export default function TenantDashboard() {
                 />
                 <Tooltip 
                   cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--card))', 
-                    borderColor: 'hsl(var(--border))',
-                    borderRadius: '12px',
-                    color: 'hsl(var(--foreground))'
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-card border border-border p-3 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.2)]">
+                          <p className="text-muted-foreground font-bold mb-2 text-sm">
+                            {groupBy === "month" ? `Mes: ${formatXAxis(String(label))}` : `Fecha: ${String(label)}`}
+                          </p>
+                          {payload.map((entry: any, index: number) => (
+                            <div key={index} className="flex items-center justify-between gap-4 mb-1">
+                              <span style={{ color: entry.color }} className="font-medium text-sm">
+                                {entry.name}
+                              </span>
+                              <span className="text-foreground font-bold text-sm">
+                                {entry.value}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    }
+                    return null;
                   }}
-                  labelFormatter={(label) => groupBy === "month" ? `Mes: ${formatXAxis(String(label))}` : `Fecha: ${String(label)}`}
                 />
                 <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
                 {visibleSeries.patients && <Bar dataKey="patients" name="Pacientes" fill="#3b82f6" radius={[4, 4, 0, 0]} />}
@@ -361,24 +376,6 @@ export default function TenantDashboard() {
           </Link>
         </div>
 
-        <div className="group p-6 rounded-2xl bg-gradient-to-br from-card to-card/50 border border-border hover:border-muted-foreground/50 transition-all duration-300">
-          <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-            <Settings className="text-muted-foreground" size={24} />
-          </div>
-          <h3 className="text-lg font-semibold mb-2">
-            Configuración de Clínica
-          </h3>
-          <p className="text-muted-foreground text-sm mb-6">
-            Completa el perfil de tu clínica y personaliza tus preferencias de facturación.
-          </p>
-          <Button
-            variant="outline"
-            className="w-full border-border hover:bg-accent"
-            disabled
-          >
-            Próximamente
-          </Button>
-        </div>
       </div>
     </div>
   );

@@ -1,6 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
-from typing import List
+from datetime import datetime, timedelta
+from app.core.timezone import now_bolivia
+from dateutil.relativedelta import relativedelta
+from typing import List, Optional
 import uuid
 
 from app.db.session import engine
@@ -16,8 +19,16 @@ def list_tenants(current_user: UserGlobal = Depends(get_current_superadmin)):
     """Listar todos los tenants registrados en la plataforma."""
     with Session(engine) as session:
         tenants = session.exec(select(Tenant)).all()
-        return [
-            {
+        result = []
+        for t in tenants:
+            # Obtener suscripción más reciente
+            active_sub = session.exec(
+                select(Subscription)
+                .where(Subscription.tenant_id == t.id)
+                .order_by(Subscription.end_date.desc())
+            ).first()
+
+            result.append({
                 "id": str(t.id),
                 "business_name": t.business_name,
                 "subdomain": t.subdomain,
@@ -30,9 +41,10 @@ def list_tenants(current_user: UserGlobal = Depends(get_current_superadmin)):
                     "billing_cycle": t.plan.billing_cycle
                 } if t.plan else None,
                 "created_at": t.created_at.isoformat() if t.created_at else None,
-            }
-            for t in tenants
-        ]
+                "subscription_end_date": active_sub.end_date.isoformat() if active_sub and active_sub.end_date else None,
+                "subscription_status": active_sub.status if active_sub else None,
+            })
+        return result
 
 
 @router.get("/tenants/{tenant_id}")
@@ -83,28 +95,50 @@ def update_tenant_status(tenant_id: str, data: dict, current_user: UserGlobal = 
             
         t.status = new_status
         
-        # Sincronizar con la(s) suscripción(es) del tenant
-        for sub in t.subscriptions:
-            # Si el tenant se activa, la suscripción se activa. 
-            # Si se suspende, la suscripción se suspende.
-            sub.status = new_status
-            session.add(sub)
+        # Obtener suscripción más reciente
+        active_sub = session.exec(
+            select(Subscription)
+            .where(Subscription.tenant_id == t.id)
+            .order_by(Subscription.end_date.desc())
+        ).first()
+
+        if active_sub:
+            if new_status == "active":
+                active_sub.status = "active"
+                # Si la suscripción ya venció, renovar desde hoy
+                if active_sub.end_date and active_sub.end_date < now_bolivia():
+                    active_sub.end_date = now_bolivia() + relativedelta(months=1)
+                    active_sub.start_date = now_bolivia()
+            else:
+                active_sub.status = "suspended"
+            session.add(active_sub)
 
         session.add(t)
         session.commit()
         session.refresh(t)
         
+        # Recargar suscripción para devolver datos actualizados
+        active_sub_refreshed = session.exec(
+            select(Subscription)
+            .where(Subscription.tenant_id == t.id)
+            .order_by(Subscription.end_date.desc())
+        ).first()
+
         return {
             "id": str(t.id),
             "business_name": t.business_name,
             "subdomain": t.subdomain,
             "status": t.status,
+            "db_name": t.db_name,
             "plan": {
                 "id": str(t.plan.id),
                 "name": t.plan.name,
                 "price": t.plan.price,
                 "billing_cycle": t.plan.billing_cycle
             } if t.plan else None,
+            "created_at": t.created_at.isoformat() if t.created_at else None,
+            "subscription_end_date": active_sub_refreshed.end_date.isoformat() if active_sub_refreshed and active_sub_refreshed.end_date else None,
+            "subscription_status": active_sub_refreshed.status if active_sub_refreshed else None,
         }
 
 
@@ -155,11 +189,35 @@ def list_users(current_user: UserGlobal = Depends(get_current_superadmin)):
                 "email": u.email,
                 "full_name": u.full_name,
                 "is_verified": u.is_verified,
+                "reset_requested": u.reset_requested,
+                "reset_approved": u.reset_approved,
                 "created_at": u.created_at.isoformat() if u.created_at else None,
                 "role_id": str(u.role_id),
             }
             for u in users
         ]
+
+
+@router.post("/users/{user_id}/approve-reset")
+def approve_password_reset(user_id: str, current_user: UserGlobal = Depends(get_current_superadmin)):
+    """Aprueba la solicitud de cambio de contraseña de un usuario."""
+    with Session(engine) as session:
+        try:
+            user_uuid = uuid.UUID(user_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="ID de usuario inválido")
+            
+        user = session.exec(select(UserGlobal).where(UserGlobal.id == user_uuid)).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+            
+        if not user.reset_requested:
+            raise HTTPException(status_code=400, detail="Este usuario no ha solicitado recuperación de contraseña")
+            
+        user.reset_approved = True
+        session.add(user)
+        session.commit()
+        return {"message": "Solicitud de recuperación aprobada exitosamente"}
 
 
 @router.get("/plans")
@@ -174,6 +232,7 @@ def list_plans(current_user: UserGlobal = Depends(get_current_superadmin)):
                 "price": p.price,
                 "billing_cycle": p.billing_cycle,
                 "max_users": p.max_users,
+                "trial_days": p.trial_days,
             }
             for p in plans
         ]
@@ -186,6 +245,7 @@ class PlanCreate(BaseModel):
     price: float
     billing_cycle: str
     max_users: int
+    trial_days: Optional[int] = 30
 
 @router.post("/plans")
 def create_plan(data: PlanCreate, current_user: UserGlobal = Depends(get_current_superadmin)):
@@ -198,7 +258,8 @@ def create_plan(data: PlanCreate, current_user: UserGlobal = Depends(get_current
             name=data.name,
             price=data.price,
             billing_cycle=data.billing_cycle,
-            max_users=data.max_users
+            max_users=data.max_users,
+            trial_days=data.trial_days or 30
         )
         session.add(new_plan)
         session.commit()
@@ -210,6 +271,7 @@ class PlanUpdate(BaseModel):
     price: Optional[float] = None
     billing_cycle: Optional[str] = None
     max_users: Optional[int] = None
+    trial_days: Optional[int] = None
 
 @router.put("/plans/{plan_id}")
 def update_plan(plan_id: str, data: PlanUpdate, current_user: UserGlobal = Depends(get_current_superadmin)):
@@ -266,6 +328,7 @@ def delete_plan(plan_id: str, current_user: UserGlobal = Depends(get_current_sup
 class SubscriptionUpdate(BaseModel):
     status: Optional[str] = None
     plan_id: Optional[str] = None
+    end_date: Optional[datetime] = None
 
 @router.get("/subscriptions")
 def list_subscriptions(current_user: UserGlobal = Depends(get_current_superadmin)):
@@ -277,8 +340,10 @@ def list_subscriptions(current_user: UserGlobal = Depends(get_current_superadmin
                 "id": str(s.id),
                 "tenant_id": str(s.tenant_id),
                 "tenant_name": s.tenant.business_name if s.tenant else "Desconocido",
+                "tenant_status": s.tenant.status if s.tenant else "unknown",
                 "plan_id": str(s.plan_id),
                 "plan_name": s.plan.name if s.plan else "Desconocido",
+                "plan_price": s.plan.price if s.plan else 0,
                 "status": s.status,
                 "start_date": s.start_date.isoformat() if s.start_date else None,
                 "end_date": s.end_date.isoformat() if s.end_date else None,
@@ -329,13 +394,72 @@ def update_subscription(sub_id: str, data: SubscriptionUpdate, current_user: Use
                 
             sub.plan_id = plan_uuid
             tenant.plan_id = plan_uuid
+            # Si el admin cambia el plan, reiniciamos el ciclo por defecto
+            sub.end_date = now_bolivia() + timedelta(days=plan.trial_days)
+
+        # 3. Cambio manual de fecha
+        if data.end_date:
+            sub.end_date = data.end_date
 
         session.add(sub)
         session.add(tenant)
         session.commit()
         session.refresh(sub)
         
-        return {"message": "Suscripción actualizada correctamente", "status": sub.status, "plan_id": str(sub.plan_id)}
+        return {
+            "message": "Suscripción actualizada correctamente",
+            "status": sub.status,
+            "plan_id": str(sub.plan_id),
+            "end_date": sub.end_date.isoformat() if sub.end_date else None,
+            "tenant_status": tenant.status,
+        }
+
+
+@router.post("/subscriptions/{sub_id}/renew")
+def renew_subscription_admin(sub_id: str, current_user: UserGlobal = Depends(get_current_superadmin)):
+    """Renueva una suscripción desde el panel de admin (+1 mes) y reactiva el tenant."""
+    with Session(engine) as session:
+        try:
+            sub_uuid = uuid.UUID(sub_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="ID de suscripción inválido")
+
+        sub = session.exec(select(Subscription).where(Subscription.id == sub_uuid)).first()
+        if not sub:
+            raise HTTPException(status_code=404, detail="Suscripción no encontrada")
+
+        tenant = sub.tenant
+        if not tenant:
+            raise HTTPException(status_code=404, detail="Tenant asociado no encontrado")
+
+        now = now_bolivia()
+        # Si ya venció, empezamos desde hoy. Si no, sumamos al end_date actual.
+        if sub.end_date and sub.end_date > now:
+            new_end_date = sub.end_date + relativedelta(months=1)
+        else:
+            new_end_date = now + relativedelta(months=1)
+
+        sub.end_date = new_end_date
+        sub.status = "active"
+        sub.start_date = now
+        tenant.status = "active"
+
+        session.add(sub)
+        session.add(tenant)
+        session.commit()
+        session.refresh(sub)
+
+        return {
+            "message": "Suscripción renovada exitosamente",
+            "id": str(sub.id),
+            "status": sub.status,
+            "start_date": sub.start_date.isoformat() if sub.start_date else None,
+            "end_date": sub.end_date.isoformat() if sub.end_date else None,
+            "tenant_status": tenant.status,
+            "tenant_name": tenant.business_name,
+            "plan_id": str(sub.plan_id),
+            "plan_name": sub.plan.name if sub.plan else "Desconocido",
+        }
 
 
 @router.get("/stats")
@@ -348,8 +472,9 @@ def admin_stats(current_user: UserGlobal = Depends(get_current_superadmin)):
         active_tenants = len(session.exec(select(Tenant).where(Tenant.status == "active")).all())
         suspended_tenants = len(session.exec(select(Tenant).where(Tenant.status == "suspended")).all())
 
-        # Cálculo muy simplificado del MRR asumiendo el plan básico ($10) por cada activo
-        mrr_estimado = active_tenants * 10.0
+        # MRR basado en precios reales de planes de tenants activos
+        active_tenant_list = session.exec(select(Tenant).where(Tenant.status == "active")).all()
+        mrr_estimado = sum(t.plan.price for t in active_tenant_list if t.plan) if active_tenant_list else 0.0
 
         return {
             "total_tenants": total_tenants,

@@ -15,7 +15,7 @@ export default function ForgotPasswordPage() {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
-    const [success, setSuccess] = useState(false)
+    const [success, setSuccess] = useState("")
     const [loginType, setLoginType] = useState<"employee" | "admin">("employee")
     const [tenants, setTenants] = useState<{subdomain: string, name: string}[]>([])
     const [loadingTenants, setLoadingTenants] = useState(false)
@@ -75,7 +75,7 @@ export default function ForgotPasswordPage() {
                 return
             }
 
-            setSuccess(true)
+            setSuccess(result.message || "Revisa tu bandeja de entrada")
         } catch (err: any) {
             setError(err.message || "Error al enviar la solicitud.")
         } finally {
@@ -109,7 +109,7 @@ export default function ForgotPasswordPage() {
                         <CardTitle className="text-2xl text-center">Recuperar Contraseña</CardTitle>
                         <CardDescription className="text-center text-muted-foreground">
                             {success 
-                                ? "Revisa tu bandeja de entrada"
+                                ? "Solicitud procesada"
                                 : "Ingresa tu correo electrónico para recibir un enlace de recuperación."
                             }
                         </CardDescription>
@@ -122,10 +122,14 @@ export default function ForgotPasswordPage() {
                                 <CheckCircle2 className="text-emerald-500" size={32} />
                             </div>
                             <p className="text-sm text-muted-foreground leading-relaxed px-2">
-                                Si el correo está registrado en nuestro sistema, recibirás un enlace para restablecer tu contraseña.
+                                {success}
                                 <br /><br />
                                 <span className="text-xs text-muted-foreground/70">
-                                    El enlace expira en <strong>15 minutos</strong>. Revisa también la carpeta de spam.
+                                    {success.includes("TRZ CORP") ? (
+                                        "Notifique por medio del Whatsapp que requiere un cambio de contraseña !!"
+                                    ) : (
+                                        "El enlace expira en 15 minutos. Revisa también la carpeta de spam."
+                                    )}
                                 </span>
                             </p>
                             <Link href="/login">

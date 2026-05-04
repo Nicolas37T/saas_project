@@ -175,6 +175,8 @@ export default function CalendarView({
     switch (status.toLowerCase()) {
       case "scheduled":
         return "bg-blue-500";
+      case "confirmed":
+        return "bg-indigo-500";
       case "completed":
         return "bg-emerald-500";
       case "cancelled":
@@ -317,6 +319,7 @@ export default function CalendarView({
           <span className="font-medium mr-1">Estados:</span>
           {[
             { key: "scheduled", label: "Programada", color: "bg-blue-500" },
+            { key: "confirmed", label: "Confirmada", color: "bg-indigo-500" },
             { key: "completed", label: "Completada", color: "bg-emerald-500" },
             { key: "cancelled", label: "Cancelada", color: "bg-rose-500" },
           ].map((s) => (

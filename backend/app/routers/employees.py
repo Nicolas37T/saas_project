@@ -4,6 +4,7 @@ from typing import List, Optional
 from pydantic import BaseModel, EmailStr
 import uuid
 from datetime import datetime
+from app.core.timezone import now_bolivia
 
 from app.db.session import get_session_for_tenant
 from app.db.tenant_models import User, Role
@@ -32,7 +33,7 @@ class EmployeeRead(BaseModel):
     created_at: datetime
 
 class EmployeeCreate(BaseModel):
-    username: str
+    username: Optional[str] = None
     email: EmailStr
     full_name: str
     password: str
@@ -157,17 +158,54 @@ def create_employee(
 
     # 2. Verificar si ya existe
     existing_user = session.exec(select(User).where((User.email == data.email) | (User.username == data.username))).first()
+    
     if existing_user:
-        raise HTTPException(status_code=400, detail="El email o nombre de usuario ya está registrado en este negocio")
+        if existing_user.status:
+            raise HTTPException(status_code=400, detail="El email o nombre de usuario ya está registrado y activo en este negocio")
+        
+        # SI EL USUARIO EXISTE PERO ESTÁ DESACTIVADO -> RE-ACTIVARLO
+        # 3. Validar Rol existe
+        role = session.get(Role, data.role_id)
+        if not role:
+            raise HTTPException(status_code=404, detail="El rol seleccionado no existe")
+            
+        existing_user.full_name = data.full_name
+        existing_user.email = data.email
+        # Si se envió un nuevo username (no vacío), usarlo. Si no, dejar el que tenía o generarlo si era vacío.
+        if data.username:
+            existing_user.username = data.username
+        
+        existing_user.password_hash = get_password_hash(data.password)
+        existing_user.role_id = data.role_id
+        existing_user.status = True
+        existing_user.updated_at = now_bolivia()
+        
+        session.add(existing_user)
+        session.commit()
+        session.refresh(existing_user)
+        return existing_user
 
     # 3. Validar Rol existe
     role = session.get(Role, data.role_id)
     if not role:
         raise HTTPException(status_code=404, detail="El rol seleccionado no existe")
 
-    # 4. Crear usuario
+    # 4. Procesar Username si es nulo o vacío
+    username = data.username
+    if not username:
+        # Generar base del username desde el email
+        base_username = data.email.split("@")[0].lower()
+        username = base_username
+        
+        # Asegurar unicidad (en caso de que el prefijo del email ya exista)
+        counter = 1
+        while session.exec(select(User).where(User.username == username)).first():
+            username = f"{base_username}{counter}"
+            counter += 1
+
+    # 5. Crear usuario
     db_user = User(
-        username=data.username,
+        username=username,
         email=data.email,
         full_name=data.full_name,
         password_hash=get_password_hash(data.password),
@@ -228,7 +266,7 @@ def update_employee(
     for key, value in update_data.items():
         setattr(db_user, key, value)
     
-    db_user.updated_at = datetime.utcnow()
+    db_user.updated_at = now_bolivia()
     session.add(db_user)
     session.commit()
     session.refresh(db_user)
@@ -250,7 +288,30 @@ def delete_employee(
         raise HTTPException(status_code=404, detail="Empleado no encontrado")
 
     db_user.status = False
-    db_user.updated_at = datetime.utcnow()
+    db_user.updated_at = now_bolivia()
     session.add(db_user)
     session.commit()
     return {"ok": True, "message": "Empleado eliminado correctamente"}
+
+@router.post("/{employee_id}/approve-reset")
+def approve_employee_reset(
+    employee_id: uuid.UUID,
+    session: Session = Depends(get_session_for_tenant),
+    current_user = Depends(get_current_tenant_user)
+):
+    """Aprueba el reseteo de contraseña de un empleado."""
+    if getattr(current_user, "computed_role", "") not in ["admin", "superadmin", "owner"]:
+        raise HTTPException(status_code=403, detail="No tienes permiso para aprobar el reseteo de contraseñas")
+
+    db_user = session.get(User, employee_id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="Empleado no encontrado")
+
+    if not db_user.reset_requested:
+        raise HTTPException(status_code=400, detail="Este empleado no ha solicitado recuperación de contraseña")
+
+    db_user.reset_approved = True
+    session.add(db_user)
+    session.commit()
+    return {"message": "Reseteo aprobado exitosamente"}
+

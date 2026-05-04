@@ -23,7 +23,7 @@ import {
   BookOpen
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { tenantApi } from "@/lib/api";
+import { tenantApi, API_BASE } from "@/lib/api";
 
 // Helper function to decode JWT and get user info
 function decodeJWT(token: string): { email?: string; full_name?: string; sub?: string } | null {
@@ -38,15 +38,48 @@ function decodeJWT(token: string): { email?: string; full_name?: string; sub?: s
   }
 }
 
+function BillingBadge({ subStatus }: { subStatus: any }) {
+  if (!subStatus) return null;
+
+  let daysLeft = 0;
+  if (subStatus && subStatus.end_date) {
+    const end = new Date(subStatus.end_date);
+    end.setHours(0, 0, 0, 0);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    daysLeft = Math.max(0, Math.round((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+  }
+
+  const isLow = daysLeft <= 3;
+
+  return (
+    <Link 
+      href="/dashboard/billing"
+      className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase transition-all hover:scale-105 border ${
+        isLow 
+          ? "bg-red-500/10 text-red-600 border-red-500/50 animate-pulse" 
+          : "bg-primary/10 text-primary border-primary/20"
+      }`}
+    >
+      <CreditCard size={12} />
+      <span>{subStatus.plan_name || "Plan"}</span>
+      <span className="opacity-50">•</span>
+      <span>{daysLeft} días restantes</span>
+    </Link>
+  );
+}
+
 function UserMenuHeader({
   navItems,
   pathname,
   userName,
+  subStatus,
   onLogout,
 }: {
   navItems: { name: string; href: string }[];
   pathname: string;
   userName: string;
+  subStatus: any;
   onLogout: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -75,7 +108,8 @@ function UserMenuHeader({
   return (
     <header className="hidden md:flex h-16 border-b border-border/50 bg-background/50 backdrop-blur-sm sticky top-0 z-10 items-center justify-between px-8">
       <h2 className="text-xl font-semibold">{pageTitle}</h2>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
+        <BillingBadge subStatus={subStatus} />
         <ThemeToggle />
         {/* User menu */}
         <div ref={ref} className="relative">
@@ -140,6 +174,11 @@ export default function DashboardLayout({
   const [userName, setUserName] = useState("");
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [subStatus, setSubStatus] = useState<any>(null);
+
+  const role = typeof window !== 'undefined' ? localStorage.getItem("user_role") : "empleado";
+  const isPrivileged = role === "owner" || role === "admin" || role === "superadmin" || role === "administrador";
+  const isReceptionist = role === "recepcionista";
 
   useEffect(() => {
     async function loadTenantData() {
@@ -162,24 +201,38 @@ export default function DashboardLayout({
         setUserName(decoded.email.split('@')[0]);
       }
 
-      try {
-        const config = await tenantApi.getTenantConfig();
-        if (config) {
-            setTenantName(config.business_name || sub);
-            setTenantLogo(config.logo_url || "");
+        try {
+          const config = await tenantApi.getTenantConfig();
+          if (config) {
+              setTenantName(config.business_name || sub);
+              setTenantLogo(config.logo_url || "");
+          }
+        } catch (e: any) {
+          setTenantName(sub);
+          // Si es 403 y es owner, probablemente está suspendido
+          if (e.message.includes("expirado") || e.message.includes("suspendida")) {
+              if (isPrivileged && pathname !== "/dashboard/billing") {
+                  router.push("/dashboard/billing");
+              }
+          }
         }
-      } catch (e) {
-        setTenantName(sub);
-      }
+
+        // Fetch billing status for the badge
+        if (isPrivileged) {
+          try {
+            const res = await fetch(`${API_BASE}/api/tenant/billing/status`, {
+                headers: { "Authorization": `Bearer ${token}`, "X-Tenant": sub }
+            });
+            if (res.ok) setSubStatus(await res.json());
+          } catch (e) {}
+        }
 
       setLoading(false);
     }
     loadTenantData();
   }, [router]);
 
-  const role = typeof window !== 'undefined' ? localStorage.getItem("user_role") : "empleado";
-  const isPrivileged = role === "owner" || role === "admin" || role === "superadmin" || role === "administrador";
-  const isReceptionist = role === "recepcionista";
+
 
   // Protection: Redirect if receptionist tries to access restricted routes
   useEffect(() => {
@@ -255,7 +308,7 @@ export default function DashboardLayout({
         name: "Configuración",
         href: "/dashboard/settings",
         icon: <SettingsIcon size={20} />,
-      }
+      },
     ] : []),
   ];
 
@@ -332,6 +385,7 @@ export default function DashboardLayout({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {isPrivileged && <BillingBadge subStatus={subStatus} />}
           <ThemeToggle />
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -399,6 +453,7 @@ export default function DashboardLayout({
           navItems={navItems}
           pathname={pathname}
           userName={userName}
+          subStatus={subStatus}
           onLogout={() => { localStorage.clear(); router.push("/login"); }}
         />
 

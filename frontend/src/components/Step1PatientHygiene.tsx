@@ -262,33 +262,48 @@ export const Step1PatientHygiene: React.FC<Step1Props> = ({
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Frecuencia de cepillado
                 </label>
-                <Input
-                  className="bg-muted/50 border-border h-11"
-                  placeholder="Ej: 3 "
-                  value={formData.brushing_frequency}
+                <select
+                  className="w-full h-11 rounded-md bg-muted/50 border border-border text-foreground text-sm px-3 appearance-none focus:ring-1 focus:ring-primary outline-none"
+                  value={formData.brushing_frequency || ""}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
                       brushing_frequency: e.target.value,
                     })
                   }
-                />
+                >
+                  <option value="">Selecciona una opción</option>
+                  <option value="1 vez al día">1 vez al día</option>
+                  <option value="2 veces al día">2 veces al día</option>
+                  <option value="3 o más veces">3 o más veces al día</option>
+                  <option value="Ocasionalmente">Ocasionalmente</option>
+                  <option value="Nunca">Nunca</option>
+                </select>
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Técnica de cepillado
                 </label>
-                <Input
-                  className="bg-muted/50 border-border h-11"
-                  placeholder="Ej: Bass, Circular..."
-                  value={formData.brushing_technique}
+                <select
+                  className="w-full h-11 rounded-md bg-muted/50 border border-border text-foreground text-sm px-3 appearance-none focus:ring-1 focus:ring-primary outline-none"
+                  value={formData.brushing_technique || ""}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
                       brushing_technique: e.target.value,
                     })
                   }
-                />
+                >
+                  <option value="">Selecciona una opción</option>
+                  <option value="Circular (Fones)">Circular (Fones)</option>
+                  <option value="Horizontal / Fregado">Horizontal / Fregado</option>
+                  <option value="Barrido / Roll">Barrido / Roll</option>
+                  <option value="Bass / Modificada">Bass / Modificada</option>
+                  <option value="Stillman / Modificada">Stillman / Modificada</option>
+                  <option value="Charters">Charters</option>
+                  <option value="Ninguna">Ninguna / No sabe</option>
+                  <option value="Otra">Otra</option>
+                </select>
               </div>
             </div>
           </CardContent>

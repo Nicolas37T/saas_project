@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { adminApi, User } from "@/lib/api";
-import { Users, AlertTriangle, Shield, User as UserIcon, CheckCircle, XCircle } from "lucide-react";
+import { Users, AlertTriangle, Shield, User as UserIcon, CheckCircle, XCircle, KeyRound, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function UsersPage() {
     const [users, setUsers] = useState<User[]>([]);
@@ -16,6 +17,15 @@ export default function UsersPage() {
             .catch((e) => setError(e.message))
             .finally(() => setLoading(false));
     }, []);
+
+    const handleApproveReset = async (userId: string) => {
+        try {
+            await adminApi.approvePasswordReset(userId);
+            setUsers(users.map(u => u.id === userId ? { ...u, reset_approved: true, reset_requested: false } : u));
+        } catch (e: any) {
+            setError(e.message);
+        }
+    };
 
     return (
         <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
@@ -44,6 +54,7 @@ export default function UsersPage() {
                                 <th className="text-left px-6 py-4 font-medium">Email</th>
                                 <th className="text-left px-6 py-4 font-medium">Rol</th>
                                 <th className="text-left px-6 py-4 font-medium">Verificado</th>
+                                <th className="text-left px-6 py-4 font-medium">Seguridad</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -53,6 +64,7 @@ export default function UsersPage() {
                                         <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-48" /></td>
                                         <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-20" /></td>
                                         <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-16" /></td>
+                                        <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-24" /></td>
                                     </tr>
                                 ))
                                 : users.map((u) => (
@@ -78,6 +90,17 @@ export default function UsersPage() {
                                                 <span className="flex items-center gap-1.5 text-destructive text-xs font-medium">
                                                     <XCircle size={14} /> No
                                                 </span>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {u.reset_requested ? (
+                                                <Button size="sm" variant="destructive" onClick={() => handleApproveReset(u.id)} className="h-7 text-xs flex gap-1.5 items-center">
+                                                    <KeyRound size={12} /> Aprobar Reseteo
+                                                </Button>
+                                            ) : u.reset_approved ? (
+                                                <span className="text-xs text-emerald-500 font-medium">Reseteo Habilitado</span>
+                                            ) : (
+                                                <span className="text-xs text-muted-foreground">-</span>
                                             )}
                                         </td>
                                     </tr>

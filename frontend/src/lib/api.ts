@@ -73,11 +73,18 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const data = await res.json();
   if (!res.ok) {
     // Evitamos console.error para no disparar el popup de error visual de Next.js
-    throw new Error(
-      typeof data.detail === "string"
-        ? data.detail
-        : JSON.stringify(data.detail) || "Error en la petición",
-    );
+    let errorMessage = "Error en la petición";
+    if (typeof data.detail === "string") {
+      errorMessage = data.detail;
+    } else if (Array.isArray(data.detail)) {
+      errorMessage = data.detail.map((err: any) => {
+        const field = err.loc ? err.loc[err.loc.length - 1] : "Campo";
+        return `• ${field}: ${err.msg}`;
+      }).join("\n");
+    } else if (data.detail) {
+      errorMessage = JSON.stringify(data.detail);
+    }
+    throw new Error(errorMessage);
   }
   return data as T;
 }
@@ -99,6 +106,7 @@ export interface Plan {
   price: number;
   billing_cycle: string;
   max_users: number;
+  trial_days: number;
 }
 
 export interface Tenant {
@@ -113,6 +121,9 @@ export interface Tenant {
     price: number;
     billing_cycle: string;
   } | null;
+  created_at?: string;
+  subscription_end_date?: string | null;
+  subscription_status?: string | null;
 }
 
 export interface User {
@@ -120,14 +131,18 @@ export interface User {
   email: string;
   rol_global: string;
   is_verified: boolean;
+  reset_requested?: boolean;
+  reset_approved?: boolean;
 }
 
 export interface Subscription {
   id: string;
   tenant_id: string;
   tenant_name: string;
+  tenant_status: string;
   plan_id: string;
   plan_name: string;
+  plan_price: number;
   status: string;
   start_date: string;
   end_date: string;
@@ -156,12 +171,15 @@ export const adminApi = {
   deleteTenant: (id: string) =>
     apiFetch<{ message: string }>(`/admin/tenants/${id}`, { method: "DELETE" }),
   getUsers: () => apiFetch<User[]>("/admin/users"),
+  approvePasswordReset: (userId: string) =>
+    apiFetch<{ message: string }>(`/admin/users/${userId}/approve-reset`, { method: "POST" }),
   getPlans: () => apiFetch<Plan[]>("/admin/plans"),
   createPlan: (data: {
     name: string;
     price: number;
     billing_cycle: string;
     max_users: number;
+    trial_days: number;
   }) =>
     apiFetch<Plan>("/admin/plans", {
       method: "POST",
@@ -172,6 +190,7 @@ export const adminApi = {
     price: number;
     billing_cycle: string;
     max_users: number;
+    trial_days: number;
   }>) =>
     apiFetch<Plan>(`/admin/plans/${id}`, {
       method: "PUT",
@@ -182,15 +201,27 @@ export const adminApi = {
   getSubscriptions: () => apiFetch<Subscription[]>("/admin/subscriptions"),
   updateSubscription: (
     subId: string,
-    data: { status?: string; plan_id?: string },
+    data: { status?: string; plan_id?: string; end_date?: string },
   ) =>
-    apiFetch<{ message: string; status: string; plan_id: string }>(
+    apiFetch<{ message: string; status: string; plan_id: string; end_date?: string; tenant_status?: string }>(
       `/admin/subscriptions/${subId}`,
       {
         method: "PATCH",
         body: JSON.stringify(data),
       },
     ),
+  renewSubscription: (subId: string) =>
+    apiFetch<{
+      message: string;
+      id: string;
+      status: string;
+      start_date: string;
+      end_date: string;
+      tenant_status: string;
+      tenant_name: string;
+      plan_id: string;
+      plan_name: string;
+    }>(`/admin/subscriptions/${subId}/renew`, { method: "POST" }),
 };
 
 // ─── TENANT DENTAL API ────────────────────────────────────────────────────────
@@ -309,6 +340,8 @@ export interface Employee {
   full_name: string;
   role?: Role;
   status: boolean;
+  reset_requested?: boolean;
+  reset_approved?: boolean;
   created_at: string;
 }
 
@@ -384,6 +417,11 @@ export const tenantApi = {
   deleteEmployee: async (id: string): Promise<{ ok: boolean }> => {
     return apiFetch(`/api/tenant/employees/${id}`, {
       method: "DELETE",
+    });
+  },
+  approveEmployeePasswordReset: async (id: string): Promise<{ message: string }> => {
+    return apiFetch(`/api/tenant/employees/${id}/approve-reset`, {
+      method: "POST",
     });
   },
 
