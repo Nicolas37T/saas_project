@@ -250,10 +250,8 @@ class OdontogramBase(BaseModel):
     @field_validator('tooth_number')
     @classmethod
     def validate_tooth_number(cls, v: int) -> int:
-        valid_permanents = [1] + list(range(11, 19)) + list(range(21, 29)) + list(range(31, 39)) + list(range(41, 49))
-        valid_temporals = [1] + list(range(51, 56)) + list(range(61, 66)) + list(range(71, 76)) + list(range(81, 86))
-        if v not in valid_permanents and v not in valid_temporals:
-            raise ValueError(f"Número de diente inválido (FDI): {v}")
+        if v <= 0:
+            raise ValueError(f"Número de diente debe ser positivo: {v}")
         return v
 
 class OdontogramCreate(OdontogramBase):
@@ -289,10 +287,8 @@ class FullOdontogramItem(BaseModel):
     @field_validator('tooth_number')
     @classmethod
     def validate_tooth_number(cls, v: int) -> int:
-        valid_permanents = [1] + list(range(11, 19)) + list(range(21, 29)) + list(range(31, 39)) + list(range(41, 49))
-        valid_temporals = [1] + list(range(51, 56)) + list(range(61, 66)) + list(range(71, 76)) + list(range(81, 86))
-        if v not in valid_permanents and v not in valid_temporals:
-            raise ValueError(f"Número de diente inválido (FDI): {v}")
+        if v <= 0:
+            raise ValueError(f"Número de diente debe ser positivo: {v}")
         return v
 
 class FullTreatmentItem(BaseModel):
@@ -330,10 +326,8 @@ class OdontogramWithTreatments(BaseModel):
     @field_validator('tooth_number')
     @classmethod
     def validate_tooth_number(cls, v: int) -> int:
-        valid_permanents = [1] + list(range(11, 19)) + list(range(21, 29)) + list(range(31, 39)) + list(range(41, 49))
-        valid_temporals = [1] + list(range(51, 56)) + list(range(61, 66)) + list(range(71, 76)) + list(range(81, 86))
-        if v not in valid_permanents and v not in valid_temporals:
-            raise ValueError(f"Número de diente inválido (FDI): {v}")
+        if v <= 0:
+            raise ValueError(f"Número de diente debe ser positivo: {v}")
         return v
 
 class FullMedicalHistoryUpdate(BaseModel):
