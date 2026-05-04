@@ -4,6 +4,7 @@ from typing import List, Optional
 from pydantic import BaseModel, EmailStr
 import uuid
 from datetime import datetime
+from app.core.timezone import now_bolivia
 
 from app.db.session import get_session_for_tenant
 from app.db.tenant_models import User, Role
@@ -177,7 +178,7 @@ def create_employee(
         existing_user.password_hash = get_password_hash(data.password)
         existing_user.role_id = data.role_id
         existing_user.status = True
-        existing_user.updated_at = datetime.utcnow()
+        existing_user.updated_at = now_bolivia()
         
         session.add(existing_user)
         session.commit()
@@ -265,7 +266,7 @@ def update_employee(
     for key, value in update_data.items():
         setattr(db_user, key, value)
     
-    db_user.updated_at = datetime.utcnow()
+    db_user.updated_at = now_bolivia()
     session.add(db_user)
     session.commit()
     session.refresh(db_user)
@@ -287,7 +288,7 @@ def delete_employee(
         raise HTTPException(status_code=404, detail="Empleado no encontrado")
 
     db_user.status = False
-    db_user.updated_at = datetime.utcnow()
+    db_user.updated_at = now_bolivia()
     session.add(db_user)
     session.commit()
     return {"ok": True, "message": "Empleado eliminado correctamente"}

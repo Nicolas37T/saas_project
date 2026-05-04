@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from datetime import datetime, timedelta
+from app.core.timezone import now_bolivia
 from dateutil.relativedelta import relativedelta
 from typing import List, Optional
 import uuid
@@ -105,9 +106,9 @@ def update_tenant_status(tenant_id: str, data: dict, current_user: UserGlobal = 
             if new_status == "active":
                 active_sub.status = "active"
                 # Si la suscripción ya venció, renovar desde hoy
-                if active_sub.end_date and active_sub.end_date < datetime.utcnow():
-                    active_sub.end_date = datetime.utcnow() + relativedelta(months=1)
-                    active_sub.start_date = datetime.utcnow()
+                if active_sub.end_date and active_sub.end_date < now_bolivia():
+                    active_sub.end_date = now_bolivia() + relativedelta(months=1)
+                    active_sub.start_date = now_bolivia()
             else:
                 active_sub.status = "suspended"
             session.add(active_sub)
@@ -394,7 +395,7 @@ def update_subscription(sub_id: str, data: SubscriptionUpdate, current_user: Use
             sub.plan_id = plan_uuid
             tenant.plan_id = plan_uuid
             # Si el admin cambia el plan, reiniciamos el ciclo por defecto
-            sub.end_date = datetime.utcnow() + timedelta(days=plan.trial_days)
+            sub.end_date = now_bolivia() + timedelta(days=plan.trial_days)
 
         # 3. Cambio manual de fecha
         if data.end_date:
@@ -431,7 +432,7 @@ def renew_subscription_admin(sub_id: str, current_user: UserGlobal = Depends(get
         if not tenant:
             raise HTTPException(status_code=404, detail="Tenant asociado no encontrado")
 
-        now = datetime.utcnow()
+        now = now_bolivia()
         # Si ya venció, empezamos desde hoy. Si no, sumamos al end_date actual.
         if sub.end_date and sub.end_date > now:
             new_end_date = sub.end_date + relativedelta(months=1)

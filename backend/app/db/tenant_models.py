@@ -1,4 +1,5 @@
 from datetime import datetime
+from app.core.timezone import now_bolivia
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import Index
@@ -12,8 +13,8 @@ class Role(SQLModel, table=True):
     __tablename__ = "roles"
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(unique=True, index=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=now_bolivia)
+    updated_at: datetime = Field(default_factory=now_bolivia)
 
     users: List["User"] = Relationship(back_populates="role")
 
@@ -29,8 +30,8 @@ class User(SQLModel, table=True):
     last_login: Optional[datetime] = None
     reset_requested: bool = Field(default=False)
     reset_approved: bool = Field(default=False)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=now_bolivia)
+    updated_at: datetime = Field(default_factory=now_bolivia)
 
     role_id: Optional[uuid.UUID] = Field(default=None, foreign_key="roles.id")
     role: Optional[Role] = Relationship(back_populates="users")
@@ -47,8 +48,8 @@ class Setting(SQLModel, table=True):
     cellphone: Optional[str] = None
     address: Optional[str] = None
     currency: str = Field(default="Bs.")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=now_bolivia)
+    updated_at: datetime = Field(default_factory=now_bolivia)
     created_by: Optional[uuid.UUID] = Field(default=None, foreign_key="users.id")
 
 # ─── DENTAL CLINIC MODELS ─────────────────────────────────────────────────────
@@ -64,8 +65,8 @@ class Patient(SQLModel, table=True):
     description: Optional[str] = None
     status: bool = Field(default=True)
     assigned_doctor_id: Optional[uuid.UUID] = Field(default=None, foreign_key="users.id")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=now_bolivia)
+    updated_at: datetime = Field(default_factory=now_bolivia)
 
     created_by: Optional[uuid.UUID] = Field(default=None, foreign_key="users.id")
     medical_histories: List["MedicalHistory"] = Relationship(back_populates="patient")
@@ -78,7 +79,7 @@ class PatientShare(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     patient_id: uuid.UUID = Field(foreign_key="patients.id")
     doctor_id: uuid.UUID = Field(foreign_key="users.id")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=now_bolivia)
 
     patient: Patient = Relationship(back_populates="shared_with")
     doctor: User = Relationship()
@@ -91,8 +92,8 @@ class Treatment(SQLModel, table=True):
     procedure_status: str = Field(default="pendiente")  # pendiente, en_progreso, completado
     treatment_date: Optional[datetime] = None
     status: bool = Field(default=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=now_bolivia)
+    updated_at: datetime = Field(default_factory=now_bolivia)
 
     payments: List["Payment"] = Relationship(back_populates="treatment")
     medical_histories: List["MedicalHistory"] = Relationship(back_populates="treatment")
@@ -119,8 +120,8 @@ class MedicalHistory(SQLModel, table=True):
     uses_floss: bool = Field(default=False)
     
     status: bool = Field(default=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=now_bolivia)
+    updated_at: datetime = Field(default_factory=now_bolivia)
 
     patient_id: uuid.UUID = Field(foreign_key="patients.id")
     patient: Patient = Relationship(back_populates="medical_histories")
@@ -142,8 +143,8 @@ class Appointment(SQLModel, table=True):
     appointment_status: str = Field(default="scheduled") # e.g. scheduled, confirmed, cancelled, completed
     status: bool = Field(default=True)
     assigned_doctor_id: Optional[uuid.UUID] = Field(default=None, foreign_key="users.id")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=now_bolivia)
+    updated_at: datetime = Field(default_factory=now_bolivia)
 
     patient_id: uuid.UUID = Field(foreign_key="patients.id")
     patient: Patient = Relationship(back_populates="appointments")
@@ -154,7 +155,7 @@ class Payment(SQLModel, table=True):
     amount: float
     payment_method: str = Field(default="cash") # cash, card, transfer
     payment_status: str = Field(default="completed") # pending, completed, failed
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=now_bolivia)
 
     treatment_id: uuid.UUID = Field(foreign_key="treatments.id")
     treatment: Treatment = Relationship(back_populates="payments")
@@ -166,8 +167,8 @@ class Odontogram(SQLModel, table=True):
     tooth_type: str  # adult, child
     notes: Optional[str] = None
     status: bool = Field(default=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=now_bolivia)
+    updated_at: datetime = Field(default_factory=now_bolivia)
 
     patient_id: uuid.UUID = Field(foreign_key="patients.id")
     patient: Patient = Relationship(back_populates="odontograms")
@@ -177,8 +178,8 @@ class Medicine(SQLModel, table=True):
     __tablename__ = "medicines"
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(index=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=now_bolivia)
+    updated_at: datetime = Field(default_factory=now_bolivia)
 
     created_by: Optional[uuid.UUID] = Field(default=None, foreign_key="users.id")
 
@@ -188,7 +189,7 @@ class TreatmentCatalog(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(index=True)
     default_price: Optional[float] = Field(default=None)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=now_bolivia)
+    updated_at: datetime = Field(default_factory=now_bolivia)
 
     created_by: Optional[uuid.UUID] = Field(default=None, foreign_key="users.id")

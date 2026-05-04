@@ -204,11 +204,11 @@ async def register_tenant(data: TenantCreate):
             session.add(new_user)
             
             # --- CREAR SUSCRIPCIÓN ---
-            from datetime import datetime, timedelta
+            from app.core.timezone import now_bolivia
             from dateutil.relativedelta import relativedelta
             
             # Definir duración según la configuración del plan (trial_days)
-            start_date = datetime.utcnow()
+            start_date = now_bolivia()
             duration_days = getattr(plan, "trial_days", 30)
             end_date = start_date + timedelta(days=duration_days)
             print(f"Plan {plan.name}: Duración de {duration_days} días (vence: {end_date})")
@@ -302,8 +302,8 @@ async def login(data: LoginRequest):
                     .where(Subscription.tenant_id == tenant.id)
                     .order_by(Subscription.end_date.desc())
                 ).first()
-
-                if active_sub and active_sub.end_date and active_sub.end_date < datetime.utcnow():
+                from app.core.timezone import now_bolivia
+                if active_sub and active_sub.end_date and active_sub.end_date < now_bolivia():
                     # Si ha vencido, actualizamos estados
                     if tenant.status != "suspended":
                         tenant.status = "suspended"

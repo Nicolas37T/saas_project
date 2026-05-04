@@ -4,6 +4,7 @@ from app.db.session import engine
 from app.db.models import Tenant, Subscription, Plan
 from app.core.deps import get_current_tenant_user
 from datetime import datetime, timedelta
+from app.core.timezone import now_bolivia
 from dateutil.relativedelta import relativedelta
 import uuid
 
@@ -74,7 +75,7 @@ async def renew_subscription(
              raise HTTPException(status_code=404, detail="No se encontró una suscripción previa")
 
         # Simular pago y extender fecha
-        now = datetime.utcnow()
+        now = now_bolivia()
         # Si ya venció, empezamos desde hoy. Si no, sumamos al end_date actual.
         if active_sub.end_date and active_sub.end_date > now:
             new_end_date = active_sub.end_date + relativedelta(months=1)
@@ -132,7 +133,7 @@ async def change_plan(
              raise HTTPException(status_code=404, detail="No se encontró una suscripción activa")
 
         # Reiniciar ciclo con el nuevo plan
-        now = datetime.utcnow()
+        now = now_bolivia()
         new_end_date = now + timedelta(days=new_plan.trial_days)
 
         tenant.plan_id = new_plan.id

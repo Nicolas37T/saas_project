@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Activity, FileText, Calendar } from "lucide-react";
+import { ArrowLeft, Activity, FileText, Calendar, Clock, Plus } from "lucide-react";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import {
   tenantApi,
@@ -67,6 +67,16 @@ export default function PatientProfilePage({
 
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [successInfo, setSuccessInfo] = useState({ title: "", message: "" });
+
+  // New Appointment
+  const [isNewAppointmentOpen, setIsNewAppointmentOpen] = useState(false);
+  const [newAppointment, setNewAppointment] = useState({
+    appointment_date: "",
+    appointment_time: "",
+    notes: "",
+    assigned_doctor_id: "",
+  });
+  const [appointmentSubmitting, setAppointmentSubmitting] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -152,6 +162,51 @@ export default function PatientProfilePage({
       setPatient(patientData);
     } catch (error) {
       console.error("Error updating patient", error);
+    }
+  };
+
+  const handleOpenNewAppointment = () => {
+    setNewAppointment({
+      appointment_date: "",
+      appointment_time: "",
+      notes: "",
+      assigned_doctor_id: patient?.assigned_doctor_id || (employeesList.length > 0 ? employeesList[0].id : ""),
+    });
+    setIsNewAppointmentOpen(true);
+  };
+
+  const handleCreateAppointment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!patient) return;
+    setAppointmentSubmitting(true);
+    try {
+      const appointmentDateTime = `${newAppointment.appointment_date}T${newAppointment.appointment_time}:00`;
+      await tenantApi.createAppointment({
+        patient_id: patient.id,
+        appointment_date: appointmentDateTime,
+        notes: newAppointment.notes || undefined,
+        appointment_status: "scheduled",
+        assigned_doctor_id: newAppointment.assigned_doctor_id || undefined,
+      });
+      setIsNewAppointmentOpen(false);
+
+      // Refresh appointments list
+      const freshAppointments = await tenantApi.getAppointments({ patient_id: id }).catch(() => []);
+      setAppointments(
+        freshAppointments.filter(
+          (a) =>
+            a.patient_id === id &&
+            a.appointment_status !== "completed" &&
+            a.appointment_status !== "cancelled",
+        ),
+      );
+
+      setSuccessInfo({ title: "Cita Programada", message: "La cita ha sido agendada con éxito." });
+      setIsSuccessModalOpen(true);
+    } catch (error: any) {
+      console.error("Error creating appointment", error);
+    } finally {
+      setAppointmentSubmitting(false);
     }
   };
 
@@ -264,7 +319,11 @@ export default function PatientProfilePage({
             <span className="hidden sm:inline">Editar Perfil</span>
             <span className="sm:hidden">Editar</span>
           </Button>
-          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_15px_rgba(37,99,235,0.3)] flex-1 md:flex-initial">
+          <Button
+            onClick={handleOpenNewAppointment}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_15px_rgba(37,99,235,0.3)] flex-1 md:flex-initial gap-2"
+          >
+            <Plus size={16} />
             Nueva Cita
           </Button>
         </div>
@@ -589,6 +648,93 @@ export default function PatientProfilePage({
             </div>
           </form>
         )}
+      </CustomModal>
+
+      {/* ─── MODAL: NUEVA CITA ──────────────────────────────────────────────── */}
+      <CustomModal
+        isOpen={isNewAppointmentOpen}
+        onClose={() => setIsNewAppointmentOpen(false)}
+        title={`Nueva Cita — ${patient.first_name} ${patient.last_name}`}
+      >
+        <form onSubmit={handleCreateAppointment} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="space-y-2">
+              <label className="text-xs sm:text-sm font-medium">Fecha *</label>
+              <Input
+                type="date"
+                required
+                value={newAppointment.appointment_date}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setNewAppointment({ ...newAppointment, appointment_date: e.target.value })
+                }
+                className="bg-muted/50 border-border focus-visible:ring-primary text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs sm:text-sm font-medium">Hora *</label>
+              <Input
+                type="time"
+                required
+                value={newAppointment.appointment_time}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setNewAppointment({ ...newAppointment, appointment_time: e.target.value })
+                }
+                className="bg-muted/50 border-border focus-visible:ring-primary text-sm"
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs sm:text-sm font-medium">Doctor Asignado</label>
+            <select
+              value={newAppointment.assigned_doctor_id}
+              onChange={(e) =>
+                setNewAppointment({ ...newAppointment, assigned_doctor_id: e.target.value })
+              }
+              className="flex h-9 sm:h-10 w-full rounded-md border border-border bg-muted/50 px-3 py-2 text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <option value="">Sin asignar</option>
+              {employeesList.map((emp) => (
+                <option key={emp.id} value={emp.id}>
+                  {emp.full_name || emp.username}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs sm:text-sm font-medium">Notas</label>
+            <textarea
+              value={newAppointment.notes}
+              onChange={(e) =>
+                setNewAppointment({ ...newAppointment, notes: e.target.value })
+              }
+              rows={3}
+              placeholder="Motivo de la consulta, observaciones..."
+              className="flex w-full rounded-md border border-border bg-muted/50 px-3 py-2 text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary resize-none"
+            />
+          </div>
+          <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 justify-end mt-4 sm:mt-6">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setIsNewAppointmentOpen(false)}
+              className="hover:bg-accent text-sm"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={appointmentSubmitting}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm gap-2"
+            >
+              {appointmentSubmitting ? (
+                <div className="animate-spin w-4 h-4 border-2 border-white rounded-full border-t-transparent" />
+              ) : (
+                <Calendar size={16} />
+              )}
+              {appointmentSubmitting ? "Agendando..." : "Agendar Cita"}
+            </Button>
+          </div>
+        </form>
       </CustomModal>
 
       <SuccessModal

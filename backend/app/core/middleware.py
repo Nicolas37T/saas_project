@@ -3,6 +3,7 @@ from app.db.session import Session, engine
 from app.db.models import Tenant, Subscription
 from sqlmodel import select
 from datetime import datetime
+from app.core.timezone import now_bolivia
 
 async def tenant_middleware(request: Request, call_next):
     # 0. Ignorar peticiones OPTIONS (CORS preflight)
@@ -68,7 +69,7 @@ async def tenant_middleware(request: Request, call_next):
                     .order_by(Subscription.end_date.desc())
                 ).first()
 
-                if active_sub and active_sub.end_date and active_sub.end_date < datetime.utcnow():
+                if active_sub and active_sub.end_date and active_sub.end_date < now_bolivia():
                     tenant.status = "suspended"
                     active_sub.status = "suspended"
                     session.add(active_sub)

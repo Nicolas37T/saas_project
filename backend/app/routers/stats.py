@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session, select, func, or_
 from datetime import datetime, timedelta
+from app.core.timezone import now_bolivia
 from typing import List, Dict, Optional
 import uuid
 
@@ -54,7 +55,7 @@ def get_dashboard_stats(
     total_appointments = session.exec(appointment_q).one()
 
     # --- Chart data (day by day) ---
-    today = datetime.utcnow().date()
+    today = now_bolivia().date()
     chart_data = []
 
     for i in range(days - 1, -1, -1):
