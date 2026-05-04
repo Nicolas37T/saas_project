@@ -204,6 +204,7 @@ async def register_tenant(data: TenantCreate):
             session.add(new_user)
             
             # --- CREAR SUSCRIPCIÓN ---
+            from datetime import timedelta
             from app.core.timezone import now_bolivia
             from dateutil.relativedelta import relativedelta
             
