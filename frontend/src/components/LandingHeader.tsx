@@ -29,6 +29,14 @@ export function LandingHeader() {
         <Link href="/login" className="text-sm font-medium hover:underline underline-offset-4">
           Iniciar sesión
         </Link>
+        <a 
+          href="https://wa.me/59175934045?text=Hola, necesito ayuda con mi cuenta." 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-sm font-medium hover:underline underline-offset-4"
+        >
+          Soporte
+        </a>
         <ThemeToggle />
       </nav>
 
@@ -64,6 +72,15 @@ export function LandingHeader() {
           >
             Iniciar sesión
           </Link>
+          <a 
+            href="https://wa.me/59175934045?text=Hola, necesito ayuda con mi cuenta." 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-sm font-medium p-2 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-md"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Soporte
+          </a>
         </div>
       )}
     </header>

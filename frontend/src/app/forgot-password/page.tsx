@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, ArrowLeft, Users, ShieldAlert, Mail, CheckCircle2 } from "lucide-react"
+import { Loader2, ArrowLeft, Users, ShieldAlert, Mail, CheckCircle2, MessageCircle } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { API_BASE } from "@/lib/api"
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon"
 
 export default function ForgotPasswordPage() {
     const router = useRouter()
@@ -132,11 +133,22 @@ export default function ForgotPasswordPage() {
                                     )}
                                 </span>
                             </p>
-                            <Link href="/login">
-                                <Button variant="outline" className="mt-4 gap-2">
-                                    <ArrowLeft size={14} /> Volver al login
+                            <div className="flex flex-col gap-2">
+                                <Link href="/login" className="w-full">
+                                    <Button variant="outline" className="w-full gap-2">
+                                        <ArrowLeft size={14} /> Volver al login
+                                    </Button>
+                                </Link>
+                                <Button 
+                                    variant="ghost" 
+                                    className="w-full text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/10 gap-2 text-xs"
+                                    asChild
+                                >
+                                    <a href="https://wa.me/59175934045?text=Hola, ya envié la solicitud de recuperación pero necesito ayuda adicional." target="_blank" rel="noopener noreferrer">
+                                        <WhatsAppIcon size={14} /> Contactar Soporte
+                                    </a>
                                 </Button>
-                            </Link>
+                            </div>
                         </CardContent>
                     ) : (
                         /* ESTADO: Formulario */
@@ -219,6 +231,19 @@ export default function ForgotPasswordPage() {
                                 <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
                                     <ArrowLeft size={13} /> Volver al inicio de sesión
                                 </Link>
+
+                                <div className="w-full pt-4 border-t border-border mt-2">
+                                    <p className="text-xs text-muted-foreground text-center mb-3">¿Tienes problemas para recuperar tu cuenta?</p>
+                                    <Button 
+                                        variant="outline" 
+                                        className="w-full border-green-600/50 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/10 gap-2"
+                                        asChild
+                                    >
+                                        <a href="https://wa.me/59175934045?text=Hola, necesito ayuda para recuperar mi contraseña." target="_blank" rel="noopener noreferrer">
+                                            <WhatsAppIcon size={16} /> Contactar Soporte
+                                        </a>
+                                    </Button>
+                                </div>
                             </CardFooter>
                         </form>
                     )}
@@ -228,6 +253,20 @@ export default function ForgotPasswordPage() {
             <footer className="p-6 text-center text-xs text-gray-400 dark:text-muted-foreground">
                 ¿Recordaste tu contraseña? <Link href="/login" className="text-blue-600 dark:text-primary hover:underline">Inicia sesión</Link>
             </footer>
+
+            {/* Floating Support Button */}
+            <a 
+                href="https://wa.me/59175934045?text=Hola, necesito ayuda para recuperar mi contraseña." 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="fixed bottom-6 right-6 z-[60] bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-2xl transition-all hover:scale-110 flex items-center justify-center group"
+                aria-label="Contactar Soporte"
+            >
+                <WhatsAppIcon size={28} />
+                <span className="max-w-0 overflow-hidden group-hover:max-w-xs group-hover:ml-2 transition-all duration-300 font-bold whitespace-nowrap">
+                    Soporte
+                </span>
+            </a>
         </div>
     )
 }
