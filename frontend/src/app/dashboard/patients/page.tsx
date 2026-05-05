@@ -110,11 +110,14 @@ export default function PatientsPage() {
       // Solo mostramos activos (status=true), el backend ya filtra pero doble check
       setPatients(data.filter((p) => p.status));
 
-      // Auto-select first doctor if creating new patient and none selected
+      // Auto-select doctor for new patient: current user if they are a doctor, otherwise first in list
       if (doctors.length > 0 && !newPatient.assigned_doctor_id) {
+        const currentUserId = localStorage.getItem("user_id");
+        const currentUserIsDoctor = doctors.find((d) => d.id === currentUserId);
+
         setNewPatient((prev) => ({
           ...prev,
-          assigned_doctor_id: doctors[0].id,
+          assigned_doctor_id: currentUserIsDoctor ? currentUserId! : doctors[0].id,
         }));
       }
     } catch (error) {

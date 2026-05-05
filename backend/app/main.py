@@ -329,6 +329,7 @@ async def login(data: LoginRequest):
             "role": role_name,
             "subdomain": subdomain,
             "tenant_status": tenant_status,
+            "user_id": str(user.id),
         }
 
 

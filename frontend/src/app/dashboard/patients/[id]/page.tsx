@@ -166,11 +166,16 @@ export default function PatientProfilePage({
   };
 
   const handleOpenNewAppointment = () => {
+    const currentUserId = localStorage.getItem("user_id");
+    const currentUserInList = employeesList.find((e) => e.id === currentUserId);
+
     setNewAppointment({
       appointment_date: "",
       appointment_time: "",
       notes: "",
-      assigned_doctor_id: patient?.assigned_doctor_id || (employeesList.length > 0 ? employeesList[0].id : ""),
+      assigned_doctor_id: currentUserInList 
+        ? currentUserId! 
+        : (patient?.assigned_doctor_id || (employeesList.length > 0 ? employeesList[0].id : "")),
     });
     setIsNewAppointmentOpen(true);
   };

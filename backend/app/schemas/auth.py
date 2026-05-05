@@ -12,6 +12,7 @@ class Token(BaseModel):
     role: str
     is_employee: Optional[bool] = False
     tenant_status: Optional[str] = None
+    user_id: str
 
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
