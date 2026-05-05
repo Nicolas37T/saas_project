@@ -2,6 +2,7 @@ import LoginForm from "@/components/forms/LoginForm";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import Image from "next/image";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 
 export default function LoginPage() {
     return (
@@ -27,6 +28,20 @@ export default function LoginPage() {
             <footer className="p-6 text-center text-xs text-gray-400 dark:text-muted-foreground">
                 ¿No tienes una cuenta? <Link href="/register" className="text-blue-600 dark:text-primary hover:underline">Regístrate</Link>
             </footer>
+
+            {/* Floating Support Button */}
+            <a 
+                href="https://wa.me/59175934045?text=Hola, necesito ayuda para iniciar sesión." 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="fixed bottom-6 right-6 z-[60] bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-2xl transition-all hover:scale-110 flex items-center justify-center group"
+                aria-label="Contactar Soporte"
+            >
+                <WhatsAppIcon size={28} />
+                <span className="max-w-0 overflow-hidden group-hover:max-w-xs group-hover:ml-2 transition-all duration-300 font-bold whitespace-nowrap">
+                    Soporte
+                </span>
+            </a>
         </div>
     );
 }

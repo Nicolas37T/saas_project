@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { LandingHeader } from "@/components/LandingHeader";
 import { Plan } from "@/lib/api";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 
 async function getPlans(): Promise<Plan[]> {
   // En el servidor no existe window.location. Resolvemos la URL según el entorno:
@@ -486,9 +487,30 @@ export default async function LandingPage() {
             <Link href="#" className="text-xs text-gray-500 dark:text-gray-400 hover:underline underline-offset-4">
               Privacidad
             </Link>
+            <a 
+              href="https://wa.me/59175934045?text=Hola, necesito información sobre el software." 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-xs text-gray-500 dark:text-gray-400 hover:underline underline-offset-4"
+            >
+              Soporte (WhatsApp)
+            </a>
           </nav>
         </div>
       </footer>
+      {/* Floating Support Button */}
+      <a 
+        href="https://wa.me/59175934045?text=Hola, necesito ayuda con el software dental." 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 z-[60] bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-2xl transition-all hover:scale-110 flex items-center justify-center group"
+        aria-label="Contactar Soporte"
+      >
+        <WhatsAppIcon size={28} />
+        <span className="max-w-0 overflow-hidden group-hover:max-w-xs group-hover:ml-2 transition-all duration-300 font-bold whitespace-nowrap">
+          Soporte
+        </span>
+      </a>
     </div>
   );
 }
