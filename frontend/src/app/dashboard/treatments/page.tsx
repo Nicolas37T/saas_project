@@ -101,9 +101,6 @@ export default function TreatmentsPage() {
   // 2. Apply Filters (Date & Search) to the flattened list
   const filteredProcedures = useMemo(() => {
     const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-
     let list = allProcedures;
 
     // A. Date Filtering
@@ -111,21 +108,39 @@ export default function TreatmentsPage() {
       list = list.filter(item => {
         if (!item.treatment_date) return false;
         
+        // item.treatment_date is likely "YYYY-MM-DD" or ISO string
+        // We want to compare dates ignoring the time part
         const itemDate = new Date(item.treatment_date);
+        const itemYear = itemDate.getFullYear();
+        const itemMonth = itemDate.getMonth();
+        const itemDay = itemDate.getDate();
+        
+        // Today range
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         
         if (activeFilter === "today") {
-          return itemDate >= startOfToday && itemDate <= endOfToday;
+          return itemYear === now.getFullYear() && 
+                 itemMonth === now.getMonth() && 
+                 itemDay === now.getDate();
         } 
         
         if (activeFilter === "week") {
+          // Get the Monday of the current week
           const startOfWeek = new Date(startOfToday);
-          startOfWeek.setDate(startOfToday.getDate() - startOfToday.getDay());
-          return itemDate >= startOfWeek && itemDate <= endOfToday;
+          const day = startOfToday.getDay();
+          const diff = startOfToday.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Monday start
+          startOfWeek.setDate(diff);
+          startOfWeek.setHours(0,0,0,0);
+
+          const endOfWeek = new Date(startOfWeek);
+          endOfWeek.setDate(startOfWeek.getDate() + 6);
+          endOfWeek.setHours(23,59,59,999);
+
+          return itemDate >= startOfWeek && itemDate <= endOfWeek;
         }
         
         if (activeFilter === "month") {
-          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-          return itemDate >= startOfMonth && itemDate <= endOfToday;
+          return itemYear === now.getFullYear() && itemMonth === now.getMonth();
         }
         
         return true;
