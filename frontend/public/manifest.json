@@ -1,6 +1,6 @@
 {
-  "name": "SaaSManager - Gestiona tu negocio",
-  "short_name": "SaaSManager",
+  "name": "TRZ Dental - Gestiona tu negocio",
+  "short_name": "TRZ Dental",
   "description": "La plataforma más sencilla y potente para pequeños negocios. Facturación, inventario y más.",
   "start_url": "/",
   "display": "standalone",
