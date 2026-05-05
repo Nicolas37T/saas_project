@@ -21,9 +21,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
-  Cell
 } from "recharts";
 
 function decodeJWT(token: string): { email?: string; full_name?: string; sub?: string } | null {
@@ -41,7 +39,7 @@ function decodeJWT(token: string): { email?: string; full_name?: string; sub?: s
 export default function TenantDashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [timeRange, setTimeRange] = useState("90");
+  const [timeRange, setTimeRange] = useState("7");
   const [groupBy, setGroupBy] = useState<"day" | "month">("day");
   const [visibleSeries, setVisibleSeries] = useState({
     patients: true,
@@ -101,6 +99,11 @@ export default function TenantDashboard() {
     if (groupBy === "month") {
       const [, m] = value.split("-");
       return MONTH_NAMES[parseInt(m, 10) - 1] ?? value;
+    }
+    const parts = value.split("-");
+    if (parts.length === 3) {
+      const [, m, d] = parts;
+      return `${parseInt(d, 10)} ${MONTH_NAMES[parseInt(m, 10) - 1]}`;
     }
     return value;
   };
@@ -267,8 +270,8 @@ export default function TenantDashboard() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="7">Últimos 7 días</SelectItem>
+                  <SelectItem value="15">Últimos 15 días</SelectItem>
                   <SelectItem value="30">Últimos 30 días</SelectItem>
-                  <SelectItem value="90">Últimos 90 días</SelectItem>
                 </SelectContent>
               </Select>
             )}
@@ -292,65 +295,96 @@ export default function TenantDashboard() {
           </div>
         </div>
         
-        <div className="h-[350px] w-full">
-          {loading && !data ? (
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={groupChartData(data?.chart_data ?? [], groupBy)}
-                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
-                <XAxis 
-                  dataKey="date" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                  dy={10}
-                  tickFormatter={formatXAxis}
-                  interval={groupBy === "month" ? 0 : (parseInt(timeRange) > 30 ? 6 : parseInt(timeRange) > 15 ? 2 : 0)}
-                />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
-                />
-                <Tooltip 
-                  cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                  content={({ active, payload, label }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="bg-card border border-border p-3 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.2)]">
-                          <p className="text-muted-foreground font-bold mb-2 text-sm">
-                            {groupBy === "month" ? `Mes: ${formatXAxis(String(label))}` : `Fecha: ${String(label)}`}
-                          </p>
-                          {payload.map((entry: any, index: number) => (
-                            <div key={index} className="flex items-center justify-between gap-4 mb-1">
-                              <span style={{ color: entry.color }} className="font-medium text-sm">
-                                {entry.name}
-                              </span>
-                              <span className="text-foreground font-bold text-sm">
-                                {entry.value}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
-                {visibleSeries.patients && <Bar dataKey="patients" name="Pacientes" fill="#3b82f6" radius={[4, 4, 0, 0]} />}
-                {visibleSeries.treatments && <Bar dataKey="treatments" name="Tratamientos" fill="#10b981" radius={[4, 4, 0, 0]} />}
-                {visibleSeries.appointments && <Bar dataKey="appointments" name="Citas" fill="#a855f7" radius={[4, 4, 0, 0]} />}
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </div>
+        {loading && !data ? (
+          <div className="w-full h-[350px] flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : (() => {
+          const chartData = groupChartData(data?.chart_data ?? [], groupBy);
+          const minWidthPerPoint = 60;
+          const chartMinWidth = Math.max(chartData.length * minWidthPerPoint, 300);
+          return (
+            <>
+              <div className="overflow-x-auto -mx-2 px-2 pb-2" style={{ WebkitOverflowScrolling: 'touch' }}>
+                <div style={{ minWidth: `${chartMinWidth}px`, height: 320 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={chartData}
+                      margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
+                      <XAxis 
+                        dataKey="date" 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                        dy={10}
+                        tickFormatter={formatXAxis}
+                        interval={0}
+                      />
+                      <YAxis 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+                      />
+                      <Tooltip 
+                        cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                        content={({ active, payload, label }) => {
+                          if (active && payload && payload.length) {
+                            return (
+                              <div className="bg-card border border-border p-3 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.2)]">
+                                <p className="text-muted-foreground font-bold mb-2 text-sm">
+                                  {groupBy === "month" 
+                                    ? `Mes: ${formatXAxis(String(label))}` 
+                                    : `Fecha: ${formatXAxis(String(label))} del ${String(label).split('-')[0]}`}
+                                </p>
+                                {payload.map((entry: any, index: number) => (
+                                  <div key={index} className="flex items-center justify-between gap-4 mb-1">
+                                    <span style={{ color: entry.color }} className="font-medium text-sm">
+                                      {entry.name}
+                                    </span>
+                                    <span className="text-foreground font-bold text-sm">
+                                      {entry.value}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                      {visibleSeries.patients && <Bar dataKey="patients" name="Pacientes" fill="#3b82f6" radius={[4, 4, 0, 0]} />}
+                      {visibleSeries.treatments && <Bar dataKey="treatments" name="Tratamientos" fill="#10b981" radius={[4, 4, 0, 0]} />}
+                      {visibleSeries.appointments && <Bar dataKey="appointments" name="Citas" fill="#a855f7" radius={[4, 4, 0, 0]} />}
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+              {/* Legend always visible outside scroll area */}
+              <div className="flex items-center justify-center gap-6 pt-3 text-sm">
+                {visibleSeries.patients && (
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-[#3b82f6] inline-block"></span>
+                    <span className="text-muted-foreground">Pacientes</span>
+                  </div>
+                )}
+                {visibleSeries.treatments && (
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-[#10b981] inline-block"></span>
+                    <span className="text-muted-foreground">Tratamientos</span>
+                  </div>
+                )}
+                {visibleSeries.appointments && (
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-[#a855f7] inline-block"></span>
+                    <span className="text-muted-foreground">Citas</span>
+                  </div>
+                )}
+              </div>
+            </>
+          );
+        })()}
       </div>
 
       {/* Quick Actions */}
