@@ -138,12 +138,15 @@ export default function AppointmentsPage() {
       setEmployees(empData.filter((e: Employee) => e.status));
       setClinicName(configData?.business_name || "la Clínica");
       
-      // Auto-select first doctor for new appointment form
+      // Auto-select doctor for new appointment: current user if they are a doctor, otherwise first in list
       const activeEmployees = empData.filter((e: Employee) => e.status);
-      if (activeEmployees.length > 0) {
-        setNewAppointment(prev => ({
+      if (activeEmployees.length > 0 && !newAppointment.assigned_doctor_id) {
+        const currentUserId = localStorage.getItem("user_id");
+        const currentUserIsDoctor = activeEmployees.find((e) => e.id === currentUserId);
+
+        setNewAppointment((prev) => ({
           ...prev,
-          assigned_doctor_id: prev.assigned_doctor_id || activeEmployees[0].id,
+          assigned_doctor_id: currentUserIsDoctor ? currentUserId! : activeEmployees[0].id,
         }));
       }
     } catch (error) {

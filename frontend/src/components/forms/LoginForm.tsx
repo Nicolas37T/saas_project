@@ -68,6 +68,7 @@ export default function LoginForm() {
 
             localStorage.setItem("token", result.access_token)
             localStorage.setItem("user_role", result.role)
+            localStorage.setItem("user_id", result.user_id)
 
             if (result.is_employee) {
                 if (loginType !== "employee") throw new Error("Debes usar la pestaña Empleado")

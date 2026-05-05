@@ -88,7 +88,8 @@ def login_employee(
         "token_type": "bearer",
         "role": role_name,
         "subdomain": tenant_obj.subdomain,
-        "is_employee": True
+        "is_employee": True,
+        "user_id": str(user.id)
     }
 
 # ... (get_roles remains same)
