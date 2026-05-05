@@ -10,8 +10,8 @@ import {
   Edit2,
   Trash2,
   List,
-  MessageCircle,
 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { tenantApi, Appointment, Patient, Employee } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -624,7 +624,7 @@ export default function AppointmentsPage() {
                             }}
                             title="Confirmar por WhatsApp"
                           >
-                            <MessageCircle size={16} />
+                            <WhatsAppIcon size={16} />
                           </Button>
                           <Button
                             variant="ghost"
