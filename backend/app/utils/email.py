@@ -44,7 +44,7 @@ def send_reset_email(to_email: str, reset_link: str) -> bool:
                             <tr>
                                 <td style="background:linear-gradient(135deg,#2563eb,#4f46e5);padding:32px 40px;text-align:center;">
                                     <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;letter-spacing:-0.5px;">
-                                        SaaSManager
+                                        TRZ Dental
                                     </h1>
                                 </td>
                             </tr>
@@ -80,7 +80,7 @@ def send_reset_email(to_email: str, reset_link: str) -> bool:
                             <tr>
                                 <td style="padding:24px 40px;background-color:#f8fafc;border-top:1px solid #e2e8f0;text-align:center;">
                                     <p style="margin:0;color:#94a3b8;font-size:12px;">
-                                        © SaaSManager — Este es un correo automático, no responder.
+                                        © TRZ Dental — Este es un correo automático, no responder.
                                     </p>
                                 </td>
                             </tr>
@@ -95,7 +95,7 @@ def send_reset_email(to_email: str, reset_link: str) -> bool:
         r = resend.Emails.send({
             "from": RESEND_FROM_EMAIL,
             "to": [to_email],
-            "subject": "Recuperación de contraseña - SaaSManager",
+            "subject": "Recuperación de contraseña - TRZ Dental",
             "html": html_content,
         })
 

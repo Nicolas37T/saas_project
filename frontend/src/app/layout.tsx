@@ -15,14 +15,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SaaSManager - Gestiona tu negocio como un profesional",
+  title: "TRZ Dental - Gestiona tu Consultorio Dental como un profesional",
   description:
-    "La plataforma más sencilla y potente para pequeños negocios. Facturación, inventario y más bajo tu propio subdominio.",
+    "La plataforma más sencilla y potente para Consultorios Dentales. Agendamiento de citas, Facturación, historias clínicas, recordatorios y más.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "SaaSManager",
+    title: "TRZ Dental",
   },
   formatDetection: {
     telephone: false,
